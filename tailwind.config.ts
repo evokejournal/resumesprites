@@ -23,6 +23,7 @@ export default {
         bungee: ['Bungee', 'cursive'],
         ultra: ['Ultra', 'serif'],
         pixelify: ['"Pixelify Sans"', 'monospace'],
+        rocksalt: ['"Rock Salt"', 'cursive'],
       },
       colors: {
         background: 'hsl(var(--background))',
@@ -87,11 +88,11 @@ export default {
         'outset': '2px',
         'inset': '2px',
       },
-      borderColor: theme => ({
-        DEFAULT: theme('colors.border'),
+      borderColor: {
+        DEFAULT: 'hsl(var(--border))',
         'outset': 'white #808080 #808080 white',
         'inset': '#808080 white white #808080',
-      }),
+      },
       keyframes: {
         'accordion-down': {
           from: {

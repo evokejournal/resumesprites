@@ -49,6 +49,7 @@ const Barcode = ({ text }: { text: string }) => {
 
 interface TemplateProps {
   data: ResumeData;
+  pdfMode?: boolean;
 }
 
 const getNodeTextLength = (node: React.ReactNode): number => {
@@ -68,7 +69,7 @@ const getNodeTextLength = (node: React.ReactNode): number => {
 };
 
 
-export function ForTaxPurposesTemplate({ data }: TemplateProps) {
+export function ForTaxPurposesTemplate({ data, pdfMode }: TemplateProps) {
     const { about, contact, experience, education, skills, portfolio, custom } = data;
     const [lines, setLines] = useState<React.ReactNode[]>([]);
     const [isPrinting, setIsPrinting] = useState(false);
@@ -156,6 +157,7 @@ export function ForTaxPurposesTemplate({ data }: TemplateProps) {
     }, [data]);
 
     useEffect(() => {
+        if (pdfMode) return;
         if (animationKey === 0) return;
         
         let isCancelled = false;
@@ -187,9 +189,10 @@ export function ForTaxPurposesTemplate({ data }: TemplateProps) {
             isCancelled = true;
             timeouts.forEach(clearTimeout);
         };
-    }, [allContent, animationKey]);
+    }, [allContent, animationKey, pdfMode]);
 
     useEffect(() => {
+        if (pdfMode) return;
         // Automatically scroll to the bottom as the receipt "prints"
         if (isPrinting) {
             window.scrollTo({
@@ -207,14 +210,45 @@ export function ForTaxPurposesTemplate({ data }: TemplateProps) {
             }, 100); // Small delay to ensure the last line is rendered
             return () => clearTimeout(timer);
         }
-    }, [lines, isPrinting, animationKey]);
+    }, [lines, isPrinting, animationKey, pdfMode]);
     
     useEffect(() => {
+        if (pdfMode) return;
         document.documentElement.classList.add('scrollbar-hide');
         return () => {
             document.documentElement.classList.remove('scrollbar-hide');
         };
-    }, []);
+    }, [pdfMode]);
+
+    if (pdfMode) {
+        return (
+            <div className="bg-gray-200 font-code py-12 px-2 flex flex-col items-center min-h-screen text-black">
+                <div className="w-full max-w-sm">
+                    <div className="relative -mt-2 w-[94%] mx-auto z-10">
+                        <div ref={paperRef} className="w-full text-black shadow-lg bg-[#fdfdf2]">
+                            <div className="relative z-10 p-4 space-y-1">
+                                {allContent.map((line, index) => (
+                                    <div key={`pdf-${index}`}>
+                                        {line}
+                                    </div>
+                                ))}
+                            </div>
+                            <div className="w-full h-full absolute top-0 left-0 bg-[linear-gradient(to_right,rgba(0,0,0,0.03)_1px,transparent_1px),linear-gradient(to_bottom,rgba(0,0,0,0.03)_1px,transparent_1px)] bg-[size:1rem_1rem] opacity-30 z-0"></div>
+                        </div>
+                        <div
+                            className="w-full h-4 bg-repeat-x"
+                            style={{
+                                backgroundImage:
+                                'url(\'data:image/svg+xml;utf8,<svg width="20" height="10" xmlns="http://www.w3.org/2000/svg"><path d="M0 0 L10 10 L20 0 Z" fill="%23fdfdf2"/></svg>\')',
+                                backgroundSize: '15px 7.5px',
+                                filter: 'drop-shadow(0 2px 2px rgba(0,0,0,0.1))'
+                            }}
+                        />
+                    </div>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="bg-gray-200 font-code py-12 px-2 flex flex-col items-center min-h-screen text-black">

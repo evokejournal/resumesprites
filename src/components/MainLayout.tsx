@@ -5,6 +5,8 @@ import { usePathname } from 'next/navigation';
 import { SidebarProvider, Sidebar, SidebarInset, SidebarTrigger } from '@/components/ui/sidebar';
 import { SidebarNav } from '@/components/SidebarNav';
 import { cn } from '@/lib/utils';
+import { useAuth } from '@/context/AuthContext';
+import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
 
 const pageTitles: { [key: string]: string } = {
   '/builder': 'Builder',
@@ -18,6 +20,7 @@ const pageTitles: { [key: string]: string } = {
 
 export function MainLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
+  const { user } = useAuth();
 
   const getPageTitle = (path: string): string => {
     const mainPath = Object.keys(pageTitles).find(p => path.startsWith(p));
@@ -26,6 +29,15 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
 
   const pageTitle = getPageTitle(pathname);
   const isPreviewPage = pathname.startsWith('/preview');
+
+  const getUserInitials = (name: string) => {
+    return name
+      .split(' ')
+      .map(word => word.charAt(0))
+      .join('')
+      .toUpperCase()
+      .slice(0, 2);
+  };
 
   return (
     <SidebarProvider>
@@ -37,6 +49,19 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
         <header className="flex h-14 shrink-0 items-center gap-4 border-b bg-background px-4 md:hidden">
           <SidebarTrigger />
           <span className="font-semibold text-lg">{pageTitle}</span>
+          {user && (
+            <div className="ml-auto flex items-center gap-2">
+              <Avatar className="h-8 w-8">
+                <AvatarImage src={user.photoURL || undefined} alt={user.displayName || 'User'} />
+                <AvatarFallback className="text-xs">
+                  {user.displayName ? getUserInitials(user.displayName) : user.email?.charAt(0).toUpperCase() || 'U'}
+                </AvatarFallback>
+              </Avatar>
+              <span className="text-sm text-muted-foreground hidden sm:block">
+                {user.displayName || user.email?.split('@')[0]}
+              </span>
+            </div>
+          )}
         </header>
 
         {/* This div makes the content area scrollable */}

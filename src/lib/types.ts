@@ -66,13 +66,22 @@ export interface CustomSection {
   items: CustomItem[];
 }
 
+export interface ResumeView {
+  timestamp: string;
+  ip?: string;
+  userAgent?: string;
+}
+
 export interface GeneratedLink {
   id: string;
-  url: string;
+  shortId: string;
   password: string;
-  views: number;
-  lastAccessed: string;
   resumeDataSnapshot: ResumeData;
+  templateSnapshot: string;
+  createdAt: string;
+  views: ResumeView[];
+  lastViewed?: string;
+  userId: string;
 }
 
 export interface ResumeData {

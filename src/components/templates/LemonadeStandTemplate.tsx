@@ -1,11 +1,11 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
-import type { ResumeData } from '@/lib/types';
+import React, { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { cn } from '@/lib/utils';
-import { CoverLetterModal } from '@/components/CoverLetterModal';
 import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
+import { ResumeData } from '@/lib/types';
+import { cn } from '@/lib/utils';
 import { X, Hand, Droplets, Citrus, Milestone, Sparkles } from 'lucide-react';
 
 interface TemplateProps {
@@ -39,12 +39,6 @@ export function LemonadeStandTemplate({ data, isCoverLetterOpen, setCoverLetterO
     
     return (
         <>
-            <CoverLetterModal 
-                isOpen={isCoverLetterOpen}
-                onOpenChange={setCoverLetterOpen}
-                title={`A Glass of Lemonade from ${about.name}`}
-                content={data.coverLetter}
-            />
             <div className="font-gloock min-h-screen bg-amber-50 text-stone-800 p-4 sm:p-8 flex flex-col items-center justify-center overflow-hidden">
                 {/* Background Decoration */}
                 <Citrus className="absolute -top-16 -left-16 w-64 h-64 text-yellow-200/50 opacity-50 rotate-12" />

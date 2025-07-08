@@ -5,7 +5,6 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import type { ResumeData } from '@/lib/types';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
-import { CoverLetterModal } from '@/components/CoverLetterModal';
 import { Briefcase, GraduationCap, Star, FolderGit2, Users, Wrench, User, FileText, ExternalLink } from 'lucide-react';
 
 // --- HELPER ICONS --- //
@@ -30,11 +29,45 @@ type CellData = {
 // --- TEMPLATE PROPS --- //
 interface TemplateProps {
   data: ResumeData;
-  isCoverLetterOpen: boolean;
-  setCoverLetterOpen: (open: boolean) => void;
+  isCoverLetterOpen?: boolean;
+  setCoverLetterOpen?: (open: boolean) => void;
+  pdfMode?: boolean;
 }
 
-export function MineHireTemplate({ data, isCoverLetterOpen, setCoverLetterOpen }: TemplateProps) {
+export function MineHireTemplate({ data, isCoverLetterOpen, setCoverLetterOpen, pdfMode }: TemplateProps) {
+  const { about, contact, coverLetter } = data;
+
+  if (pdfMode) {
+    const currentDate = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+    return (
+      <div className="bg-[#C0C0C0] min-h-screen flex flex-col items-center justify-center font-sans p-8">
+        <div className="bg-white border-4 border-[#888] rounded-lg shadow-lg p-10 max-w-2xl w-full">
+          <div className="flex justify-between items-start mb-6">
+            <div>
+              <h1 className="text-3xl font-bold text-[#222]">{about.name}</h1>
+              <p className="text-gray-600">{about.jobTitle}</p>
+            </div>
+            <div className="text-right text-sm text-gray-500">
+              <p>{contact.email}</p>
+              <p>{contact.phone}</p>
+              <p>{contact.website}</p>
+              <p>{contact.location}</p>
+            </div>
+          </div>
+          <div className="mb-4 text-gray-500">{currentDate}</div>
+          <div className="mb-8 text-gray-700 whitespace-pre-line text-base">
+            {coverLetter || 'No cover letter provided.'}
+          </div>
+          <div className="pt-6 border-t text-center text-gray-700">
+            <p className="text-lg font-semibold">My interactive resume can be viewed online here:</p>
+            {/* The actual link and password will be injected by the PDF API */}
+            <div className="mt-2 text-md">(Link and password will appear here)</div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   const [board, setBoard] = useState<CellData[]>([]);
   const [gameState, setGameState] = useState<'playing' | 'won'>('playing');
   const [revealedContent, setRevealedContent] = useState<CellData['content'] | null>(null);
@@ -70,7 +103,11 @@ export function MineHireTemplate({ data, isCoverLetterOpen, setCoverLetterOpen }
       ...data.references.map(item => ({ type: 'reference' as const, content: item, icon: Users })),
       ...data.custom.items.map(item => ({ type: 'custom' as const, content: { ...item, title: data.custom.title }, icon: Wrench })),
       ...data.skills.map(item => ({ type: 'skill' as const, content: item, icon: Star })),
-    ].filter(item => item.content && (item.content.summary || item.content.company || item.content.degree || item.content.title || item.content.name || item.content.description));
+    ].filter(item => {
+      if (!item.content) return false;
+      const content = item.content as any;
+      return content.summary || content.company || content.degree || content.title || content.name || content.description;
+    });
 
     const totalCells = BOARD_WIDTH * BOARD_HEIGHT;
     let newBoard: Partial<CellData>[] = Array(totalCells).fill({ type: 'empty', content: null, icon: null });
@@ -174,14 +211,7 @@ export function MineHireTemplate({ data, isCoverLetterOpen, setCoverLetterOpen }
   }
 
   return (
-    <>
-      <CoverLetterModal
-        isOpen={isCoverLetterOpen}
-        onOpenChange={setCoverLetterOpen}
-        title="TOP SECRET: Cover Letter"
-        content={data.coverLetter}
-      />
-      <div className="bg-[#C0C0C0] min-h-screen p-4 sm:p-8 flex flex-col items-center justify-center font-sans">
+    <div className="bg-[#C0C0C0] min-h-screen p-4 sm:p-8 flex flex-col items-center justify-center font-sans">
         <div className="bg-[#C0C0C0] p-2 border-2 border-outset border-t-white border-l-white border-b-gray-800 border-r-gray-800">
             {/* Header */}
             <div className="flex justify-between items-center bg-[#C0C0C0] p-1 mb-2 border-2 border-inset border-t-gray-800 border-l-gray-800 border-b-white border-r-white">
@@ -215,7 +245,6 @@ export function MineHireTemplate({ data, isCoverLetterOpen, setCoverLetterOpen }
              </div>
         </div>
       </div>
-    </>
   );
 }
 

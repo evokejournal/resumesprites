@@ -62,7 +62,7 @@ export function RetroTerminalTemplate({ data }: RetroTerminalTemplateProps) {
         output = (
           <div className="space-y-2">
             <p><span className="text-yellow-400 font-bold">{data.about.name}</span> - {data.about.jobTitle}</p>
-            <div className="whitespace-pre-line"><AnimatedText text={data.about.summary} onComplete={() => {}} /></div>
+            <div className="whitespace-pre-line">{data.about.summary}</div>
           </div>
         );
         break;
@@ -81,13 +81,13 @@ export function RetroTerminalTemplate({ data }: RetroTerminalTemplateProps) {
           <div className="space-y-3">
             {data.experience.map(exp => (
               <div key={exp.id}>
-                <p>> <span className="font-bold text-yellow-400">{exp.role}</span> at {exp.company}</p>
+                <p>{'>'} <span className="font-bold text-yellow-400">{exp.role}</span> at {exp.company}</p>
                 <p className="pl-4 text-gray-400">{exp.startDate} - {exp.endDate}</p>
-                <div className="pl-4 whitespace-pre-line"><AnimatedText text={exp.description} onComplete={() => {}} /></div>
+                <div className="pl-4 whitespace-pre-line">{exp.description}</div>
               </div>
             ))}
           </div>
-        ) : <p><AnimatedText text="No experience data found." onComplete={() => {}} /></p>;
+        ) : <p>No experience data found.</p>;
         break;
       case 'skills':
         output = data.skills.length > 0 ? (
@@ -96,40 +96,40 @@ export function RetroTerminalTemplate({ data }: RetroTerminalTemplateProps) {
               <p key={skill.id}>{skill.name} [{''.padStart(Math.round(skill.level / 10), '█').padEnd(10, '░')}]</p>
             ))}
           </div>
-        ) : <p><AnimatedText text="No skills data found." onComplete={() => {}} /></p>;
+        ) : <p>No skills data found.</p>;
         break;
       case 'education':
         output = data.education.length > 0 ? (
            <div className="space-y-3">
             {data.education.map(edu => (
               <div key={edu.id}>
-                <p>> <span className="font-bold text-yellow-400">{edu.degree}</span> - {edu.institution}</p>
+                <p>{'>'} <span className="font-bold text-yellow-400">{edu.degree}</span> - {edu.institution}</p>
                 <p className="pl-4 text-gray-400">{edu.startDate} - {edu.endDate}</p>
               </div>
             ))}
           </div>
-        ) : <p><AnimatedText text="No education data found." onComplete={() => {}} /></p>;
+        ) : <p>No education data found.</p>;
         break;
       case 'portfolio':
          output = data.portfolio.length > 0 ? (
            <div className="space-y-3">
             {data.portfolio.map(item => (
               <div key={item.id}>
-                <p>> <a href={item.url} target="_blank" rel="noopener noreferrer" className="font-bold text-yellow-400 hover:underline">{item.title}</a></p>
-                <div className="pl-4"><AnimatedText text={item.description} onComplete={() => {}} /></div>
+                <p>{'>'} <a href={item.url} target="_blank" rel="noopener noreferrer" className="font-bold text-yellow-400 hover:underline">{item.title}</a></p>
+                <div className="pl-4">{item.description}</div>
               </div>
             ))}
           </div>
-        ) : <p><AnimatedText text="No portfolio data found." onComplete={() => {}} /></p>;
+        ) : <p>No portfolio data found.</p>;
         break;
       case 'references':
         output = data.references.length > 0 ? (
           <div className="space-y-2">
             {data.references.map(ref => (
-              <p key={ref.id}>> <span className="font-bold">{ref.name}</span> ({ref.relation}) - {ref.contact}</p>
+              <p key={ref.id}>&gt; <span className="font-bold">{ref.name}</span> ({ref.relation}) - {ref.contact}</p>
             ))}
           </div>
-        ) : <p><AnimatedText text="References available upon request." onComplete={() => {}} /></p>;
+        ) : <p>References available upon request.</p>;
         break;
       case data.custom.title.toLowerCase():
          output = data.custom.items.length > 0 ? (
@@ -137,17 +137,17 @@ export function RetroTerminalTemplate({ data }: RetroTerminalTemplateProps) {
             {data.custom.items.map(item => (
               <div key={item.id} className="whitespace-pre-line flex">
                 <span>-&nbsp;</span>
-                <AnimatedText text={item.description} onComplete={() => {}} />
+                {item.description}
               </div>
             ))}
           </div>
-        ) : <p><AnimatedText text="Section not found." onComplete={() => {}} /></p>;
+        ) : <p>Section not found.</p>;
         break;
       case 'clear':
         setHistory([]);
         return;
       default:
-        output = <p><AnimatedText text={`Command not found: ${cmd}. Type 'help' for a list of commands.`} onComplete={() => {}} /></p>;
+        output = <p>{`Command not found: ${cmd}. Type 'help' for a list of commands.`}</p>;
     }
     
     newHistory.push(<div key={history.length + 1} className="py-2">{output}</div>);

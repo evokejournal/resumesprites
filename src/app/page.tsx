@@ -1,11 +1,13 @@
 
 "use client";
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { ArrowRight } from 'lucide-react';
+import { useAuth } from '@/context/AuthContext';
+import { useRouter } from 'next/navigation';
 
 import { CareerPathPreview } from "@/components/templates/previews/CareerPathPreview";
 import { RetroTerminalPreview } from "@/components/templates/previews/RetroTerminalPreview";
@@ -17,7 +19,7 @@ import { MutedElegancePreview } from "@/components/templates/previews/MutedElega
 import { PeachPitPreview } from "@/components/templates/previews/PeachPitPreview";
 import { ExtremelyProfessionalPreview } from "@/components/templates/previews/ExtremelyProfessionalPreview";
 import { YoublePreview } from "@/components/templates/previews/GoobleItPreview";
-import { ReceiptRollPreview } from "@/components/templates/previews/ReceiptRollPreview";
+import { ForTaxPurposesPreview } from "@/components/templates/previews/ReceiptRollPreview";
 import { ExplosivePotentialPreview } from "@/components/templates/previews/ExplosivePotentialPreview";
 import { cn } from '@/lib/utils';
 import { templates } from '@/lib/templates';
@@ -53,6 +55,28 @@ const VerticalCarousel = ({
 };
 
 export default function HeroPage() {
+  const { user, loading } = useAuth();
+  const router = useRouter();
+
+  // Redirect authenticated users to builder
+  useEffect(() => {
+    if (!loading && user) {
+      router.push('/builder');
+    }
+  }, [user, loading, router]);
+
+  // Don't render the landing page if user is authenticated
+  if (loading || user) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+          <p className="text-muted-foreground">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
   // To ensure no two same templates appear at once, we'll shuffle the order for each column.
   const column1Templates = [...templates];
   // Offset by a third
@@ -102,7 +126,7 @@ export default function HeroPage() {
             className="mt-12 w-full max-w-sm sm:max-w-md grid grid-cols-1 sm:grid-cols-2 gap-4"
         >
             <Button asChild size="lg" className="text-lg font-semibold rounded-full bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg transition-transform hover:scale-105">
-                <Link href="/builder">
+                <Link href="/auth">
                     Log In / Sign Up
                 </Link>
             </Button>

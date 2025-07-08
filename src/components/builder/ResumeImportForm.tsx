@@ -34,7 +34,10 @@ export function ResumeImportForm() {
                     const skills = parsedData.skills?.map(item => ({...item, id: `skill${Math.random()}`})) || currentData.skills;
                     const portfolio = parsedData.portfolio?.map(item => ({...item, id: `port${Math.random()}`})) || currentData.portfolio;
                     const references = parsedData.references?.map(item => ({...item, id: `ref${Math.random()}`})) || currentData.references;
-                    const custom = parsedData.custom || currentData.custom;
+                    const custom = parsedData.custom ? {
+                        ...parsedData.custom,
+                        items: parsedData.custom.items?.map(item => ({...item, id: `custom${Math.random()}`})) || []
+                    } : currentData.custom;
 
                     return {
                         ...currentData,

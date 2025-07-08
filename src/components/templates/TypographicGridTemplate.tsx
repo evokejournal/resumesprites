@@ -49,6 +49,7 @@ const themes = {
 
 interface TemplateProps {
   data: ResumeData;
+  pdfMode?: boolean;
 }
 
 const Section = ({ title, children, className, theme }: { title: string, children: React.ReactNode, className?: string, theme: typeof themes.original }) => (
@@ -61,7 +62,7 @@ const Section = ({ title, children, className, theme }: { title: string, childre
     </div>
 );
 
-export function TypographicGridTemplate({ data }: TemplateProps) {
+export function TypographicGridTemplate({ data, pdfMode }: TemplateProps) {
     const { about, contact, experience, education, skills, portfolio, custom, interests, references } = data;
     const theme = themes[data.theme as keyof typeof themes] || themes.original;
 

@@ -20,7 +20,7 @@ export function Window({ id, title, children, zIndex, initialX, initialY, onClos
   return (
     <motion.div
       drag
-      dragHandle=".drag-handle"
+      dragMomentum={false}
       dragMomentum={false}
       initial={{ x: initialX, y: initialY, scale: 0.8, opacity: 0 }}
       animate={{ scale: 1, opacity: 1 }}

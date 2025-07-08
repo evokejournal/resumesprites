@@ -19,80 +19,59 @@ import { SmsConversationTemplate } from '@/components/templates/SmsConversationT
 import { MainLayout } from '@/components/MainLayout';
 import { Loader2 } from 'lucide-react';
 import { CodeSyntaxTemplate } from '@/components/templates/CodeSyntaxTemplate';
-import { CreepyLampTemplate } from '@/components/templates/CreepyLampTemplate';
-import { MirrorMirrorTemplate } from '@/components/templates/MirrorMirrorTemplate';
+import { DigitalDashboardTemplate } from '@/components/templates/DigitalDashboardTemplate';
+import { templateComponentMap } from '@/lib/templates';
+import { useParams } from 'next/navigation';
+import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
 
-export default function PreviewPage({ params }: { params: { id: string } }) {
+export default function PreviewPage() {
   const { resumeData, isHydrated } = useResume();
+  const params = useParams();
+  const templateId = params.id as string;
   const [isCoverLetterOpen, setCoverLetterOpen] = useState(false);
-
-  // Open cover letter if it exists
-  React.useEffect(() => {
-    if (resumeData.coverLetter) {
-      setCoverLetterOpen(true);
-    }
-  }, [resumeData.coverLetter]);
 
   if (!isHydrated) {
     return (
-      <MainLayout>
-        <div className="flex h-[calc(100vh-100px)] items-center justify-center">
-          <div className="text-center">
-            <Loader2 className="mx-auto h-12 w-12 animate-spin text-muted-foreground" />
-            <p className="mt-4 text-lg text-muted-foreground">Loading Live Preview...</p>
+      <ProtectedRoute>
+        <MainLayout>
+          <div className="flex items-center justify-center min-h-[50vh]">
+            <div className="text-center">
+              <Loader2 className="w-8 h-8 animate-spin text-primary mx-auto mb-4" />
+              <p className="text-muted-foreground">Loading preview...</p>
+            </div>
           </div>
-        </div>
-      </MainLayout>
+        </MainLayout>
+      </ProtectedRoute>
     );
   }
 
-  const renderTemplate = () => {
-    const props = {
-      data: resumeData,
-      isCoverLetterOpen: isCoverLetterOpen,
-      setCoverLetterOpen: setCoverLetterOpen,
-    };
+  const TemplateComponent = templateComponentMap[templateId];
 
-    switch (resumeData.template) {
-      case 'mirror-mirror':
-        return <MirrorMirrorTemplate {...props} />;
-      case 'creepy-lamp':
-        return <CreepyLampTemplate {...props} />;
-      case 'code-syntax':
-        return <CodeSyntaxTemplate {...props} />;
-      case 'retro-terminal':
-        return <RetroTerminalTemplate {...props} />;
-      case 'operating-system':
-        return <OperatingSystemTemplate {...props} />;
-      case 'scarlet-timeline':
-        return <ScarletTimelineTemplate {...props} />;
-      case 'typographic-grid':
-        return <TypographicGridTemplate {...props} />;
-      case 'obsidian':
-        return <ObsidianTemplate {...props} />;
-      case 'muted-elegance':
-        return <MutedEleganceTemplate {...props} />;
-      case 'peach-pit':
-        return <PeachPitTemplate {...props} />;
-      case 'extremely-professional':
-        return <ExtremelyProfessionalTemplate {...props} />;
-      case 'youble':
-        return <YoubleTemplate {...props} />;
-      case 'for-tax-purposes':
-        return <ForTaxPurposesTemplate {...props} />;
-      case 'explosive-potential':
-        return <ExplosivePotentialTemplate {...props} />;
-      case 'sms-conversation':
-        return <SmsConversationTemplate {...props} />;
-      case 'career-path':
-      default:
-        return <CareerPathTemplate {...props} />;
-    }
-  };
+  if (!TemplateComponent) {
+    return (
+      <ProtectedRoute>
+        <MainLayout>
+          <div className="flex items-center justify-center min-h-[50vh]">
+            <div className="text-center">
+              <p className="text-muted-foreground">Template not found.</p>
+            </div>
+          </div>
+        </MainLayout>
+      </ProtectedRoute>
+    );
+  }
 
   return (
-    <MainLayout>
-      {renderTemplate()}
-    </MainLayout>
+    <ProtectedRoute>
+      <MainLayout>
+        <div className="min-h-screen">
+          <TemplateComponent 
+            data={resumeData} 
+            isCoverLetterOpen={isCoverLetterOpen}
+            setCoverLetterOpen={setCoverLetterOpen}
+          />
+        </div>
+      </MainLayout>
+    </ProtectedRoute>
   );
 }

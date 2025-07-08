@@ -2,10 +2,11 @@
 'use client';
 
 import React, { useState, useEffect, useMemo, useRef } from 'react';
-import type { ResumeData } from '@/lib/types';
 import { motion, AnimatePresence } from 'framer-motion';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
+import { ResumeData } from '@/lib/types';
 import { cn } from '@/lib/utils';
-import { CoverLetterModal } from '@/components/CoverLetterModal';
 import { User } from 'lucide-react';
 
 interface TemplateProps {
@@ -16,41 +17,29 @@ interface TemplateProps {
 
 const TypingIndicator = ({ name }: { name: string }) => (
   <motion.div
-    initial={{ opacity: 0, y: 10 }}
+    initial={{ opacity: 0, y: 20 }}
     animate={{ opacity: 1, y: 0 }}
-    className="flex items-center space-x-2 p-3"
+    exit={{ opacity: 0, y: -20 }}
+    className="flex items-center space-x-2 p-4"
   >
-    <div className="flex items-center space-x-1.5">
-        <span className="sr-only">Typing...</span>
-        <motion.div
-            className="h-1.5 w-1.5 bg-gray-400 rounded-full"
-            animate={{ y: [0, -3, 0] }}
-            transition={{ duration: 0.9, repeat: Infinity, ease: "easeInOut" }}
-        />
-        <motion.div
-            className="h-1.5 w-1.5 bg-gray-400 rounded-full"
-            animate={{ y: [0, -3, 0] }}
-            transition={{ duration: 0.9, delay: 0.1, repeat: Infinity, ease: "easeInOut" }}
-        />
-        <motion.div
-            className="h-1.5 w-1.5 bg-gray-400 rounded-full"
-            animate={{ y: [0, -3, 0] }}
-            transition={{ duration: 0.9, delay: 0.2, repeat: Infinity, ease: "easeInOut" }}
-        />
+    <div className="flex space-x-1">
+      <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
+      <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
+      <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
     </div>
-    <p className="text-xs text-gray-500">{name} is typing...</p>
+    <span className="text-sm text-gray-500">{name} is typing...</span>
   </motion.div>
 );
 
 const MessageBubble = ({ sender, children }: { sender: 'recruiter' | 'candidate', children: React.ReactNode }) => {
   const isCandidate = sender === 'candidate';
+  
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.4, ease: 'easeOut' }}
       className={cn(
-        "flex w-full mb-3",
+        "flex mb-4",
         isCandidate ? "justify-end" : "justify-start"
       )}
     >
@@ -65,7 +54,6 @@ const MessageBubble = ({ sender, children }: { sender: 'recruiter' | 'candidate'
     </motion.div>
   );
 };
-
 
 export function SmsConversationTemplate({ data, isCoverLetterOpen, setCoverLetterOpen }: TemplateProps) {
   const [messages, setMessages] = useState<React.ReactNode[]>([]);
@@ -146,7 +134,7 @@ export function SmsConversationTemplate({ data, isCoverLetterOpen, setCoverLette
       if (item.type === 'typing') {
         const randomDelay = Math.random() * 2000 + 1000; // 1-3 seconds
         const delayTimeout = setTimeout(() => {
-            const typerName = item.who === 'candidate' ? data.about.name.split(' ')[0] : 'Recruiter';
+            const typerName = (item as any).who === 'candidate' ? data.about.name.split(' ')[0] : 'Recruiter';
             setTypingUser(typerName);
             
             // This is how long the typing indicator is visible
@@ -154,7 +142,7 @@ export function SmsConversationTemplate({ data, isCoverLetterOpen, setCoverLette
                 setTypingUser(null);
                 currentMessageIndex++;
                 processNextMessage();
-            }, item.delay);
+            }, (item as any).delay);
             timeouts.push(typingDurationTimeout);
         }, randomDelay);
         timeouts.push(delayTimeout);
@@ -187,7 +175,7 @@ export function SmsConversationTemplate({ data, isCoverLetterOpen, setCoverLette
       }, 100);
     }
   }, [messages]);
-  
+
   return (
     <div className="bg-white min-h-screen p-4 font-sans">
         <div className="w-full max-w-lg mx-auto">

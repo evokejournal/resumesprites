@@ -77,6 +77,7 @@ const themes = {
 
 interface TemplateProps {
   data: ResumeData;
+  pdfMode?: boolean;
 }
 
 const SectionTitle = ({ title, className, theme }: { title: string, className?: string, theme: typeof themes.original }) => (
@@ -87,8 +88,19 @@ const SectionTitle = ({ title, className, theme }: { title: string, className?: 
     </div>
 );
 
-const TimelineEntry = ({ onRightSide, children, animationDelay }: { onRightSide: boolean, children: React.ReactNode, animationDelay: number }) => {
-    return (
+const TimelineEntry = ({ onRightSide, children, animationDelay, pdfMode }: { onRightSide: boolean, children: React.ReactNode, animationDelay: number, pdfMode?: boolean }) => {
+    return pdfMode ? (
+        <div
+            className={cn(
+                "my-12 flex w-1/2 relative",
+                onRightSide ? "ml-[50%] -translate-x-12 pl-6" : "mr-[50%] translate-x-12 pr-6"
+            )}
+        >
+            <div className={cn("w-full", onRightSide ? 'text-left' : 'text-right')}>
+                {children}
+            </div>
+        </div>
+    ) : (
         <motion.div
             className={cn(
                 "my-12 flex w-1/2 relative",
@@ -105,7 +117,7 @@ const TimelineEntry = ({ onRightSide, children, animationDelay }: { onRightSide:
     );
 };
 
-export function ScarletTimelineTemplate({ data }: TemplateProps) {
+export function ScarletTimelineTemplate({ data, pdfMode }: TemplateProps) {
     const { about, contact, experience, education, skills, portfolio, references, custom } = data;
     const theme = themes[data.theme as keyof typeof themes] || themes.original;
     
@@ -122,29 +134,49 @@ export function ScarletTimelineTemplate({ data }: TemplateProps) {
     const headerPosition = firstSectionIsOnRight ? 'left-8 text-left' : 'right-8 text-right';
 
     return (
-        <div className={cn("relative min-h-screen w-full overflow-x-hidden py-24 px-4 font-serif antialiased", theme.bg, theme.text)} style={{'--font-family-serif': 'Georgia, "Times New Roman", Times, serif'}}>
-            <motion.div
-                className={cn("absolute top-0 left-1/2 z-0 h-full w-48 -translate-x-full", theme.timelineBg)}
-                initial={{ height: 0 }}
-                animate={{ height: "100%" }}
-                transition={{ duration: 1.2, ease: [0.22, 1, 0.36, 1] }}
-            />
+        <div className={cn("relative min-h-screen w-full overflow-x-hidden py-24 px-4 font-serif antialiased", theme.bg, theme.text)} style={{'--font-family-serif': 'Georgia, "Times New Roman", Times, serif'} as React.CSSProperties}>
+            {pdfMode ? (
+                <div
+                    className={cn("absolute top-0 left-1/2 z-0 h-full w-48 -translate-x-full", theme.timelineBg)}
+                />
+            ) : (
+                <motion.div
+                    className={cn("absolute top-0 left-1/2 z-0 h-full w-48 -translate-x-full", theme.timelineBg)}
+                    initial={{ height: 0 }}
+                    animate={{ height: "100%" }}
+                    transition={{ duration: 1.2, ease: [0.22, 1, 0.36, 1] }}
+                />
+            )}
 
             <div className="relative z-10 mx-auto max-w-5xl">
-                <motion.div 
-                    className={cn("absolute top-0", headerPosition)}
-                    style={{ top: '-4rem' }}
-                    initial={{ opacity: 0, y: -20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 1.2, duration: 0.5 }}
-                >
-                     <h1 className="text-4xl font-bold uppercase tracking-wider text-black/80">{about.name}</h1>
-                     <h2 className={cn("text-xl", theme.subtleText)}>{about.jobTitle}</h2>
-                     <div className={cn("mt-2 text-sm space-y-1", theme.subtleText)}>
-                        <p>{contact.email}</p>
-                        <p>{contact.phone}</p>
-                     </div>
-                </motion.div>
+                {pdfMode ? (
+                    <div 
+                        className={cn("absolute top-0", headerPosition)}
+                        style={{ top: '-4rem' }}
+                    >
+                         <h1 className="text-4xl font-bold uppercase tracking-wider text-black/80">{about.name}</h1>
+                         <h2 className={cn("text-xl", theme.subtleText)}>{about.jobTitle}</h2>
+                         <div className={cn("mt-2 text-sm space-y-1", theme.subtleText)}>
+                            <p>{contact.email}</p>
+                            <p>{contact.phone}</p>
+                         </div>
+                    </div>
+                ) : (
+                    <motion.div 
+                        className={cn("absolute top-0", headerPosition)}
+                        style={{ top: '-4rem' }}
+                        initial={{ opacity: 0, y: -20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 1.2, duration: 0.5 }}
+                    >
+                         <h1 className="text-4xl font-bold uppercase tracking-wider text-black/80">{about.name}</h1>
+                         <h2 className={cn("text-xl", theme.subtleText)}>{about.jobTitle}</h2>
+                         <div className={cn("mt-2 text-sm space-y-1", theme.subtleText)}>
+                            <p>{contact.email}</p>
+                            <p>{contact.phone}</p>
+                         </div>
+                    </motion.div>
+                )}
 
                 <div>
                     {sections.map((section, index) => {
@@ -154,6 +186,7 @@ export function ScarletTimelineTemplate({ data }: TemplateProps) {
                                 key={section.id}
                                 onRightSide={onRightSide}
                                 animationDelay={1.2 + index * 0.3}
+                                pdfMode={pdfMode}
                             >
                                 <SectionTitle title={section.title} theme={theme} />
                                 <div className="space-y-4 text-sm text-black/70">

@@ -8,12 +8,43 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 
 interface TemplateProps {
   data: ResumeData;
-  isCoverLetterOpen: boolean;
-  setCoverLetterOpen: (open: boolean) => void;
+  isCoverLetterOpen?: boolean;
+  setCoverLetterOpen?: (open: boolean) => void;
+  pdfMode?: boolean;
 }
 
-export function ModernTemplate({ data, isCoverLetterOpen, setCoverLetterOpen }: TemplateProps) {
-  const { about, contact, experience, education, skills, portfolio, references, custom } = data;
+export function ModernTemplate({ data, isCoverLetterOpen, setCoverLetterOpen, pdfMode }: TemplateProps) {
+  const { about, contact, experience, education, skills, portfolio, references, custom, coverLetter } = data;
+
+  if (pdfMode) {
+    // PDF mode: Only render cover letter and view online message, styled
+    const currentDate = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+    return (
+      <div className="p-12 font-body bg-white text-neutral-800 max-w-2xl mx-auto">
+        <header className="flex justify-between items-start mb-8 border-b-2 border-teal-500 pb-4">
+          <div>
+            <h1 className="text-4xl font-headline font-bold text-teal-600">{about.name}</h1>
+            <h2 className="text-xl font-light text-neutral-500 mt-1">{about.jobTitle}</h2>
+          </div>
+          <div className="text-right text-sm text-neutral-500">
+            <p>{contact.email}</p>
+            <p>{contact.phone}</p>
+            <p>{contact.website}</p>
+            <p>{contact.location}</p>
+          </div>
+        </header>
+        <div className="mb-6 text-neutral-500">{currentDate}</div>
+        <div className="mb-10 text-neutral-700 whitespace-pre-line text-base">
+          {coverLetter || 'No cover letter provided.'}
+        </div>
+        <div className="pt-8 border-t text-center text-neutral-700">
+          <p className="text-lg font-semibold">My interactive resume can be viewed online here:</p>
+          {/* The actual link and password will be injected by the PDF API */}
+          <div className="mt-2 text-md">(Link and password will appear here)</div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <>

@@ -25,6 +25,7 @@ const randomFoodPosition = (snake: {x:number, y:number}[]) => {
 
 interface TemplateProps {
   data: ResumeData;
+  pdfMode?: boolean;
 }
 
 const SectionDisplay = ({ sectionData }: { sectionData: any }) => {
@@ -111,7 +112,7 @@ const SectionDisplay = ({ sectionData }: { sectionData: any }) => {
 }
 
 
-export function SnakebiteResumeTemplate({ data }: TemplateProps) {
+export function SnakebiteResumeTemplate({ data, pdfMode }: TemplateProps) {
   const [snake, setSnake] = useState([{ x: 12, y: 12 }]);
   const [food, setFood] = useState({ x: 18, y: 12 });
   const [direction, setDirection] = useState<'UP' | 'DOWN' | 'LEFT' | 'RIGHT'>('RIGHT');
@@ -134,6 +135,7 @@ export function SnakebiteResumeTemplate({ data }: TemplateProps) {
   }, [data]);
   
   const handleKeyDown = useCallback((e: KeyboardEvent) => {
+    if (pdfMode) return;
     e.preventDefault();
     if (gameState !== 'playing') return;
     switch (e.key) {
@@ -142,16 +144,18 @@ export function SnakebiteResumeTemplate({ data }: TemplateProps) {
       case 'ArrowLeft': setDirection(d => d !== 'RIGHT' ? 'LEFT' : d); break;
       case 'ArrowRight': setDirection(d => d !== 'LEFT' ? 'RIGHT' : d); break;
     }
-  }, [gameState]);
+  }, [gameState, pdfMode]);
 
   useEffect(() => {
+    if (pdfMode) return;
     window.addEventListener('keydown', handleKeyDown);
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
     };
-  }, [handleKeyDown]);
+  }, [handleKeyDown, pdfMode]);
   
   useEffect(() => {
+    if (pdfMode) return;
     if (gameState !== 'playing') {
         return;
     }
@@ -199,7 +203,23 @@ export function SnakebiteResumeTemplate({ data }: TemplateProps) {
     }, speed);
 
     return () => clearInterval(gameInterval);
-  }, [snake, direction, speed, food, gameState, resumeChunks, nextSectionIndex]);
+  }, [snake, direction, speed, food, gameState, resumeChunks, nextSectionIndex, pdfMode]);
+
+  if (pdfMode) {
+    return (
+      <div className="font-pixelify bg-[#9bbc0f] min-h-screen w-full p-8 text-[#0f380f]">
+        <div className="max-w-4xl mx-auto bg-[#8bac0f] rounded-lg shadow-2xl p-8 border-4 border-black/20">
+          <div className="space-y-6">
+            {resumeChunks.map((section) => (
+              <div key={section.id}>
+                <SectionDisplay sectionData={section} />
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div 

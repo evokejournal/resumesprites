@@ -14,22 +14,28 @@ import { ForTaxPurposesPreview } from "@/components/templates/previews/ReceiptRo
 import { ExplosivePotentialPreview } from "@/components/templates/previews/ExplosivePotentialPreview";
 import { SmsConversationPreview } from '@/components/templates/previews/SmsConversationPreview';
 import { CodeSyntaxPreview } from '@/components/templates/previews/CodeSyntaxPreview';
-import { CreepyLampPreview } from '@/components/templates/previews/CreepyLampPreview';
-import { MirrorMirrorPreview } from '@/components/templates/previews/MirrorMirrorPreview';
+import { DigitalDashboardPreview } from "@/components/templates/previews/DigitalDashboardPreview";
+import { ModernTemplate } from "@/components/templates/ModernTemplate";
+import { YoubleTemplate } from "@/components/templates/GoobleItTemplate";
+import { MineHireTemplate } from "@/components/templates/MineHireTemplate";
+import { ObsidianTemplate } from "@/components/templates/ObsidianTemplate";
+import { PeachPitTemplate } from "@/components/templates/PeachPitTemplate";
+import { ForTaxPurposesTemplate } from "@/components/templates/ReceiptRollTemplate";
+import { RetroTerminalTemplate } from "@/components/templates/RetroTerminalTemplate";
+import { ScarletTimelineTemplate } from "@/components/templates/ScarletTimelineTemplate";
+import { SmsConversationTemplate } from "@/components/templates/SmsConversationTemplate";
+import { SnakebiteResumeTemplate } from "@/components/templates/SnakebiteResumeTemplate";
+import { TypographicGridTemplate } from "@/components/templates/TypographicGridTemplate";
+import { OperationTemplate } from "@/components/templates/OperationTemplate";
+import { MutedEleganceTemplate } from "@/components/templates/MutedEleganceTemplate";
+import { CareerPathTemplate } from "@/components/templates/CareerPathTemplate";
+import { CodeSyntaxTemplate } from "@/components/templates/CodeSyntaxTemplate";
+import { ExplosivePotentialTemplate } from "@/components/templates/ExplosivePotentialTemplate";
+import { ExtremelyProfessionalTemplate } from "@/components/templates/ExtremelyProfessionalTemplate";
+import { DigitalDashboardTemplate } from "@/components/templates/DigitalDashboardTemplate";
+import { OperatingSystemTemplate } from "@/components/templates/OperatingSystemTemplate";
 
 export const templates = [
-  {
-    id: "mirror-mirror",
-    name: "Mirror, Mirror",
-    description: "A striking, symmetrical layout that mirrors your resume content across a central axis.",
-    previewComponent: <MirrorMirrorPreview />,
-  },
-  {
-    id: "creepy-lamp",
-    name: "Creepy Lamp",
-    description: "A spooky, interactive resume revealed by the flickering light of a swinging lamp.",
-    previewComponent: <CreepyLampPreview />,
-  },
   {
     id: "code-syntax",
     name: "Code Syntax",
@@ -114,4 +120,41 @@ export const templates = [
     description: "Soft neutral tones with minimalist serif fonts, smooth fades and scroll reveals.",
     previewComponent: <MutedElegancePreview />,
   },
+  {
+    id: "digital-dashboard",
+    name: "Digital Dashboard",
+    description: "A modern, card-based dashboard layout with widgets for each section.",
+    previewComponent: <DigitalDashboardPreview />,
+  },
 ];
+
+export const templateComponentMap: Record<string, React.ComponentType<any>> = {
+  'modern': ModernTemplate,
+  'youble': YoubleTemplate,
+  'mine-hire': MineHireTemplate,
+  'obsidian': ObsidianTemplate,
+  'peach-pit': PeachPitTemplate,
+  'for-tax-purposes': ForTaxPurposesTemplate,
+  'retro-terminal': RetroTerminalTemplate,
+  'scarlet-timeline': ScarletTimelineTemplate,
+  'sms-conversation': SmsConversationTemplate,
+  'snakebite-resume': SnakebiteResumeTemplate,
+  'typographic-grid': TypographicGridTemplate,
+  'operation': OperationTemplate,
+  'muted-elegance': MutedEleganceTemplate,
+  'career-path': CareerPathTemplate,
+  'code-syntax': CodeSyntaxTemplate,
+  'explosive-potential': ExplosivePotentialTemplate,
+  'extremely-professional': ExtremelyProfessionalTemplate,
+  'digital-dashboard': DigitalDashboardTemplate,
+  'operating-system': OperatingSystemTemplate,
+};
+
+export function getTemplateComponent(templateName: string): React.ComponentType<any> {
+  const Component = templateComponentMap[templateName];
+  if (!Component) {
+    console.warn(`Template component not found for: ${templateName}, falling back to modern`);
+    return templateComponentMap['modern'] || ModernTemplate;
+  }
+  return Component;
+}

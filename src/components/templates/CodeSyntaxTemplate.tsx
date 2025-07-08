@@ -69,19 +69,19 @@ const PongGame = ({ contentRef }: { contentRef: React.RefObject<HTMLDivElement> 
                 state.ballRelativePos.x += state.ballVel.x * deltaTime;
                 state.ballRelativePos.y += state.ballVel.y * deltaTime;
 
-                // --- Vertical Wall Collision (Top/Bottom) ---
-                const bottomWall = state.bounds.height - BALL_SIZE;
-                if (state.ballRelativePos.y < 0) {
-                    const overshoot = -state.ballRelativePos.y;
-                    state.ballRelativePos.y = overshoot;
+                // --- Vertical Wall Collision (Top/Bottom, viewport-based) ---
+                const ballAbsoluteY = state.bounds.top + state.ballRelativePos.y;
+                const topWall = 0;
+                const bottomWall = window.innerHeight - BALL_SIZE;
+                if (ballAbsoluteY < topWall) {
+                    const overshoot = topWall - ballAbsoluteY;
+                    state.ballRelativePos.y += overshoot;
                     state.ballVel.y *= -1;
-                } else if (state.ballRelativePos.y > bottomWall) {
-                    const overshoot = state.ballRelativePos.y - bottomWall;
-                    state.ballRelativePos.y = bottomWall - overshoot;
+                } else if (ballAbsoluteY > bottomWall) {
+                    const overshoot = ballAbsoluteY - bottomWall;
+                    state.ballRelativePos.y -= overshoot;
                     state.ballVel.y *= -1;
                 }
-
-                const ballAbsoluteY = state.bounds.top + state.ballRelativePos.y;
 
                 // --- AI Paddle Logic ---
                 const aiPaddleCenter = state.aiPaddleY + PADDLE_HEIGHT / 2;

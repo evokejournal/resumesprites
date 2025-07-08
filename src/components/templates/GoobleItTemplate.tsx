@@ -19,10 +19,11 @@ const YoubleLogo = ({ size = 'large' }: { size?: 'large' | 'small' }) => (
 
 interface TemplateProps {
   data: ResumeData;
+  pdfMode?: boolean;
 }
 
-export function YoubleTemplate({ data }: TemplateProps) {
-    const { about, contact, experience, education, skills, portfolio, references, custom } = data;
+export function YoubleTemplate({ data, pdfMode }: TemplateProps) {
+    const { about, contact, experience, education, skills, portfolio, references, custom, coverLetter } = data;
     const [query, setQuery] = useState('');
     const [submittedQuery, setSubmittedQuery] = useState('');
     const [showResults, setShowResults] = useState(false);
@@ -60,6 +61,40 @@ export function YoubleTemplate({ data }: TemplateProps) {
             <div className="text-sm text-[#4d5156] mt-1">{snippet}</div>
         </div>
     );
+
+    if (pdfMode) {
+        const currentDate = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+        return (
+            <div className="bg-white min-h-screen flex flex-col items-center justify-center font-sans p-8">
+                <div className="mb-8">
+                    <YoubleLogo />
+                </div>
+                <div className="bg-gray-50 border border-gray-200 rounded-lg p-8 max-w-2xl w-full">
+                    <div className="flex justify-between items-start mb-6">
+                        <div>
+                            <h1 className="text-3xl font-bold text-[#4285F4]">{about.name}</h1>
+                            <p className="text-gray-600">{about.jobTitle}</p>
+                        </div>
+                        <div className="text-right text-sm text-gray-500">
+                            <p>{contact.email}</p>
+                            <p>{contact.phone}</p>
+                            <p>{contact.website}</p>
+                            <p>{contact.location}</p>
+                        </div>
+                    </div>
+                    <div className="mb-4 text-gray-500">{currentDate}</div>
+                    <div className="mb-8 text-gray-700 whitespace-pre-line text-base">
+                        {coverLetter || 'No cover letter provided.'}
+                    </div>
+                    <div className="pt-6 border-t text-center text-gray-700">
+                        <p className="text-lg font-semibold">My interactive resume can be viewed online here:</p>
+                        {/* The actual link and password will be injected by the PDF API */}
+                        <div className="mt-2 text-md">(Link and password will appear here)</div>
+                    </div>
+                </div>
+            </div>
+        );
+    }
 
     if (!showResults) {
         return (

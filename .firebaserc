@@ -1,0 +1,8 @@
+{
+  "projects": {
+    "default": "resumesprites",
+    "staging": "resumesprites-ffaae"
+  },
+  "targets": {},
+  "etags": {}
+}

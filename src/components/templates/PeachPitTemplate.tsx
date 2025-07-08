@@ -50,26 +50,38 @@ const themes = {
 
 interface TemplateProps {
   data: ResumeData;
+  pdfMode?: boolean;
 }
 
-const Section = ({ title, children, className, theme }: { title: string, children: React.ReactNode, className?: string, theme: typeof themes.original }) => (
-    <motion.section 
-        className={`mb-10 ${className}`}
-        initial={{ opacity: 0, y: 20 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true, amount: 0.5 }}
-        transition={{ duration: 0.5 }}
-    >
-        <div className={cn("inline-block", theme.accentBg)}>
-            <h2 className={cn("text-xs font-bold uppercase tracking-widest px-2 py-1", theme.accentText)}>{title}</h2>
-        </div>
-        <div className="text-sm">
-            {children}
-        </div>
-    </motion.section>
+const Section = ({ title, children, className, theme, pdfMode }: { title: string, children: React.ReactNode, className?: string, theme: typeof themes.original, pdfMode?: boolean }) => (
+    pdfMode ? (
+        <section className={`mb-10 ${className}`}>
+            <div className={cn("inline-block", theme.accentBg)}>
+                <h2 className={cn("text-xs font-bold uppercase tracking-widest px-2 py-1", theme.accentText)}>{title}</h2>
+            </div>
+            <div className="text-sm">
+                {children}
+            </div>
+        </section>
+    ) : (
+        <motion.section 
+            className={`mb-10 ${className}`}
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, amount: 0.5 }}
+            transition={{ duration: 0.5 }}
+        >
+            <div className={cn("inline-block", theme.accentBg)}>
+                <h2 className={cn("text-xs font-bold uppercase tracking-widest px-2 py-1", theme.accentText)}>{title}</h2>
+            </div>
+            <div className="text-sm">
+                {children}
+            </div>
+        </motion.section>
+    )
 );
 
-export function PeachPitTemplate({ data }: TemplateProps) {
+export function PeachPitTemplate({ data, pdfMode }: TemplateProps) {
     const { about, contact, experience, education, skills, portfolio, references, custom } = data;
     const theme = themes[data.theme as keyof typeof themes] || themes.original;
 
@@ -78,23 +90,27 @@ export function PeachPitTemplate({ data }: TemplateProps) {
             <header className={cn("w-full py-24 sm:py-32 md:py-40 px-8 sm:px-12 md:px-16", theme.headerBg)}>
                 <div className="max-w-5xl mx-auto flex flex-col md:flex-row items-center justify-center gap-8 md:gap-16">
                     <div className="flex-shrink-0">
-                        <motion.h1 
-                            className="text-9xl font-thin tracking-tighter"
-                            initial={{ opacity: 0, y: -20, rotate: 5 }}
-                            animate={{
-                              opacity: 1,
-                              y: 0,
-                              rotate: 0,
-                              transition: {
-                                type: 'spring',
-                                stiffness: 80,
-                                damping: 8,
-                                mass: 0.8,
-                              },
-                            }}
-                        >
-                            Hello.
-                        </motion.h1>
+                        {pdfMode ? (
+                            <h1 className="text-9xl font-thin tracking-tighter">Hello.</h1>
+                        ) : (
+                            <motion.h1 
+                                className="text-9xl font-thin tracking-tighter"
+                                initial={{ opacity: 0, y: -20, rotate: 5 }}
+                                animate={{
+                                  opacity: 1,
+                                  y: 0,
+                                  rotate: 0,
+                                  transition: {
+                                    type: 'spring',
+                                    stiffness: 80,
+                                    damping: 8,
+                                    mass: 0.8,
+                                  },
+                                }}
+                            >
+                                Hello.
+                            </motion.h1>
+                        )}
                     </div>
                     <div className="md:w-2/5 md:max-w-xs text-sm leading-relaxed whitespace-pre-line">
                         <p>{about.summary}</p>
@@ -120,7 +136,7 @@ export function PeachPitTemplate({ data }: TemplateProps) {
                         {/* Left Column */}
                         <div>
                             {experience.length > 0 && (
-                                <Section title="Experience" theme={theme}>
+                                <Section title="Experience" theme={theme} pdfMode={pdfMode}>
                                     <div className="space-y-6">
                                         {experience.map(job => (
                                             <div key={job.id}>
@@ -134,7 +150,7 @@ export function PeachPitTemplate({ data }: TemplateProps) {
                                 </Section>
                             )}
                             {references.length > 0 && (
-                                <Section title="References" theme={theme}>
+                                <Section title="References" theme={theme} pdfMode={pdfMode}>
                                     <div className="space-y-4">
                                         {references.map(ref => (
                                             <div key={ref.id}>
@@ -150,7 +166,7 @@ export function PeachPitTemplate({ data }: TemplateProps) {
                         {/* Right Column */}
                          <div>
                             {education.length > 0 && (
-                                <Section title="Education" theme={theme}>
+                                <Section title="Education" theme={theme} pdfMode={pdfMode}>
                                     <div className="space-y-6">
                                         {education.map(edu => (
                                              <div key={edu.id}>
@@ -163,14 +179,14 @@ export function PeachPitTemplate({ data }: TemplateProps) {
                                 </Section>
                             )}
                              {skills.length > 0 && (
-                                <Section title="Skills" theme={theme}>
+                                <Section title="Skills" theme={theme} pdfMode={pdfMode}>
                                     <ul className="space-y-1">
                                         {skills.map(skill => <li key={skill.id}>{skill.name}</li>)}
                                     </ul>
                                 </Section>
                             )}
                              {portfolio.length > 0 && (
-                                <Section title="Portfolio" theme={theme}>
+                                <Section title="Portfolio" theme={theme} pdfMode={pdfMode}>
                                     <div className="space-y-4">
                                         {portfolio.map(item => (
                                             <div key={item.id}>
@@ -182,7 +198,7 @@ export function PeachPitTemplate({ data }: TemplateProps) {
                                 </Section>
                             )}
                             {custom.items.length > 0 && (
-                                <Section title={custom.title || 'Accomplishments'} theme={theme}>
+                                <Section title={custom.title || 'Accomplishments'} theme={theme} pdfMode={pdfMode}>
                                     <ul className="space-y-1 list-disc list-inside">
                                         {custom.items.map(item => <li key={item.id}>{item.description}</li>)}
                                     </ul>

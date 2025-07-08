@@ -17,10 +17,16 @@ import { LayoutGrid, FileText, Link as LinkIcon, LogOut, Eye, Sparkles, Settings
 import { Button } from './ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
 import { useResume } from '@/context/ResumeContext';
+import { useAuth } from '@/context/AuthContext';
+import { signOut } from 'firebase/auth';
+import { auth } from '@/lib/firebase';
+import { useRouter } from 'next/navigation';
 
 export function SidebarNav() {
   const pathname = usePathname();
   const { resumeData } = useResume();
+  const { user } = useAuth();
+  const router = useRouter();
   const [isMounted, setIsMounted] = useState(false);
 
   useEffect(() => {
@@ -29,11 +35,29 @@ export function SidebarNav() {
   
   const previewHref = isMounted ? `/preview/${resumeData.template}` : '#';
 
+  const handleSignOut = async () => {
+    try {
+      await signOut(auth);
+      router.push('/');
+    } catch (error) {
+      console.error('Error signing out:', error);
+    }
+  };
+
+  const getUserInitials = (name: string) => {
+    return name
+      .split(' ')
+      .map(word => word.charAt(0))
+      .join('')
+      .toUpperCase()
+      .slice(0, 2);
+  };
+
   const menuItems = [
     { href: '/builder', label: 'Builder', icon: <LayoutGrid /> },
     { href: '/templates', label: 'Templates', icon: <FileText /> },
     { href: previewHref, label: 'Live Preview', icon: <Eye /> },
-    { href: '/dashboard', label: 'Dashboard', icon: <LinkIcon /> },
+    { href: '/dashboard', label: 'Link Dashboard', icon: <LinkIcon /> },
     { href: '/settings', label: 'Settings', icon: <Settings /> },
   ];
 
@@ -101,14 +125,26 @@ export function SidebarNav() {
       <SidebarFooter>
         <div className="flex items-center gap-3 p-2">
             <Avatar className="h-9 w-9">
-              <AvatarImage src="https://placehold.co/40x40.png" alt="@shadcn" data-ai-hint="profile picture" />
-              <AvatarFallback>AD</AvatarFallback>
+              <AvatarImage src={user?.photoURL || undefined} alt={user?.displayName || 'User'} />
+              <AvatarFallback>
+                {user?.displayName ? getUserInitials(user.displayName) : user?.email?.charAt(0).toUpperCase() || 'U'}
+              </AvatarFallback>
             </Avatar>
             <div className="flex flex-col">
-              <span className="text-sm font-medium">Alex Doe</span>
-              <span className="text-xs text-muted-foreground">alex.doe@example.com</span>
+              <span className="text-sm font-medium">
+                {user?.displayName || user?.email?.split('@')[0] || 'User'}
+              </span>
+              <span className="text-xs text-muted-foreground">
+                {user?.email || 'Not signed in'}
+              </span>
             </div>
-            <Button variant="ghost" size="icon" className="ml-auto">
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              className="ml-auto"
+              onClick={handleSignOut}
+              title="Sign out"
+            >
                 <LogOut className="h-4 w-4" />
             </Button>
         </div>

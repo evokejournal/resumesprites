@@ -84,28 +84,6 @@ export const initialResumeData: ResumeData = {
   coverLetter: "To Whom It May Concern,\n\nI am writing to express my keen interest in the developer position I saw advertised. With a proven track record of developing robust and scalable web applications, I am confident that I possess the skills, experience, and passion necessary to make a significant contribution to your team.\n\nMy experience at Tech Solutions Inc. involved leading a team to deliver a high-traffic e-commerce platform, where I was responsible for both front-end and back-end development. This role honed my abilities in React, Next.js, and Node.js, and gave me valuable experience in mentoring junior developers and overseeing project lifecycles.\n\nI am particularly drawn to your company's commitment to innovation and user-centric design, values that I share and have championed in my own work. I am eager to bring my technical expertise and creative problem-solving skills to a new and exciting challenge.\n\nThank you for considering my application. I have attached my interactive resume for your review and welcome the opportunity to discuss how I can benefit your organization.\n\nSincerely,\nAlex Doe",
 };
 
-export const mockDashboardLinks = [
-  {
-    id: 'link1',
-    url: 'https://resumespri.tes/aB3xZ9',
-    views: 12,
-    lastAccessed: '2 hours ago',
-  },
-  {
-    id: 'link2',
-    url: 'https://resumespri.tes/cV7yW1',
-    views: 3,
-    lastAccessed: '1 day ago',
-  },
-  {
-    id: 'link3',
-    url: 'https://resumespri.tes/dF5uP4',
-    views: 0,
-    lastAccessed: 'Never',
-  },
-];
-
-
 export const templateThemes = {
   'career-path': [
     { id: 'forest', name: 'Forest', colors: ['#57534E', '#16A34A', '#F5F5F4'] },

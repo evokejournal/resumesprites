@@ -5,13 +5,13 @@ import React, { useState, useEffect, useMemo, useRef } from 'react';
 import type { ResumeData } from '@/lib/types';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
-import { CoverLetterModal } from '@/components/CoverLetterModal';
 import { Heart, Brain, Bone, Star, FolderGit2, Briefcase, GraduationCap, Users, Wrench, ShieldQuestion } from 'lucide-react';
 
 interface TemplateProps {
   data: ResumeData;
   isCoverLetterOpen: boolean;
   setCoverLetterOpen: (open: boolean) => void;
+  pdfMode?: boolean;
 }
 
 const organConfig = {
@@ -37,12 +37,13 @@ const Organ = ({ id, Icon, position, onSuccessfulExtraction, className }: { id: 
     </motion.button>
 );
 
-export function OperationTemplate({ data, isCoverLetterOpen, setCoverLetterOpen }: TemplateProps) {
+export function OperationTemplate({ data, isCoverLetterOpen, setCoverLetterOpen, pdfMode }: TemplateProps) {
     const [buzzerOn, setBuzzerOn] = useState(false);
     const [revealedSection, setRevealedSection] = useState<any>(null);
     const buzzTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
     const handleMouseLeavePatient = () => {
+        if (pdfMode) return;
         setBuzzerOn(true);
         if (buzzTimeoutRef.current) {
             clearTimeout(buzzTimeoutRef.current);
@@ -53,6 +54,7 @@ export function OperationTemplate({ data, isCoverLetterOpen, setCoverLetterOpen 
     };
 
     const handleMouseEnterPatient = () => {
+        if (pdfMode) return;
         if (buzzTimeoutRef.current) {
             clearTimeout(buzzTimeoutRef.current);
         }
@@ -74,9 +76,70 @@ export function OperationTemplate({ data, isCoverLetterOpen, setCoverLetterOpen 
     ];
 
     const handleSuccessfulExtraction = (id: string) => {
+        if (pdfMode) return;
         const section = sections.find(s => s.id === id);
         setRevealedSection(section);
     };
+
+    if (pdfMode) {
+        return (
+            <div className="min-h-screen bg-green-200 p-8 font-body">
+                <div className="max-w-4xl mx-auto">
+                    <h1 className="text-3xl md:text-5xl font-bold text-red-600 mb-8 text-center font-bungee">Operation: Management</h1>
+                    
+                    <div className="bg-yellow-50 rounded-lg shadow-xl p-8">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                            {sections.map((section) => (
+                                <div key={section.id} className="space-y-4">
+                                    <div className="flex items-center gap-3">
+                                        <section.Icon className="w-6 h-6 text-red-700" />
+                                        <h2 className="text-2xl font-bold text-red-600 font-bungee">{section.label}</h2>
+                                    </div>
+                                    <div className="space-y-4 text-sm">
+                                        {section.id === 'experience' && (section.data as ResumeData['experience']).map(item => (
+                                            <div key={item.id}>
+                                                <h4 className="font-bold">{item.role}</h4>
+                                                <p>{item.company}</p>
+                                                <p className="whitespace-pre-line text-xs">{item.description}</p>
+                                            </div>
+                                        ))}
+                                        {section.id === 'skills' && (
+                                            <div className="flex flex-wrap gap-2">
+                                                {(section.data as ResumeData['skills']).map(item => (
+                                                    <span key={item.id} className="bg-green-200 px-2 py-1 rounded">{item.name}</span>
+                                                ))}
+                                            </div>
+                                        )}
+                                        {section.id === 'education' && (section.data as ResumeData['education']).map(item => (
+                                            <div key={item.id}>
+                                                <h4 className="font-bold">{item.degree}</h4>
+                                                <p>{item.institution}</p>
+                                            </div>
+                                        ))}
+                                        {section.id === 'portfolio' && (section.data as ResumeData['portfolio']).map(item => (
+                                            <div key={item.id}>
+                                                <span className="font-bold">{item.title}</span>
+                                                <p className="text-xs">{item.description}</p>
+                                            </div>
+                                        ))}
+                                        {section.id === 'references' && (section.data as ResumeData['references']).map(item => (
+                                            <div key={item.id}>
+                                                <h4 className="font-bold">{item.name}</h4>
+                                                <p>{item.relation}</p>
+                                            </div>
+                                        ))}
+                                        {section.id === 'custom' && (section.data as ResumeData['custom']).items.map(item => (
+                                            <p key={item.id}>{item.description}</p>
+                                        ))}
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        );
+    }
     
     return (
         <div className="min-h-screen bg-green-200 flex flex-col items-center justify-center p-4 font-body overflow-hidden cursor-crosshair">

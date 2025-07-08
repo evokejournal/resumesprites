@@ -21,8 +21,7 @@ import { ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { CodeSyntaxTemplate } from '@/components/templates/CodeSyntaxTemplate';
-import { CreepyLampTemplate } from '@/components/templates/CreepyLampTemplate';
-import { MirrorMirrorTemplate } from '@/components/templates/MirrorMirrorTemplate';
+import { DigitalDashboardTemplate } from '@/components/templates/DigitalDashboardTemplate';
 
 export default function PublicPreviewPage() {
   const params = useParams();
@@ -44,10 +43,6 @@ export default function PublicPreviewPage() {
     };
 
     switch (resumeData.template) {
-      case 'mirror-mirror':
-        return <MirrorMirrorTemplate {...props} />;
-      case 'creepy-lamp':
-        return <CreepyLampTemplate {...props} />;
       case 'code-syntax':
         return <CodeSyntaxTemplate {...props} />;
       case 'retro-terminal':
@@ -77,6 +72,8 @@ export default function PublicPreviewPage() {
       case 'career-path':
       default:
         return <CareerPathTemplate {...props} />;
+      case 'digital-dashboard':
+        return <DigitalDashboardTemplate {...props} />;
     }
   };
 

@@ -102,12 +102,44 @@ const SkillDots = ({ level, theme }: { level: number, theme: typeof themes.origi
 
 interface TemplateProps {
   data: ResumeData;
+  pdfMode?: boolean;
 }
 
-export function ObsidianTemplate({ data }: TemplateProps) {
-    const { about, contact, experience, education, skills, custom } = data;
+export function ObsidianTemplate({ data, pdfMode }: TemplateProps) {
+    const { about, contact, experience, education, skills, custom, coverLetter } = data;
     const [firstName, ...lastName] = about.name.split(' ');
     const theme = themes[data.theme as keyof typeof themes] || themes.original;
+
+    if (pdfMode) {
+      const currentDate = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+      return (
+        <div className={cn('min-h-screen bg-gradient-to-br font-body p-8 flex flex-col items-center justify-center', theme.bg, theme.text)}>
+          <div className={cn('max-w-2xl w-full rounded-3xl p-10 shadow-lg', theme.paper)}>
+            <header className="flex justify-between items-start mb-8 border-b-2 border-gray-300 pb-4">
+              <div>
+                <h1 className={cn('text-4xl font-black uppercase leading-none', theme.mainHeading)}>{about.name}</h1>
+                <h2 className={cn('text-xl font-light', theme.subHeading)}>{about.jobTitle}</h2>
+              </div>
+              <div className="text-right text-sm text-gray-500">
+                <p>{contact.email}</p>
+                <p>{contact.phone}</p>
+                <p>{contact.website}</p>
+                <p>{contact.location}</p>
+              </div>
+            </header>
+            <div className="mb-6 text-gray-500">{currentDate}</div>
+            <div className="mb-10 text-gray-700 whitespace-pre-line text-base">
+              {coverLetter || 'No cover letter provided.'}
+            </div>
+            <div className="pt-8 border-t text-center text-gray-700">
+              <p className="text-lg font-semibold">My interactive resume can be viewed online here:</p>
+              {/* The actual link and password will be injected by the PDF API */}
+              <div className="mt-2 text-md">(Link and password will appear here)</div>
+            </div>
+          </div>
+        </div>
+      );
+    }
 
     return (
         <div className={cn("min-h-screen bg-gradient-to-br font-body p-4 sm:p-8", theme.bg, theme.text)}>
