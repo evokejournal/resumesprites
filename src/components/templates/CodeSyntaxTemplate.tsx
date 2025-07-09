@@ -12,7 +12,7 @@ const BALL_SIZE = 10;
 const PADDLE_OUTSIDE_OFFSET = 24; // Corresponds to p-6 padding
 
 // --- Pong Game Component ---
-const PongGame = ({ contentRef }: { contentRef: React.RefObject<HTMLDivElement> }) => {
+const PongGame = ({ contentRef, isPaused }: { contentRef: React.RefObject<HTMLDivElement>; isPaused?: boolean }) => {
     // These states are for triggering re-renders to show the game elements on screen
     const [ballPos, setBallPos] = useState({ x: -100, y: -100 });
     const [leftPaddleY, setLeftPaddleY] = useState(0);
@@ -43,9 +43,9 @@ const PongGame = ({ contentRef }: { contentRef: React.RefObject<HTMLDivElement> 
         gameState.current.ballVel = { x: newVelX, y: newVelY };
         gameState.current.status = 'paused';
         setTimeout(() => {
-            if (gameState.current) gameState.current.status = 'playing';
+            if (gameState.current && !isPaused) gameState.current.status = 'playing';
         }, 1000);
-    }, []);
+    }, [isPaused]);
 
     useEffect(() => {
         let animationFrameId: number;
@@ -63,6 +63,11 @@ const PongGame = ({ contentRef }: { contentRef: React.RefObject<HTMLDivElement> 
             // Cap deltaTime to prevent huge jumps on tab resume
             const deltaTime = Math.min(5, (currentTime - state.lastTime) / 16.67);
             state.lastTime = currentTime;
+
+            // Pause game when modal is open
+            if (isPaused) {
+                state.status = 'paused';
+            }
 
             if (state.status === 'playing') {
                 // --- Ball Movement ---
@@ -131,7 +136,9 @@ const PongGame = ({ contentRef }: { contentRef: React.RefObject<HTMLDivElement> 
         };
 
         const handleMouseMove = (e: MouseEvent) => {
-            gameState.current.playerPaddleY = Math.max(0, Math.min(e.clientY - PADDLE_HEIGHT / 2, window.innerHeight - PADDLE_HEIGHT));
+            if (!isPaused) {
+                gameState.current.playerPaddleY = Math.max(0, Math.min(e.clientY - PADDLE_HEIGHT / 2, window.innerHeight - PADDLE_HEIGHT));
+            }
         };
 
         const measureAndStart = () => {
@@ -162,7 +169,7 @@ const PongGame = ({ contentRef }: { contentRef: React.RefObject<HTMLDivElement> 
             window.removeEventListener('mousemove', handleMouseMove);
             cancelAnimationFrame(animationFrameId);
         };
-    }, [contentRef, resetBall]);
+    }, [contentRef, resetBall, isPaused]);
 
     if (!isVisible || !gameState.current.bounds) return null;
 
@@ -192,7 +199,7 @@ const PongGame = ({ contentRef }: { contentRef: React.RefObject<HTMLDivElement> 
             />
             {/* Ball */}
             <div
-                className="bg-white"
+                className="bg-white rounded-full"
                 style={{
                     position: 'fixed',
                     left: `${ballPos.x}px`,
@@ -205,15 +212,33 @@ const PongGame = ({ contentRef }: { contentRef: React.RefObject<HTMLDivElement> 
     );
 };
 
-
 interface TemplateProps {
   data: ResumeData;
 }
 
 export function CodeSyntaxTemplate({ data }: TemplateProps) {
-  const { about, contact, experience, education, skills, portfolio, references, custom } = data;
-  const lineCounter = useRef(1);
+  const { about, contact, experience, education, skills, portfolio, references, custom, coverLetter } = data;
   const contentRef = useRef<HTMLDivElement>(null);
+  const lineCounter = useRef(1);
+  const [showCoverLetter, setShowCoverLetter] = useState(false);
+  const [modalPosition, setModalPosition] = useState({ left: 0, width: '100vw' });
+
+  // Auto-open cover letter modal on mount if cover letter exists
+  useEffect(() => {
+    if (coverLetter && coverLetter.trim() !== '') {
+      setShowCoverLetter(true);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (showCoverLetter && contentRef.current) {
+      const rect = contentRef.current.getBoundingClientRect();
+      setModalPosition({
+        left: rect.left,
+        width: `${rect.width}px`
+      });
+    }
+  }, [showCoverLetter]);
 
   const renderLine = (content: React.ReactNode) => {
     const lineNum = lineCounter.current;
@@ -335,13 +360,40 @@ export function CodeSyntaxTemplate({ data }: TemplateProps) {
     return lines;
   };
   
+  const renderCoverLetterLines = () => {
+    if (!coverLetter || coverLetter.trim() === '') {
+      return (
+        <div className="flex">
+          <span className="w-8 select-none text-right text-gray-500">2</span>
+          <span className="pl-4 flex-1 text-gray-500">// No cover letter available</span>
+        </div>
+      );
+    }
+
+    const lines = coverLetter.split('\n');
+    return lines.map((line, index) => (
+      <div key={index} className="flex">
+        <span className="w-8 select-none text-right text-gray-500">{index + 2}</span>
+        <span className="pl-4 flex-1 text-white whitespace-pre-wrap">{line || ' '}</span>
+      </div>
+    ));
+  };
+
+
+
   return (
     <div className="font-code bg-[#1E1E1E] text-white min-h-screen p-4 sm:p-8 relative overflow-hidden">
-      <PongGame contentRef={contentRef} />
+      <PongGame contentRef={contentRef} isPaused={showCoverLetter} />
+
+
 
       <div ref={contentRef} className="relative z-10 max-w-4xl mx-auto bg-[#252526] p-6 rounded-lg shadow-2xl border border-gray-700">
         <div className="text-center mb-8 border-b border-gray-700 pb-4">
-          <h1 className="font-pixelify text-5xl md:text-7xl text-green-400" style={{ textShadow: '0 0 8px rgba(52, 211, 153, 0.5)'}}>
+          <h1 
+            className="font-pixelify text-5xl md:text-7xl text-green-400 cursor-pointer hover:text-green-300 transition-colors" 
+            style={{ textShadow: '0 0 8px rgba(52, 211, 153, 0.5)'}}
+            onClick={() => setShowCoverLetter(true)}
+          >
             Hello, World!
           </h1>
           <p className="text-gray-400 mt-2">// My name is {about.name}, and this is my resume.</p>
@@ -351,6 +403,44 @@ export function CodeSyntaxTemplate({ data }: TemplateProps) {
             {codeContent()}
         </div>
       </div>
+
+      {/* Cover Letter Modal */}
+      {showCoverLetter && (
+        <div 
+          className="fixed z-50 flex items-start justify-center bg-black/90 p-4"
+          style={{
+            top: 0,
+            left: modalPosition.left,
+            width: modalPosition.width,
+            height: '100vh'
+          }}
+        >
+          <div className="relative max-w-4xl w-full max-h-[60vh] bg-[#252526] border border-gray-700 rounded-lg shadow-2xl overflow-hidden font-code flex flex-col mt-4">
+            {/* Modal header as code line */}
+            <div className="flex items-center border-b border-gray-700 px-6 py-4 flex-shrink-0">
+              <span className="w-8 select-none text-right text-gray-500">1</span>
+              <span className="pl-4 flex-1 text-purple-400">// Cover Letter for {about.name}</span>
+              <button
+                className="ml-4 px-2 py-1 rounded bg-[#18181b] border border-gray-700 text-gray-400 font-code text-sm hover:text-red-400 hover:bg-[#232324] transition-colors"
+                onClick={() => setShowCoverLetter(false)}
+                aria-label="Close"
+              >
+                {'// close'}
+              </button>
+            </div>
+            {/* Modal content as code lines */}
+            <div className="px-6 py-6 overflow-y-auto flex-1">
+              {/* Cover letter header */}
+              <div className="flex">
+                <span className="w-8 select-none text-right text-gray-500">1</span>
+                <span className="pl-4 flex-1 text-gray-500">// Cover Letter for {about.name}</span>
+              </div>
+              {/* Actual cover letter content */}
+              {renderCoverLetterLines()}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

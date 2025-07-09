@@ -5,9 +5,8 @@ interface CareerPathPreviewProps {
   name?: string;
 }
 
-export function CareerPathPreview({ theme, name }: CareerPathPreviewProps) {
-  const defaultColors = ['#94A3B8', '#3B82F6', '#F1F5F9'];
-  const colors = theme?.colors || defaultColors;
+export function CareerPathPreview({ name }: CareerPathPreviewProps) {
+  const colors = ['#94A3B8', '#3B82F6', '#F1F5F9'];
   const [primary, accent, background] = colors;
   const isDark = parseInt(background.substring(1, 3), 16) < 128; // Simple check if background is dark
   const textColor = isDark ? '#FFFFFF' : '#0F172A';

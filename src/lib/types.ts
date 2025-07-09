@@ -95,6 +95,5 @@ export interface ResumeData {
   references: Reference[];
   custom: CustomSection;
   template: string;
-  theme: string;
   coverLetter?: string;
 }

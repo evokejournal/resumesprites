@@ -2,15 +2,26 @@
 
 import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Lock, Eye, EyeOff } from 'lucide-react';
+import { Card, CardContent } from '@/components/ui/card';
+import { Lock } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { db } from '@/lib/firebase';
 import { collection, query, where, getDocs, updateDoc, doc } from 'firebase/firestore';
 import { GeneratedLink, ResumeData } from '@/lib/types';
 import { getTemplateComponent } from '@/lib/templates';
+import {
+  CodeSyntaxPasswordScreen,
+  RetroTerminalPasswordScreen,
+  OperatingSystemPasswordScreen,
+  ObsidianPasswordScreen,
+  ModernPasswordScreen,
+  YoublePasswordScreen,
+  PeachPitPasswordScreen,
+  SmsConversationPasswordScreen,
+  ReceiptRollPasswordScreen,
+  ExplosivePotentialPasswordScreen,
+  SnakebitePasswordScreen
+} from '@/components/templates/password-screens';
 
 export default function ResumeViewPage() {
   const params = useParams();
@@ -18,11 +29,10 @@ export default function ResumeViewPage() {
   const { toast } = useToast();
   
   const [link, setLink] = useState<GeneratedLink | null>(null);
-  const [password, setPassword] = useState('');
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
-  const [showPassword, setShowPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<string | undefined>(undefined);
 
   // Load link data on mount
   useEffect(() => {
@@ -98,20 +108,17 @@ export default function ResumeViewPage() {
     }
   };
 
-  const handlePasswordSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!password.trim() || !link) return;
+  const handlePasswordSubmit = async (submittedPassword: string) => {
+    if (!submittedPassword.trim() || !link) return;
 
     setIsSubmitting(true);
+    setError(undefined);
     
     // Simple password check
-    if (password === link.password) {
+    if (submittedPassword === link.password) {
       setIsAuthenticated(true);
-      toast({
-        title: "Access granted",
-        description: "Welcome to the resume!",
-      });
     } else {
+      setError("Incorrect password. Please try again.");
       toast({
         title: "Incorrect password",
         description: "Please check your password and try again.",
@@ -150,54 +157,110 @@ export default function ResumeViewPage() {
   }
 
   if (!isAuthenticated) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background to-muted">
-        <Card className="w-full max-w-md">
-          <CardHeader className="text-center">
-            <div className="mx-auto mb-4 p-3 bg-primary/10 rounded-full w-fit">
-              <Lock className="h-8 w-8 text-primary" />
-            </div>
-            <CardTitle>Password Protected Resume</CardTitle>
-            <CardDescription>
-              Enter the password to view this resume
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={handlePasswordSubmit} className="space-y-4">
-              <div className="relative">
-                <Input
-                  type={showPassword ? "text" : "password"}
-                  placeholder="Enter password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="pr-10"
-                />
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  className="absolute right-0 top-0 h-full px-3 hover:bg-transparent"
-                  onClick={() => setShowPassword(!showPassword)}
-                >
-                  {showPassword ? (
-                    <EyeOff className="h-4 w-4" />
-                  ) : (
-                    <Eye className="h-4 w-4" />
-                  )}
-                </Button>
-              </div>
-              <Button 
-                type="submit" 
-                className="w-full" 
-                disabled={isSubmitting || !password.trim()}
-              >
-                {isSubmitting ? 'Checking...' : 'View Resume'}
-              </Button>
-            </form>
-          </CardContent>
-        </Card>
-      </div>
-    );
+    const getPasswordScreen = () => {
+      switch (link.templateSnapshot) {
+        case 'code-syntax':
+          return (
+            <CodeSyntaxPasswordScreen
+              onSubmit={handlePasswordSubmit}
+              isSubmitting={isSubmitting}
+              error={error}
+            />
+          );
+        case 'retro-terminal':
+          return (
+            <RetroTerminalPasswordScreen
+              onSubmit={handlePasswordSubmit}
+              isSubmitting={isSubmitting}
+              error={error}
+            />
+          );
+        case 'operating-system':
+          return (
+            <OperatingSystemPasswordScreen
+              onSubmit={handlePasswordSubmit}
+              isSubmitting={isSubmitting}
+              error={error}
+            />
+          );
+        case 'obsidian':
+          return (
+            <ObsidianPasswordScreen
+              onSubmit={handlePasswordSubmit}
+              isSubmitting={isSubmitting}
+              error={error}
+            />
+          );
+        case 'modern':
+          return (
+            <ModernPasswordScreen
+              onSubmit={handlePasswordSubmit}
+              isSubmitting={isSubmitting}
+              error={error}
+            />
+          );
+        case 'youble':
+          return (
+            <YoublePasswordScreen
+              onSubmit={handlePasswordSubmit}
+              isSubmitting={isSubmitting}
+              error={error}
+            />
+          );
+        case 'peach-pit':
+          return (
+            <PeachPitPasswordScreen
+              onSubmit={handlePasswordSubmit}
+              isSubmitting={isSubmitting}
+              error={error}
+            />
+          );
+        case 'sms-conversation':
+          return (
+            <SmsConversationPasswordScreen
+              onSubmit={handlePasswordSubmit}
+              isSubmitting={isSubmitting}
+              error={error}
+            />
+          );
+        case 'for-tax-purposes':
+          return (
+            <ReceiptRollPasswordScreen
+              onSubmit={handlePasswordSubmit}
+              loading={isSubmitting}
+              error={error}
+            />
+          );
+        case 'explosive-potential':
+          return (
+            <ExplosivePotentialPasswordScreen
+              onSubmit={handlePasswordSubmit}
+              isSubmitting={isSubmitting}
+              error={error}
+              name={link?.resumeDataSnapshot?.about?.name}
+            />
+          );
+        case 'snakebite-resume':
+          return (
+            <SnakebitePasswordScreen
+              onSubmit={handlePasswordSubmit}
+              loading={isSubmitting}
+              error={error}
+              name={link?.resumeDataSnapshot?.about?.name}
+            />
+          );
+        default:
+          return (
+            <ModernPasswordScreen
+              onSubmit={handlePasswordSubmit}
+              isSubmitting={isSubmitting}
+              error={error}
+            />
+          );
+      }
+    };
+
+    return getPasswordScreen();
   }
 
   // Render the animated template
@@ -207,7 +270,6 @@ export default function ResumeViewPage() {
     <div className="min-h-screen bg-background">
       <TemplateComponent 
         data={link.resumeDataSnapshot} 
-        theme={link.resumeDataSnapshot.theme}
         isPreview={false}
       />
     </div>

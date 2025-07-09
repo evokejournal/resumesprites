@@ -56,7 +56,6 @@ export function SidebarNav() {
   const menuItems = [
     { href: '/builder', label: 'Builder', icon: <LayoutGrid /> },
     { href: '/templates', label: 'Templates', icon: <FileText /> },
-    { href: previewHref, label: 'Live Preview', icon: <Eye /> },
     { href: '/dashboard', label: 'Link Dashboard', icon: <LinkIcon /> },
     { href: '/settings', label: 'Settings', icon: <Settings /> },
   ];

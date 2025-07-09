@@ -25,8 +25,9 @@ interface ResumeContextType {
   setResumeData: React.Dispatch<React.SetStateAction<ResumeData>>;
   updateField: <T extends keyof ResumeData>(section: T, value: ResumeData[T]) => void;
   generatedLinks: GeneratedLink[];
-  generateResumeLink: (password: string) => Promise<GeneratedLink>;
+  generateResumeLink: (password: string, templateOverride?: string) => Promise<GeneratedLink>;
   deleteGeneratedLink: (id: string) => Promise<void>;
+  refreshLinks: () => Promise<void>;
   isHydrated: boolean;
   loading: boolean;
   error: string | null;
@@ -52,7 +53,9 @@ export const ResumeProvider = ({ children }: { children: ReactNode }) => {
   const sanitizeResumeData = (data: ResumeData): ResumeData => {
     const clean = (obj: any): any => {
       if (obj === null || obj === undefined) return '';
-      if (typeof obj === 'string') return obj.trim();
+      if (typeof obj === 'string') {
+        return obj.trim();
+      }
       if (typeof obj === 'number') return obj;
       if (typeof obj === 'boolean') return obj;
       if (Array.isArray(obj)) {
@@ -71,7 +74,16 @@ export const ResumeProvider = ({ children }: { children: ReactNode }) => {
       return String(obj);
     };
 
-    return clean(data) as ResumeData;
+    // Create a copy of the data and exclude the photo field
+    const dataWithoutPhoto = {
+      ...data,
+      about: {
+        ...data.about,
+        photo: '' // Clear photo field to prevent Firestore issues
+      }
+    };
+
+    return clean(dataWithoutPhoto) as ResumeData;
   };
 
   // Generate a unique short ID
@@ -110,11 +122,20 @@ export const ResumeProvider = ({ children }: { children: ReactNode }) => {
     setError(null);
     const loadData = async () => {
       try {
+        console.log('Loading resume data from Firestore for user:', user.uid);
+        
         // Load resumeData
         const resumeSnap = await getDoc(resumeDocRef!);
         if (resumeSnap.exists()) {
-          setResumeData(resumeSnap.data() as ResumeData);
+          const loadedData = resumeSnap.data() as ResumeData;
+          console.log('Resume data loaded from Firestore:', { 
+            hasData: !!loadedData.about.name,
+            template: loadedData.template,
+            experienceCount: loadedData.experience.length 
+          });
+          setResumeData(loadedData);
         } else {
+          console.log('No existing resume data found, creating initial data');
           await setDoc(resumeDocRef!, initialResumeData);
           setResumeData(initialResumeData);
         }
@@ -122,7 +143,8 @@ export const ResumeProvider = ({ children }: { children: ReactNode }) => {
         // Load generatedLinks for current user
         const userLinksQuery = query(linksColRef, where('userId', '==', user.uid));
         const linksSnap = await getDocs(userLinksQuery);
-        setGeneratedLinks(linksSnap.docs.map(doc => ({ id: doc.id, ...doc.data() } as GeneratedLink)));
+        const links = linksSnap.docs.map(doc => ({ id: doc.id, ...doc.data() } as GeneratedLink));
+        setGeneratedLinks(links);
         
         setIsHydrated(true);
         setLoading(false);
@@ -150,22 +172,31 @@ export const ResumeProvider = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     if (user && isHydrated) {
       const sanitizedData = sanitizeResumeData(resumeData);
-      console.log('Saving sanitized resume data:', sanitizedData);
       
-      setDoc(resumeDocRef!, sanitizedData).catch((err) => {
-        console.error('Failed to save resume data:', err);
-        console.error('Error details:', {
-          code: err.code,
-          message: err.message,
-          details: err.details
-        });
-        if (err.message?.includes('CORS') || err.message?.includes('502') || err.code === 'unavailable') {
-          console.warn('Firebase connectivity issue detected. Resume data not saved');
-          setIsOffline(true);
-        } else {
-          setError('Failed to save resume data.');
-        }
+      console.log('Auto-saving resume data to Firestore...', { 
+        userId: user.uid, 
+        hasData: !!resumeData.about.name,
+        template: resumeData.template 
       });
+      
+      setDoc(resumeDocRef!, sanitizedData)
+        .then(() => {
+          console.log('Resume data saved successfully to Firestore');
+        })
+        .catch((err) => {
+          console.error('Failed to save resume data:', err);
+          console.error('Error details:', {
+            code: err.code,
+            message: err.message,
+            details: err.details
+          });
+          if (err.message?.includes('CORS') || err.message?.includes('502') || err.code === 'unavailable') {
+            console.warn('Firebase connectivity issue detected. Resume data not saved');
+            setIsOffline(true);
+          } else {
+            setError('Failed to save resume data.');
+          }
+        });
     }
     // eslint-disable-next-line
   }, [resumeData, user, isHydrated]);
@@ -177,21 +208,26 @@ export const ResumeProvider = ({ children }: { children: ReactNode }) => {
     }));
   };
 
-  const generateResumeLink = async (password: string): Promise<GeneratedLink> => {
-    if (!user) throw new Error('User not authenticated');
+  const generateResumeLink = async (password: string, templateOverride?: string): Promise<GeneratedLink> => {
+    if (!user) {
+      throw new Error('User not authenticated');
+    }
     
     try {
       const shortId = await generateUniqueShortId();
       const now = new Date().toISOString();
       
+      // Use the override template if provided, otherwise use the current template
+      const templateToUse = templateOverride || resumeData.template;
+      
       const newLink: Omit<GeneratedLink, 'id'> = {
         shortId,
         password,
         resumeDataSnapshot: sanitizeResumeData(resumeData),
-        templateSnapshot: resumeData.template,
+        templateSnapshot: templateToUse,
         createdAt: now,
         views: [],
-        userId: user.uid, // Add user ID to track ownership
+        userId: user.uid,
       };
 
       // Save to Firestore
@@ -201,9 +237,8 @@ export const ResumeProvider = ({ children }: { children: ReactNode }) => {
       // Update local state
       setGeneratedLinks(prev => [generatedLink, ...prev]);
       
-      console.log('Resume link generated successfully:', shortId);
       return generatedLink;
-    } catch (err) {
+    } catch (err: any) {
       console.error('Failed to generate resume link:', err);
       throw err;
     }
@@ -230,6 +265,23 @@ export const ResumeProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
+  const refreshLinks = async (): Promise<void> => {
+    if (!user) {
+      return;
+    }
+    
+    try {
+      // Reload generatedLinks from Firestore
+      const userLinksQuery = query(linksColRef, where('userId', '==', user.uid));
+      const linksSnap = await getDocs(userLinksQuery);
+      const links = linksSnap.docs.map(doc => ({ id: doc.id, ...doc.data() } as GeneratedLink));
+      setGeneratedLinks(links);
+    } catch (err: any) {
+      console.error('Failed to refresh links:', err);
+      throw err;
+    }
+  };
+
   return (
     <ResumeContext.Provider value={{ 
       resumeData, 
@@ -238,6 +290,7 @@ export const ResumeProvider = ({ children }: { children: ReactNode }) => {
       generatedLinks,
       generateResumeLink,
       deleteGeneratedLink,
+      refreshLinks,
       isHydrated, 
       loading, 
       error, 

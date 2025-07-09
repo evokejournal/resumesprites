@@ -5,9 +5,8 @@ interface ExtremelyProfessionalPreviewProps {
   name?: string;
 }
 
-export function ExtremelyProfessionalPreview({ theme, name }: ExtremelyProfessionalPreviewProps) {
-  const defaultColors = ['#475569', '#1E293B', '#F8FAFC'];
-  const colors = theme?.colors || defaultColors;
+export function ExtremelyProfessionalPreview({ name }: { name?: string }) {
+  const colors = ['#475569', '#1E293B', '#F8FAFC'];
   const [primary, accent, background] = colors;
   const isDark = parseInt(background.substring(1, 3), 16) < 128;
   const paperBg = isDark ? '#171717' : '#F8FAFC';

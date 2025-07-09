@@ -6,7 +6,6 @@ import React, { useState } from 'react';
 import { CareerPathTemplate } from '@/components/templates/CareerPathTemplate';
 import { RetroTerminalTemplate } from '@/components/templates/RetroTerminalTemplate';
 import { OperatingSystemTemplate } from '@/components/templates/OperatingSystemTemplate';
-import { ScarletTimelineTemplate } from '@/components/templates/ScarletTimelineTemplate';
 import { TypographicGridTemplate } from '@/components/templates/TypographicGridTemplate';
 import { ObsidianTemplate } from '@/components/templates/ObsidianTemplate';
 import { MutedEleganceTemplate } from '@/components/templates/MutedEleganceTemplate';
@@ -21,12 +20,12 @@ import { ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { CodeSyntaxTemplate } from '@/components/templates/CodeSyntaxTemplate';
-import { DigitalDashboardTemplate } from '@/components/templates/DigitalDashboardTemplate';
+
 
 export default function PublicPreviewPage() {
   const params = useParams();
   const id = Array.isArray(params.id) ? params.id[0] : params.id;
-  const resumeData = { ...initialResumeData, template: id };
+  const resumeData = { ...initialResumeData, template: id || 'career-path' };
   const [isCoverLetterOpen, setCoverLetterOpen] = useState(false);
 
   React.useEffect(() => {
@@ -49,8 +48,6 @@ export default function PublicPreviewPage() {
         return <RetroTerminalTemplate {...props} />;
       case 'operating-system':
         return <OperatingSystemTemplate {...props} />;
-      case 'scarlet-timeline':
-        return <ScarletTimelineTemplate {...props} />;
       case 'typographic-grid':
         return <TypographicGridTemplate {...props} />;
       case 'obsidian':
@@ -72,8 +69,6 @@ export default function PublicPreviewPage() {
       case 'career-path':
       default:
         return <CareerPathTemplate {...props} />;
-      case 'digital-dashboard':
-        return <DigitalDashboardTemplate {...props} />;
     }
   };
 

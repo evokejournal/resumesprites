@@ -35,7 +35,7 @@ export function RetroTerminalTemplate({ data }: RetroTerminalTemplateProps) {
 
   const availableCommands = useMemo(() => {
     const commandList: string[] = [];
-    commandList.push('about', 'contact', 'experience', 'education', 'skills', 'portfolio', 'references');
+    commandList.push('coverletter', 'about', 'contact', 'experience', 'education', 'skills', 'portfolio', 'references');
     if (data.custom?.title && data.custom.items.length > 0) {
       commandList.push(data.custom.title.toLowerCase());
     }
@@ -57,6 +57,14 @@ export function RetroTerminalTemplate({ data }: RetroTerminalTemplateProps) {
             </ul>
           </div>
         );
+        break;
+      case 'coverletter':
+        output = data.coverLetter && data.coverLetter.trim() ? (
+          <div className="space-y-2">
+            <p><span className="text-yellow-400 font-bold">Cover Letter</span></p>
+            <div className="whitespace-pre-line">{data.coverLetter}</div>
+          </div>
+        ) : <p>No cover letter available.</p>;
         break;
       case 'about':
         output = (

@@ -208,9 +208,41 @@ body {
   .scrollbar-hide {
     -ms-overflow-style: none;  /* IE and Edge */
     scrollbar-width: none;  /* Firefox */
+    /* Additional webkit properties for better coverage */
+    -webkit-overflow-scrolling: touch;
   }
   .scrollbar-hide::-webkit-scrollbar {
     display: none;  /* Safari and Chrome */
+    width: 0;
+    height: 0;
+  }
+  .scrollbar-hide::-webkit-scrollbar-track {
+    display: none;
+  }
+  .scrollbar-hide::-webkit-scrollbar-thumb {
+    display: none;
+  }
+  .scrollbar-hide::-webkit-scrollbar-corner {
+    display: none;
+  }
+  /* Hide scrollbar for the entire document */
+  html.scrollbar-hide {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+  html.scrollbar-hide::-webkit-scrollbar {
+    display: none;
+    width: 0;
+    height: 0;
+  }
+  body.scrollbar-hide {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+  body.scrollbar-hide::-webkit-scrollbar {
+    display: none;
+    width: 0;
+    height: 0;
   }
   @media print {
     .print\:hidden {

@@ -5,11 +5,10 @@ interface TypographicGridPreviewProps {
   name?: string;
 }
 
-export function TypographicGridPreview({ theme, name }: TypographicGridPreviewProps) {
-  const defaultColors = ['#000000', '#4A4A4A', '#FDFBF5'];
-  const colors = theme?.colors || defaultColors;
+export function TypographicGridPreview({ name }: { name?: string }) {
+  const colors = ['#000000', '#4A4A4A', '#FDFBF5'];
   const [primary, accent, background] = colors;
-  const displayName = name || 'John Smith';
+  const displayName = name || 'Jane Doe';
 
   return (
     <svg viewBox="0 0 300 300" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ fontFamily: 'serif' }}>

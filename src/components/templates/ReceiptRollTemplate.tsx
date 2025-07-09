@@ -70,16 +70,24 @@ const getNodeTextLength = (node: React.ReactNode): number => {
 
 
 export function ForTaxPurposesTemplate({ data, pdfMode }: TemplateProps) {
-    const { about, contact, experience, education, skills, portfolio, custom } = data;
+    const { about, contact, experience, education, skills, portfolio, custom, coverLetter } = data;
     const [lines, setLines] = useState<React.ReactNode[]>([]);
     const [isPrinting, setIsPrinting] = useState(false);
     const [animationKey, setAnimationKey] = useState(0);
+    const [isPrintingCoverLetter, setIsPrintingCoverLetter] = useState(false);
+    const [coverLetterAnimationKey, setCoverLetterAnimationKey] = useState(0);
     const paperRef = useRef<HTMLDivElement>(null);
 
     const handlePrintClick = (e: React.MouseEvent) => {
         e.stopPropagation();
-        if (isPrinting) return;
+        if (isPrinting || isPrintingCoverLetter) return;
         setAnimationKey(k => k + 1);
+    };
+
+    const handleCoverLetterPrintClick = (e: React.MouseEvent) => {
+        e.stopPropagation();
+        if (isPrinting || isPrintingCoverLetter) return;
+        setCoverLetterAnimationKey(k => k + 1);
     };
     
     const allContent = useMemo(() => {
@@ -156,6 +164,49 @@ export function ForTaxPurposesTemplate({ data, pdfMode }: TemplateProps) {
         return contentList;
     }, [data]);
 
+    const coverLetterContent = useMemo(() => {
+        if (!coverLetter || coverLetter.trim() === '') {
+            return [
+                <p className="text-xs text-center">NO COVER LETTER AVAILABLE</p>
+            ];
+        }
+
+        const separator = <p className="text-xs text-center">{"****************************************"}</p>;
+        const contentList: React.ReactNode[] = [];
+
+        const now = new Date();
+        const formattedDate = `${(now.getMonth() + 1).toString().padStart(2, '0')}/${now.getDate().toString().padStart(2, '0')}/${now.getFullYear()}`;
+        const formattedTime = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+        contentList.push(<h1 className="text-2xl font-bold tracking-widest text-center">COVER LETTER</h1>);
+        contentList.push(<p className="text-xs text-center">{about.name.toUpperCase()}</p>);
+        contentList.push(<p className="text-xs text-center">{about.jobTitle}</p>);
+        contentList.push(separator);
+        contentList.push(<ReceiptRow label="DATE/TIME:" value={`${formattedDate} ${formattedTime}`} />);
+        contentList.push(<ReceiptRow label="FROM:" value={about.name.toUpperCase()} />);
+        contentList.push(<ReceiptRow label="POSITION:" value={about.jobTitle} />);
+        contentList.push(separator);
+
+        // Split cover letter into paragraphs and print each line
+        const paragraphs = coverLetter.split('\n\n').filter(p => p.trim());
+        paragraphs.forEach(paragraph => {
+            const lines = paragraph.split('\n').filter(line => line.trim());
+            lines.forEach(line => {
+                if (line.trim()) {
+                    contentList.push(<p className="text-xs whitespace-pre-line">{line.trim()}</p>);
+                }
+            });
+            contentList.push(<div className="h-1" />);
+        });
+
+        contentList.push(separator);
+        contentList.push(<Barcode text={`${about.name}-COVER-${now.toISOString()}`} />);
+        contentList.push(<p className="text-xs text-center mt-2">THANK YOU FOR YOUR CONSIDERATION!</p>);
+        contentList.push(<p className="text-xs text-center">PLEASE VISIT AGAIN!</p>);
+        
+        return contentList;
+    }, [data, coverLetter]);
+
     useEffect(() => {
         if (pdfMode) return;
         if (animationKey === 0) return;
@@ -193,15 +244,50 @@ export function ForTaxPurposesTemplate({ data, pdfMode }: TemplateProps) {
 
     useEffect(() => {
         if (pdfMode) return;
+        if (coverLetterAnimationKey === 0) return;
+        
+        let isCancelled = false;
+        const timeouts: NodeJS.Timeout[] = [];
+        
+        setLines([]);
+        setIsPrintingCoverLetter(true);
+
+        let accumulatedDelay = 500;
+
+        coverLetterContent.forEach((lineContent) => {
+            const lineDelay = 40 + getNodeTextLength(lineContent) * 5;
+            accumulatedDelay += lineDelay;
+
+            const timeout = setTimeout(() => {
+                if (isCancelled) return;
+                setLines(prev => [...prev, lineContent]);
+            }, accumulatedDelay);
+            timeouts.push(timeout);
+        });
+        
+        const finalTimeout = setTimeout(() => {
+          if (isCancelled) return;
+          setIsPrintingCoverLetter(false);
+        }, accumulatedDelay + 500);
+        timeouts.push(finalTimeout);
+
+        return () => {
+            isCancelled = true;
+            timeouts.forEach(clearTimeout);
+        };
+    }, [coverLetterContent, coverLetterAnimationKey, pdfMode]);
+
+    useEffect(() => {
+        if (pdfMode) return;
         // Automatically scroll to the bottom as the receipt "prints"
-        if (isPrinting) {
+        if (isPrinting || isPrintingCoverLetter) {
             window.scrollTo({
                 top: document.body.scrollHeight,
                 behavior: 'smooth',
             });
         }
         // One final scroll after printing has finished to get to the very bottom
-        if (!isPrinting && animationKey > 0) {
+        if (!isPrinting && !isPrintingCoverLetter && (animationKey > 0 || coverLetterAnimationKey > 0)) {
             const timer = setTimeout(() => {
                 window.scrollTo({
                     top: document.body.scrollHeight,
@@ -210,7 +296,7 @@ export function ForTaxPurposesTemplate({ data, pdfMode }: TemplateProps) {
             }, 100); // Small delay to ensure the last line is rendered
             return () => clearTimeout(timer);
         }
-    }, [lines, isPrinting, animationKey, pdfMode]);
+    }, [lines, isPrinting, isPrintingCoverLetter, animationKey, coverLetterAnimationKey, pdfMode]);
     
     useEffect(() => {
         if (pdfMode) return;
@@ -253,28 +339,38 @@ export function ForTaxPurposesTemplate({ data, pdfMode }: TemplateProps) {
     return (
         <div className="bg-gray-200 font-code py-12 px-2 flex flex-col items-center min-h-screen text-black">
             <div className="w-full max-w-sm">
-                 <div onClick={handlePrintClick}>
+                 <div>
                     <div className="relative h-20 bg-gray-700 rounded-t-lg shadow-inner p-2">
-                        <button 
-                            disabled={isPrinting}
-                            className="absolute top-2 left-1/2 -translate-x-1/2 bg-red-600 text-white font-mono text-lg uppercase px-4 py-2 rounded-sm shadow-md hover:bg-red-700 active:bg-red-800 whitespace-nowrap z-10 disabled:bg-gray-500 h-10"
-                        >
-                            Print Resume
-                        </button>
+                        <div className="flex justify-between items-center h-full px-4">
+                            <button 
+                                disabled={isPrinting || isPrintingCoverLetter}
+                                onClick={handleCoverLetterPrintClick}
+                                className="bg-green-600 text-white font-mono text-sm uppercase px-3 py-2 rounded-sm shadow-md hover:bg-green-700 active:bg-green-800 whitespace-nowrap z-10 disabled:bg-gray-500 h-10"
+                            >
+                                Print Cover Letter
+                            </button>
+                            <button 
+                                disabled={isPrinting || isPrintingCoverLetter}
+                                onClick={handlePrintClick}
+                                className="bg-red-600 text-white font-mono text-sm uppercase px-3 py-2 rounded-sm shadow-md hover:bg-red-700 active:bg-red-800 whitespace-nowrap z-10 disabled:bg-gray-500 h-10"
+                            >
+                                Print Resume
+                            </button>
+                        </div>
                     </div>
                     <div className="h-6 bg-black rounded-b-md shadow-lg flex items-center p-2">
                         <div className="w-full h-1 bg-gray-800 rounded-full"></div>
                     </div>
                 </div>
                 
-                {animationKey > 0 && (
+                {(animationKey > 0 || coverLetterAnimationKey > 0) && (
                     <div className="relative -mt-2 w-[94%] mx-auto z-10">
                         <div ref={paperRef} className="w-full text-black shadow-lg bg-[#fdfdf2]">
                             <div className="relative z-10 p-4 space-y-1">
                                 <AnimatePresence>
                                     {lines.map((line, index) => (
                                         <motion.div 
-                                            key={`${animationKey}-${index}`}
+                                            key={`${animationKey}-${coverLetterAnimationKey}-${index}`}
                                             initial={{ opacity: 0, y: 10 }}
                                             animate={{ opacity: 1, y: 0 }}
                                             exit={{ opacity: 0 }}

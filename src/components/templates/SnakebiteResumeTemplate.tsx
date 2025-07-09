@@ -4,6 +4,8 @@
 import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import type { ResumeData } from '@/lib/types';
 import { motion, AnimatePresence } from 'framer-motion';
+import { cn } from '@/lib/utils';
+import { X } from 'lucide-react';
 
 const GRID_SIZE = 25;
 const INITIAL_SPEED = 200; // ms per move
@@ -23,32 +25,71 @@ const randomFoodPosition = (snake: {x:number, y:number}[]) => {
   }
 };
 
+const Confetti = ({ count = 400 }) => {
+    const colors = ['#0f380f', '#306230', '#8bac0f', '#9bbc0f', '#cadc9f'];
+    return (
+      <div className="absolute inset-0 z-50 overflow-hidden pointer-events-none">
+        {Array.from({ length: count }).map((_, i) => {
+          const color = colors[i % colors.length];
+          const size = Math.random() * 8 + 4; // size from 4 to 12px
+          return (
+            <motion.div
+              key={i}
+              className="absolute"
+              style={{
+                left: '50%',
+                top: '50%',
+                width: size,
+                height: size,
+                backgroundColor: color,
+              }}
+              animate={{
+                x: (Math.random() - 0.5) * 1500, // Spread horizontally
+                y: (Math.random() - 0.5) * 1500, // Spread vertically
+                rotate: Math.random() * 360,
+                opacity: [1, 1, 0],
+              }}
+              transition={{
+                duration: Math.random() * 2 + 1.5, // 1.5-3.5 seconds duration
+                ease: "easeOut",
+                delay: Math.random() * 0.2,
+              }}
+            />
+          );
+        })}
+      </div>
+    );
+};
+
 interface TemplateProps {
   data: ResumeData;
-  pdfMode?: boolean;
 }
 
 const SectionDisplay = ({ sectionData }: { sectionData: any }) => {
     if (!sectionData) return null;
     const { type, content } = sectionData;
 
+    const headingStyles = "font-mono font-bold text-xl";
+    const textStyles = "text-base ml-4";
+    const subTextStyles = "text-sm ml-4 my-1";
+    const detailStyles = "opacity-80";
+
     switch (type) {
         case 'about':
             return (
                 <div className="mb-4">
-                    <h2 className="text-xl font-bold">{content.name}</h2>
-                    <p className="text-lg">{content.jobTitle}</p>
-                    <p className="text-xs mt-1 whitespace-pre-line">{content.summary}</p>
+                    <h3 className={headingStyles}>› About Me</h3>
+                    <p className={`${textStyles} mt-1 whitespace-pre-line text-sm`}>{content.summary}</p>
                 </div>
             );
         case 'experience':
             return (
                 <div className="mb-2">
-                    <h3 className="font-bold">› Experience</h3>
+                    <h3 className={headingStyles}>› Experience</h3>
                     {(content as ResumeData['experience']).map(job => (
-                         <div key={job.id} className="text-xs ml-4 my-1">
-                            <p className="font-semibold">{job.role} at {job.company}</p>
-                            <p className="opacity-80">{job.startDate} - {job.endDate}</p>
+                         <div key={job.id} className={subTextStyles}>
+                            <p className="font-semibold text-base">{job.role} at {job.company}</p>
+                            <p className={detailStyles}>{job.startDate} - {job.endDate}</p>
                         </div>
                     ))}
                 </div>
@@ -56,18 +97,18 @@ const SectionDisplay = ({ sectionData }: { sectionData: any }) => {
         case 'skills':
              return (
                 <div className="mb-2">
-                    <h3 className="font-bold">› Skills</h3>
-                    <p className="text-xs ml-4">{(content as ResumeData['skills']).map((s: any) => s.name).join(', ')}</p>
+                    <h3 className={headingStyles}>› Skills</h3>
+                    <p className={textStyles}>{(content as ResumeData['skills']).map((s: any) => s.name).join(', ')}</p>
                 </div>
             );
         case 'education':
             return (
                  <div className="mb-2">
-                    <h3 className="font-bold">› Education</h3>
+                    <h3 className={headingStyles}>› Education</h3>
                      {(content as ResumeData['education']).map(edu => (
-                        <div key={edu.id} className="text-xs ml-4 my-1">
-                            <p className="font-semibold">{edu.degree}</p>
-                            <p>{edu.institution}</p>
+                        <div key={edu.id} className={subTextStyles}>
+                            <p className="font-semibold text-base">{edu.degree}</p>
+                            <p className="text-base">{edu.institution}</p>
                         </div>
                     ))}
                 </div>
@@ -75,10 +116,10 @@ const SectionDisplay = ({ sectionData }: { sectionData: any }) => {
         case 'portfolio':
              return (
                  <div className="mb-2">
-                    <h3 className="font-bold">› Portfolio</h3>
+                    <h3 className={headingStyles}>› Portfolio</h3>
                      {(content as ResumeData['portfolio']).map(item => (
-                        <div key={item.id} className="text-xs ml-4 my-1">
-                            <a href={item.url} target="_blank" rel="noopener noreferrer" className="font-semibold hover:underline">{item.title}</a>
+                        <div key={item.id} className={subTextStyles}>
+                            <a href={item.url} target="_blank" rel="noopener noreferrer" className="font-semibold text-base hover:underline">{item.title}</a>
                         </div>
                     ))}
                 </div>
@@ -86,44 +127,48 @@ const SectionDisplay = ({ sectionData }: { sectionData: any }) => {
         case 'custom':
              return (
                  <div className="mb-2">
-                    <h3 className="font-bold">› {content.title}</h3>
+                    <h3 className={headingStyles}>› {content.title}</h3>
                     {(content.items as ResumeData['custom']['items']).map((item: any) => (
-                         <p key={item.id} className="text-xs ml-4">{item.description}</p>
+                         <p key={item.id} className={textStyles}>{item.description}</p>
                     ))}
                 </div>
             );
         case 'references':
              return (
                  <div className="mb-2">
-                    <h3 className="font-bold">› References</h3>
-                    <p className="text-xs ml-4">Available upon request.</p>
+                    <h3 className={headingStyles}>› References</h3>
+                    <p className={textStyles}>Available upon request.</p>
                 </div>
             );
          case 'contact':
              return (
                  <div className="mb-2">
-                    <h3 className="font-bold">› Contact</h3>
-                    <p className="text-xs ml-4">{content.email} | {content.phone} | {content.website}</p>
+                    <h3 className={headingStyles}>› Contact</h3>
+                    <p className={textStyles}>{content.email} | {content.phone} | {content.website}</p>
                 </div>
             );
         default:
-             return <p className="text-xs">Section loaded.</p>;
+             return <p className="text-base">Section loaded.</p>;
     }
 }
 
 
-export function SnakebiteResumeTemplate({ data, pdfMode }: TemplateProps) {
+export function SnakebiteResumeTemplate({ data }: TemplateProps) {
   const [snake, setSnake] = useState([{ x: 12, y: 12 }]);
   const [food, setFood] = useState({ x: 18, y: 12 });
   const [direction, setDirection] = useState<'UP' | 'DOWN' | 'LEFT' | 'RIGHT'>('RIGHT');
   const [speed, setSpeed] = useState<number>(INITIAL_SPEED);
   const [gameState, setGameState] = useState<'playing' | 'won'>('playing');
   const [revealedSections, setRevealedSections] = useState<any[]>([]);
-  const [nextSectionIndex, setNextSectionIndex] = useState(0);
+  const [justAte, setJustAte] = useState(false);
+  const contentRef = useRef<HTMLDivElement>(null);
+  
+  const directionRef = useRef(direction);
+  directionRef.current = direction;
 
   const resumeChunks = useMemo(() => {
     const chunks: any[] = [];
-    if (data.about?.summary) chunks.push({ type: 'about', content: data.about, id: 'about' });
+    if (data.about?.summary) chunks.push({ type: 'about', content: { title: 'About Me', summary: data.about.summary }, id: 'about' });
     if (data.experience?.length > 0) chunks.push({ type: 'experience', content: data.experience, id: 'experience' });
     if (data.skills?.length > 0) chunks.push({ type: 'skills', content: data.skills, id: 'skills' });
     if (data.education?.length > 0) chunks.push({ type: 'education', content: data.education, id: 'education' });
@@ -135,102 +180,181 @@ export function SnakebiteResumeTemplate({ data, pdfMode }: TemplateProps) {
   }, [data]);
   
   const handleKeyDown = useCallback((e: KeyboardEvent) => {
-    if (pdfMode) return;
     e.preventDefault();
-    if (gameState !== 'playing') return;
-    switch (e.key) {
-      case 'ArrowUp': setDirection(d => d !== 'DOWN' ? 'UP' : d); break;
-      case 'ArrowDown': setDirection(d => d !== 'UP' ? 'DOWN' : d); break;
-      case 'ArrowLeft': setDirection(d => d !== 'RIGHT' ? 'LEFT' : d); break;
-      case 'ArrowRight': setDirection(d => d !== 'LEFT' ? 'RIGHT' : d); break;
+    const keyMap = {
+      ArrowUp: 'UP',
+      ArrowDown: 'DOWN',
+      ArrowLeft: 'LEFT',
+      ArrowRight: 'RIGHT',
+      w: 'UP',
+      s: 'DOWN',
+      a: 'LEFT',
+      d: 'RIGHT',
+    };
+    const newDir = keyMap[e.key as keyof typeof keyMap];
+    
+    if (newDir) {
+      setDirection((prevDir) => {
+        if ((newDir === 'UP' && prevDir === 'DOWN') ||
+            (newDir === 'DOWN' && prevDir === 'UP') ||
+            (newDir === 'LEFT' && prevDir === 'RIGHT') ||
+            (newDir === 'RIGHT' && prevDir === 'LEFT')) {
+          return prevDir;
+        }
+        return newDir as 'UP' | 'DOWN' | 'LEFT' | 'RIGHT';
+      });
     }
-  }, [gameState, pdfMode]);
+  }, []);
+
+  const [showCoverLetter, setShowCoverLetter] = useState(!!(data.coverLetter && data.coverLetter.trim() !== ''));
 
   useEffect(() => {
-    if (pdfMode) return;
     window.addEventListener('keydown', handleKeyDown);
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
     };
-  }, [handleKeyDown, pdfMode]);
+  }, [handleKeyDown]);
   
+  // Game Loop for movement
   useEffect(() => {
-    if (pdfMode) return;
-    if (gameState !== 'playing') {
-        return;
-    }
+    if (gameState !== 'playing' || showCoverLetter) return;
 
-    const gameInterval = setInterval(() => {
-      setSnake(prevSnake => {
+    const gameTick = () => {
+      setSnake((prevSnake) => {
         const newSnake = [...prevSnake];
-        let head = { ...newSnake[0] };
+        const head = { ...newSnake[0] };
 
-        switch (direction) {
+        switch (directionRef.current) {
           case 'UP': head.y -= 1; break;
           case 'DOWN': head.y += 1; break;
           case 'LEFT': head.x -= 1; break;
           case 'RIGHT': head.x += 1; break;
         }
-
-        // Wall wrapping logic
+        
         if (head.x < 0) head.x = GRID_SIZE - 1;
         if (head.x >= GRID_SIZE) head.x = 0;
         if (head.y < 0) head.y = GRID_SIZE - 1;
         if (head.y >= GRID_SIZE) head.y = 0;
         
-        newSnake.unshift(head);
+        const ateFood = head.x === food.x && head.y === food.y;
 
-        if (head.x === food.x && head.y === food.y) {
-            if (nextSectionIndex < resumeChunks.length) {
-                setRevealedSections(prev => [...prev, resumeChunks[nextSectionIndex]]);
-                
-                const newIndex = nextSectionIndex + 1;
-                setNextSectionIndex(newIndex);
-                
-                if (newIndex >= resumeChunks.length) {
-                  setGameState('won');
-                } else {
-                  setFood(randomFoodPosition(newSnake));
-                }
-            }
-          setSpeed(s => Math.max(MIN_SPEED, s - SPEED_INCREMENT));
+        newSnake.unshift(head);
+        
+        if (ateFood) {
+            setJustAte(true);
         } else {
-          newSnake.pop();
+            newSnake.pop();
         }
         
         return newSnake;
       });
-    }, speed);
+    };
 
-    return () => clearInterval(gameInterval);
-  }, [snake, direction, speed, food, gameState, resumeChunks, nextSectionIndex, pdfMode]);
+    const intervalId = setInterval(gameTick, speed);
+    return () => clearInterval(intervalId);
+  }, [gameState, speed, food.x, food.y, showCoverLetter]);
 
-  if (pdfMode) {
-    return (
-      <div className="font-pixelify bg-[#9bbc0f] min-h-screen w-full p-8 text-[#0f380f]">
-        <div className="max-w-4xl mx-auto bg-[#8bac0f] rounded-lg shadow-2xl p-8 border-4 border-black/20">
-          <div className="space-y-6">
-            {resumeChunks.map((section) => (
-              <div key={section.id}>
-                <SectionDisplay sectionData={section} />
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-    );
-  }
+  // Effect for handling logic when food is eaten
+  useEffect(() => {
+    if (justAte) {
+      setRevealedSections((current) => {
+        const nextIndex = current.length;
+        if (nextIndex < resumeChunks.length) {
+          const newRevealed = [...current, resumeChunks[nextIndex]];
+          if (newRevealed.length === resumeChunks.length) {
+            setGameState('won');
+          }
+          return newRevealed;
+        }
+        return current;
+      });
+      
+      setSpeed(s => Math.max(MIN_SPEED, s - SPEED_INCREMENT));
+
+      if (revealedSections.length + 1 < resumeChunks.length) {
+          setFood(randomFoodPosition(snake));
+      }
+
+      setJustAte(false);
+    }
+  }, [justAte, resumeChunks, snake, revealedSections.length]);
+
+  useEffect(() => {
+      if (contentRef.current) {
+          contentRef.current.scrollTo({
+              top: contentRef.current.scrollHeight,
+              behavior: 'smooth'
+          });
+      }
+  }, [revealedSections]);
+
+  // Disable game input when cover letter modal is open
+  useEffect(() => {
+    if (showCoverLetter) return;
+    window.addEventListener('keydown', handleKeyDown);
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [handleKeyDown, showCoverLetter]);
 
   return (
     <div 
-        className="font-pixelify bg-[#9bbc0f] h-screen w-full flex flex-col items-center justify-center p-2 text-[#0f380f]"
+        className="font-pixelify bg-[#9bbc0f] h-screen w-full flex flex-col items-center justify-center p-2 text-[#0f380f] relative"
         tabIndex={0}
     >
+        {showCoverLetter && (
+          <div className="absolute inset-0 z-50 flex items-center justify-center bg-[#9bbc0f]/90">
+            <div className="relative w-full h-full max-w-4xl max-h-[80vh] aspect-video border-4 border-[#0f380f] rounded-lg bg-[#8bac0f] shadow-2xl p-6 flex flex-col items-center font-[Pixelify_Sans,monospace]" style={{ boxShadow: '0 0 0 8px #cadc9f, 0 0 0 12px #0f380f' }}>
+              <button
+                className="absolute top-2 right-2 bg-[#0f380f] text-[#cadc9f] rounded px-2 py-1 text-lg font-bold hover:bg-[#306230] transition"
+                onClick={() => setShowCoverLetter(false)}
+                aria-label="Close cover letter"
+                style={{ fontFamily: 'inherit' }}
+              >
+                <X className="w-5 h-5" />
+              </button>
+              <h2 className="text-2xl font-bold mb-4 text-center tracking-widest" style={{ fontFamily: 'inherit' }}>
+                COVER LETTER
+              </h2>
+              <div className="w-full flex-1 overflow-y-auto bg-[#cadc9f] text-[#0f380f] rounded p-4 text-lg leading-relaxed whitespace-pre-line font-[inherit]" style={{ fontFamily: 'inherit' }}>
+                {data.coverLetter}
+              </div>
+              {/* Pixel grid overlay */}
+              <div className="absolute inset-0 pointer-events-none z-0" style={{
+                backgroundImage: 'linear-gradient(to right, rgba(15,56,15,0.08) 1px, transparent 1px), linear-gradient(to bottom, rgba(15,56,15,0.08) 1px, transparent 1px)',
+                backgroundSize: '12px 12px',
+              }} />
+            </div>
+          </div>
+        )}
+        {/* Envelope button to reopen cover letter */}
+        {!showCoverLetter && data.coverLetter && data.coverLetter.trim() !== '' && (
+          <button
+            className="absolute top-4 right-4 bg-[#0f380f] text-[#cadc9f] rounded p-2 shadow hover:bg-[#306230] transition"
+            onClick={() => setShowCoverLetter(true)}
+            aria-label="Show cover letter"
+            style={{ fontFamily: 'inherit' }}
+          >
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+              <rect x="2" y="6" width="20" height="12" rx="2" fill="#cadc9f" stroke="#0f380f" strokeWidth="2" />
+              <path d="M2 6l10 7 10-7" stroke="#0f380f" strokeWidth="2" fill="none" />
+            </svg>
+          </button>
+        )}
+        {gameState === 'won' && <Confetti />}
         <div className="relative w-full h-full max-w-4xl max-h-[80vh] aspect-video bg-[#8bac0f] rounded-lg shadow-2xl overflow-hidden border-4 border-black/20">
-            {/* Game Grid and Content Area */}
             <div className="absolute inset-0 grid" style={{ gridTemplateColumns: `repeat(${GRID_SIZE}, 1fr)`, gridTemplateRows: `repeat(${GRID_SIZE}, 1fr)` }}>
                 {/* Resume Content in the background */}
-                <div className="absolute inset-0 p-4 overflow-y-auto text-[#3f6212] opacity-75 pointer-events-none">
+                <div 
+                    ref={contentRef} 
+                    className={cn(
+                        "scrollbar-hide absolute inset-0 p-4 overflow-y-auto text-[#306230] opacity-75",
+                        gameState === 'playing' && "pointer-events-none"
+                    )}
+                >
+                     <h2 className="font-[Pixelify_Sans,monospace] text-4xl">{data.about.name}</h2>
+                     <p className="font-mono text-xl font-semibold opacity-90">{data.about.jobTitle}</p>
+                     <div className="h-4" />
                      <AnimatePresence>
                         {revealedSections.map((section) => (
                              <motion.div
@@ -249,7 +373,10 @@ export function SnakebiteResumeTemplate({ data, pdfMode }: TemplateProps) {
                 {snake.map((segment, index) => (
                     <div
                         key={index}
-                        className="bg-[#0f380f]"
+                        className={cn(
+                          "bg-[#0f380f]",
+                          gameState === 'won' && "opacity-40 transition-opacity duration-500"
+                        )}
                         style={{ gridColumn: segment.x + 1, gridRow: segment.y + 1 }}
                     />
                 ))}
@@ -262,7 +389,7 @@ export function SnakebiteResumeTemplate({ data, pdfMode }: TemplateProps) {
                 )}
             </div>
         </div>
-        <div className="mt-4 text-center">
+        <div className="mt-4 text-center text-lg">
             <p>Use arrow keys to control the snake.</p>
             <p>Reveal my resume by eating the dots!</p>
         </div>

@@ -5,11 +5,10 @@ interface MutedElegancePreviewProps {
   name?: string;
 }
 
-export function MutedElegancePreview({ theme, name }: MutedElegancePreviewProps) {
-  const defaultColors = ['#78716C', '#44403C', '#F5F5F4'];
-  const colors = theme?.colors || defaultColors;
+export function MutedElegancePreview({ name }: { name?: string }) {
+  const colors = ['#78716C', '#44403C', '#F5F5F4'];
   const [primary, accent, background] = colors;
-  const displayName = name || 'John Smith';
+  const displayName = name || 'Jane Doe';
   
   return (
     <svg viewBox="0 0 300 300" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ fontFamily: 'serif' }}>

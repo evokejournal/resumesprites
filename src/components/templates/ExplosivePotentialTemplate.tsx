@@ -5,7 +5,7 @@ import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react'
 import type { ResumeData } from '@/lib/types';
 import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
-import { Briefcase, GraduationCap, Star, FolderGit2, Users, Wrench, User, Bomb, Flag, ExternalLink } from 'lucide-react';
+import { Briefcase, GraduationCap, Star, FolderGit2, Users, Wrench, User, Bomb, Flag, ExternalLink, FileText } from 'lucide-react';
 
 const BOARD_WIDTH = 12;
 const BOARD_HEIGHT = 12;
@@ -35,29 +35,30 @@ export function ExplosivePotentialTemplate({ data }: TemplateProps) {
   const [board, setBoard] = useState<CellData[]>([]);
   const [revealedSections, setRevealedSections] = useState<RevealedSection[]>([]);
   const [gameState, setGameState] = useState<'playing' | 'won'>('playing');
+  const [showCoverLetter, setShowCoverLetter] = useState(true);
   const contentContainerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (contentContainerRef.current) {
+    if (contentContainerRef.current && !showCoverLetter) {
         contentContainerRef.current.scrollTo({
             top: contentContainerRef.current.scrollHeight,
             behavior: 'smooth'
         });
     }
-  }, [revealedSections]);
+  }, [revealedSections, showCoverLetter]);
 
   const mineCount = useMemo(() => board.filter(cell => cell.isMine).length, [board]);
   const flagCount = useMemo(() => board.filter(cell => cell.isFlagged).length, [board]);
 
   const orderedSections = useMemo(() => {
     const sections: (RevealedSection | false)[] = [
-      data.about.summary && { type: 'about', data: { ...data.about, title: 'About Me', id: 'about' } },
-      data.experience.length > 0 && { type: 'experience', data: data.experience },
-      data.skills.length > 0 && { type: 'skills', data: data.skills },
-      data.education.length > 0 && { type: 'education', data: data.education },
-      data.portfolio.length > 0 && { type: 'portfolio', data: data.portfolio },
-      data.references.length > 0 && { type: 'reference', data: data.references },
-      (data.custom.title && data.custom.items.length > 0) && { type: 'custom', data: data.custom },
+      data.about.summary ? { type: 'about', data: { ...data.about, title: 'About Me', id: 'about' } } : false,
+      data.experience.length > 0 ? { type: 'experience', data: data.experience } : false,
+      data.skills.length > 0 ? { type: 'skills', data: data.skills } : false,
+      data.education.length > 0 ? { type: 'education', data: data.education } : false,
+      data.portfolio.length > 0 ? { type: 'portfolio', data: data.portfolio } : false,
+      data.references.length > 0 ? { type: 'reference', data: data.references } : false,
+      (data.custom.title && data.custom.items.length > 0) ? { type: 'custom', data: data.custom } : false,
     ];
     return sections.filter(Boolean) as RevealedSection[];
   }, [data]);
@@ -129,7 +130,7 @@ export function ExplosivePotentialTemplate({ data }: TemplateProps) {
   }, [initializeBoard]);
   
   const handleTileClick = (index: number) => {
-    if (gameState !== 'playing' || board[index].isRevealed || board[index].isFlagged) return;
+    if (gameState !== 'playing' || board[index].isRevealed || board[index].isFlagged || showCoverLetter) return;
 
     let newBoard = [...board];
     const revealedMinesBefore = newBoard.filter(c => c.isMine && c.isRevealed).length;
@@ -165,7 +166,7 @@ export function ExplosivePotentialTemplate({ data }: TemplateProps) {
   
   const handleRightClick = (e: React.MouseEvent, index: number) => {
     e.preventDefault();
-    if (gameState !== 'playing' || board[index].isRevealed) return;
+    if (gameState !== 'playing' || board[index].isRevealed || showCoverLetter) return;
 
     let newBoard = [...board];
     const cell = newBoard[index];
@@ -242,24 +243,60 @@ export function ExplosivePotentialTemplate({ data }: TemplateProps) {
           <div className="p-1 space-y-4">
               <div className="bg-win-gray p-1 border-2 border-outset">
                   <div className="bg-white p-2 border-2 border-inset text-center">
-                      <h2 className="text-xl font-bold">{data.about.name}</h2>
+                      <h2 
+                        className="text-xl font-bold cursor-pointer hover:text-win-blue transition-colors"
+                        onClick={() => setShowCoverLetter(true)}
+                      >
+                        {data.about.name}
+                      </h2>
                       <h3 className="text-md">{data.about.jobTitle}</h3>
                   </div>
               </div>
 
-              {revealedSections.map((section, index) => (
-                  <motion.div
-                      key={section.type || index}
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ duration: 0.5, delay: 0.1 }}
-                      className="bg-win-gray p-1 border-2 border-outset"
-                  >
-                      <div className="bg-white p-3 border-2 border-inset">
-                          <ContentDisplay section={section.data} type={section.type} />
-                      </div>
-                  </motion.div>
-              ))}
+              {showCoverLetter ? (
+                // Cover Letter Modal Content
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.5 }}
+                  className="bg-win-gray p-1 border-2 border-outset"
+                >
+                  <div className="bg-white p-3 border-2 border-inset">
+                    <div className="flex items-center justify-between mb-3">
+                      <h3 className="font-bold text-xl flex items-center gap-2">
+                        <FileText className="w-5 h-5" />
+                        Cover Letter
+                      </h3>
+                      <button
+                        onClick={() => setShowCoverLetter(false)}
+                        className="text-gray-500 hover:text-gray-700 text-sm px-2 py-1 border border-gray-300 hover:bg-gray-100 transition-colors"
+                      >
+                        ✕ Close
+                      </button>
+                    </div>
+                    <div className="whitespace-pre-line text-sm leading-relaxed">
+                      {data.coverLetter || 'No cover letter available.'}
+                    </div>
+                  </div>
+                </motion.div>
+              ) : (
+                // Regular Revealed Sections
+                <>
+                  {revealedSections.map((section, index) => (
+                      <motion.div
+                          key={section.type || index}
+                          initial={{ opacity: 0, y: 20 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ duration: 0.5, delay: 0.1 }}
+                          className="bg-win-gray p-1 border-2 border-outset"
+                      >
+                          <div className="bg-white p-3 border-2 border-inset">
+                              <ContentDisplay section={section.data} type={section.type} />
+                          </div>
+                      </motion.div>
+                  ))}
+                </>
+              )}
           </div>
         </div>
       </div>
@@ -272,8 +309,9 @@ const Tile = ({ cell, onClick, onRightClick }: { cell: CellData, onClick: () => 
 
   const renderContent = () => {
     if (cell.isRevealed) {
-      if (cell.isMine) {
-        return <cell.Icon className="h-4 w-4 text-black" />;
+      if (cell.isMine && cell.Icon) {
+        const IconComponent = cell.Icon;
+        return <IconComponent className="h-4 w-4 text-black" />;
       }
       if (cell.adjacentMines > 0) {
         return <span className={cn("font-bold", numberColors[cell.adjacentMines])}>{cell.adjacentMines}</span>;

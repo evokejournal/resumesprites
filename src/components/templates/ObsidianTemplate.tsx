@@ -7,77 +7,19 @@ import { motion } from 'framer-motion';
 import Image from 'next/image';
 import { cn } from '@/lib/utils';
 
-const themes = {
-  original: {
-    bg: 'from-gray-200 to-gray-300',
-    paper: 'bg-white/80',
-    text: 'text-gray-800',
-    mainHeading: 'text-gray-800',
-    subHeading: 'text-gray-600',
-    strong: 'text-gray-800',
-    accent: 'bg-gray-800',
-    accentText: 'text-white',
-    highlight: 'text-amber-400',
-    quoteIcon: 'fill-amber-400',
-    skillDot: 'bg-gray-800',
-    skillDotEmpty: 'bg-gray-300',
-  },
-  ruby: {
-    bg: 'from-red-100 to-gray-100',
-    paper: 'bg-white/80',
-    text: 'text-gray-800',
-    mainHeading: 'text-red-700',
-    subHeading: 'text-gray-600',
-    strong: 'text-gray-900',
-    accent: 'bg-red-700',
-    accentText: 'text-white',
-    highlight: 'text-red-500',
-    quoteIcon: 'fill-red-500',
-    skillDot: 'bg-red-700',
-    skillDotEmpty: 'bg-red-200',
-  },
-  jade: {
-    bg: 'from-gray-800 to-gray-900',
-    paper: 'bg-black/50',
-    text: 'text-gray-200',
-    mainHeading: 'text-white',
-    subHeading: 'text-gray-400',
-    strong: 'text-white',
-    accent: 'bg-teal-500',
-    accentText: 'text-black',
-    highlight: 'text-teal-400',
-    quoteIcon: 'fill-teal-400',
-    skillDot: 'bg-teal-400',
-    skillDotEmpty: 'bg-gray-600',
-  },
-  sapphire: {
-    bg: 'from-blue-100 to-slate-200',
-    paper: 'bg-white/80',
-    text: 'text-gray-800',
-    mainHeading: 'text-blue-800',
-    subHeading: 'text-gray-600',
-    strong: 'text-blue-900',
-    accent: 'bg-blue-700',
-    accentText: 'text-white',
-    highlight: 'text-cyan-400',
-    quoteIcon: 'fill-cyan-400',
-    skillDot: 'bg-blue-700',
-    skillDotEmpty: 'bg-blue-200',
-  },
-  quartz: {
-    bg: 'from-pink-100 to-fuchsia-100',
-    paper: 'bg-white/80',
-    text: 'text-gray-800',
-    mainHeading: 'text-fuchsia-800',
-    subHeading: 'text-gray-600',
-    strong: 'text-fuchsia-900',
-    accent: 'bg-fuchsia-700',
-    accentText: 'text-white',
-    highlight: 'text-pink-400',
-    quoteIcon: 'fill-pink-400',
-    skillDot: 'bg-fuchsia-700',
-    skillDotEmpty: 'bg-fuchsia-200',
-  },
+const theme = {
+  bg: 'from-gray-200 to-gray-300',
+  paper: 'bg-white/80',
+  text: 'text-gray-800',
+  mainHeading: 'text-gray-800',
+  subHeading: 'text-gray-600',
+  strong: 'text-gray-800',
+  accent: 'bg-gray-800',
+  accentText: 'text-white',
+  highlight: 'text-amber-400',
+  quoteIcon: 'fill-amber-400',
+  skillDot: 'bg-gray-800',
+  skillDotEmpty: 'bg-gray-300',
 };
 
 const QuoteIcon = ({ className }: { className?: string }) => (
@@ -87,7 +29,7 @@ const QuoteIcon = ({ className }: { className?: string }) => (
     </svg>
 );
 
-const SkillDots = ({ level, theme }: { level: number, theme: typeof themes.original }) => {
+const SkillDots = ({ level, theme }: { level: number, theme: typeof theme }) => {
     const totalDots = 5;
     const filledDots = Math.round((level / 100) * totalDots);
     return (
@@ -108,7 +50,6 @@ interface TemplateProps {
 export function ObsidianTemplate({ data, pdfMode }: TemplateProps) {
     const { about, contact, experience, education, skills, custom, coverLetter } = data;
     const [firstName, ...lastName] = about.name.split(' ');
-    const theme = themes[data.theme as keyof typeof themes] || themes.original;
 
     if (pdfMode) {
       const currentDate = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });

@@ -39,6 +39,24 @@ export function OperatingSystemTemplate({ data }: OperatingSystemTemplateProps) 
     return () => clearInterval(timer);
   }, []);
 
+  // Auto-open cover letter on landing
+  useEffect(() => {
+    if (data.coverLetter && data.coverLetter.trim() !== '') {
+      const coverLetterContent = (
+        <div className="space-y-3">
+          <h3 className="font-bold text-lg">Cover Letter</h3>
+          <div className="whitespace-pre-line text-sm leading-relaxed">
+            {data.coverLetter}
+          </div>
+        </div>
+      );
+      
+      setTimeout(() => {
+        openWindow('coverLetter', 'cover_letter.txt', Icons.CoverLetterIcon, coverLetterContent);
+      }, 500); // Small delay to let the page settle
+    }
+  }, [data.coverLetter]);
+
   const openWindow = useCallback((id: string, title: string, icon: React.ComponentType, content: React.ReactNode) => {
     setWindows(prev => {
       const existingWindowIndex = prev.findIndex(w => w.id === id);
@@ -81,6 +99,14 @@ export function OperatingSystemTemplate({ data }: OperatingSystemTemplateProps) 
   };
 
   const desktopItems = [
+    { id: 'coverLetter', title: 'Cover Letter', icon: Icons.CoverLetterIcon, content: (
+      <div className="space-y-3 min-h-[300px]">
+        <h3 className="font-bold text-lg">Cover Letter</h3>
+        <div className="whitespace-pre-line text-sm leading-relaxed flex-1">
+          {data.coverLetter || 'No cover letter available.'}
+        </div>
+      </div>
+    ), hasContent: !!data.coverLetter && data.coverLetter.trim() !== '' },
     { id: 'about', title: 'About Me', icon: Icons.NotepadIcon, content: (
       <div>
         {data.about.photo ? (

@@ -66,7 +66,7 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
 
         {/* This div makes the content area scrollable */}
         <div className={cn(
-          "flex-1 overflow-y-auto",
+          "flex-1 overflow-y-auto relative",
           !isPreviewPage && "p-4 sm:p-6 lg:p-8"
         )}>
           {children}

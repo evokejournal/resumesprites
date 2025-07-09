@@ -3,7 +3,6 @@ import React from 'react';
 import { CareerPathPreview } from "@/components/templates/previews/CareerPathPreview";
 import { RetroTerminalPreview } from "@/components/templates/previews/RetroTerminalPreview";
 import { OperatingSystemPreview } from "@/components/templates/previews/OperatingSystemPreview";
-import { ScarletTimelinePreview } from "@/components/templates/previews/ScarletTimelinePreview";
 import { TypographicGridPreview } from "@/components/templates/previews/TypographicGridPreview";
 import { ObsidianPreview } from "@/components/templates/previews/ObsidianPreview";
 import { MutedElegancePreview } from "@/components/templates/previews/MutedElegancePreview";
@@ -14,7 +13,8 @@ import { ForTaxPurposesPreview } from "@/components/templates/previews/ReceiptRo
 import { ExplosivePotentialPreview } from "@/components/templates/previews/ExplosivePotentialPreview";
 import { SmsConversationPreview } from '@/components/templates/previews/SmsConversationPreview';
 import { CodeSyntaxPreview } from '@/components/templates/previews/CodeSyntaxPreview';
-import { DigitalDashboardPreview } from "@/components/templates/previews/DigitalDashboardPreview";
+import { SnakebiteResumePreview } from "@/components/templates/previews/SnakebiteResumePreview";
+
 import { ModernTemplate } from "@/components/templates/ModernTemplate";
 import { YoubleTemplate } from "@/components/templates/GoobleItTemplate";
 import { MineHireTemplate } from "@/components/templates/MineHireTemplate";
@@ -22,7 +22,6 @@ import { ObsidianTemplate } from "@/components/templates/ObsidianTemplate";
 import { PeachPitTemplate } from "@/components/templates/PeachPitTemplate";
 import { ForTaxPurposesTemplate } from "@/components/templates/ReceiptRollTemplate";
 import { RetroTerminalTemplate } from "@/components/templates/RetroTerminalTemplate";
-import { ScarletTimelineTemplate } from "@/components/templates/ScarletTimelineTemplate";
 import { SmsConversationTemplate } from "@/components/templates/SmsConversationTemplate";
 import { SnakebiteResumeTemplate } from "@/components/templates/SnakebiteResumeTemplate";
 import { TypographicGridTemplate } from "@/components/templates/TypographicGridTemplate";
@@ -32,7 +31,7 @@ import { CareerPathTemplate } from "@/components/templates/CareerPathTemplate";
 import { CodeSyntaxTemplate } from "@/components/templates/CodeSyntaxTemplate";
 import { ExplosivePotentialTemplate } from "@/components/templates/ExplosivePotentialTemplate";
 import { ExtremelyProfessionalTemplate } from "@/components/templates/ExtremelyProfessionalTemplate";
-import { DigitalDashboardTemplate } from "@/components/templates/DigitalDashboardTemplate";
+
 import { OperatingSystemTemplate } from "@/components/templates/OperatingSystemTemplate";
 
 export const templates = [
@@ -109,22 +108,16 @@ export const templates = [
     previewComponent: <CareerPathPreview />,
   },
   {
-    id: "scarlet-timeline",
-    name: "Scarlet Timeline",
-    description: "A bold, stylish design with an animated, flowing timeline.",
-    previewComponent: <ScarletTimelinePreview />,
-  },
-  {
     id: "muted-elegance",
     name: "Muted Elegance",
     description: "Soft neutral tones with minimalist serif fonts, smooth fades and scroll reveals.",
     previewComponent: <MutedElegancePreview />,
   },
   {
-    id: "digital-dashboard",
-    name: "Digital Dashboard",
-    description: "A modern, card-based dashboard layout with widgets for each section.",
-    previewComponent: <DigitalDashboardPreview />,
+    id: "snakebite-resume",
+    name: "Snakebite Resume",
+    description: "A playful, retro snake game-inspired resume. Unlock sections as you play!",
+    previewComponent: <SnakebiteResumePreview />,
   },
 ];
 
@@ -136,7 +129,6 @@ export const templateComponentMap: Record<string, React.ComponentType<any>> = {
   'peach-pit': PeachPitTemplate,
   'for-tax-purposes': ForTaxPurposesTemplate,
   'retro-terminal': RetroTerminalTemplate,
-  'scarlet-timeline': ScarletTimelineTemplate,
   'sms-conversation': SmsConversationTemplate,
   'snakebite-resume': SnakebiteResumeTemplate,
   'typographic-grid': TypographicGridTemplate,
@@ -146,7 +138,6 @@ export const templateComponentMap: Record<string, React.ComponentType<any>> = {
   'code-syntax': CodeSyntaxTemplate,
   'explosive-potential': ExplosivePotentialTemplate,
   'extremely-professional': ExtremelyProfessionalTemplate,
-  'digital-dashboard': DigitalDashboardTemplate,
   'operating-system': OperatingSystemTemplate,
 };
 
@@ -157,4 +148,28 @@ export function getTemplateComponent(templateName: string): React.ComponentType<
     return templateComponentMap['modern'] || ModernTemplate;
   }
   return Component;
+}
+
+export const templateStyleMap: Record<string, { background: string; fontFamily: string; textColor: string }> = {
+  'modern': { background: '#fff', fontFamily: 'Inter, sans-serif', textColor: '#222' },
+  'youble': { background: '#fff', fontFamily: 'Arial, sans-serif', textColor: '#222' },
+  'mine-hire': { background: '#f7f6e7', fontFamily: 'Inter, sans-serif', textColor: '#222' },
+  'obsidian': { background: '#18181b', fontFamily: 'Inter, sans-serif', textColor: '#fff' },
+  'peach-pit': { background: '#fff7f0', fontFamily: 'Inter, sans-serif', textColor: '#222' },
+  'for-tax-purposes': { background: '#fff', fontFamily: 'Menlo, monospace', textColor: '#222' },
+  'retro-terminal': { background: '#18181b', fontFamily: 'Menlo, monospace', textColor: '#00ff00' },
+  'sms-conversation': { background: '#f5f5f5', fontFamily: 'Inter, sans-serif', textColor: '#222' },
+  'snakebite-resume': { background: '#fff', fontFamily: 'Inter, sans-serif', textColor: '#222' },
+  'typographic-grid': { background: '#fff', fontFamily: 'Georgia, serif', textColor: '#222' },
+  'operation': { background: '#f3f4f6', fontFamily: 'Inter, sans-serif', textColor: '#222' },
+  'muted-elegance': { background: '#f8fafc', fontFamily: 'Georgia, serif', textColor: '#222' },
+  'career-path': { background: '#fff', fontFamily: 'Inter, sans-serif', textColor: '#222' },
+  'code-syntax': { background: '#18181b', fontFamily: 'Menlo, monospace', textColor: '#a6e22e' },
+  'explosive-potential': { background: '#fff', fontFamily: 'Inter, sans-serif', textColor: '#222' },
+  'extremely-professional': { background: '#fff', fontFamily: 'Inter, sans-serif', textColor: '#222' },
+  'operating-system': { background: '#e5e7eb', fontFamily: 'Inter, sans-serif', textColor: '#222' },
+};
+
+export function getTemplateStyle(templateId: string) {
+  return templateStyleMap[templateId] || templateStyleMap['modern'];
 }

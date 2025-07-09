@@ -5,9 +5,8 @@ interface PeachPitPreviewProps {
   name?: string;
 }
 
-export function PeachPitPreview({ theme, name }: PeachPitPreviewProps) {
-  const defaultColors = ['#FA8072', '#3D3D3D', '#FFF8F5'];
-  const colors = theme?.colors || defaultColors;
+export function PeachPitPreview({ name }: { name?: string }) {
+  const colors = ['#FA8072', '#3D3D3D', '#FFF8F5'];
   const [primary, accent, background] = colors;
   const displayName = name || 'Patricia Smith';
   

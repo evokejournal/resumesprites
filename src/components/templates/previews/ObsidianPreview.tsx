@@ -5,15 +5,14 @@ interface ObsidianPreviewProps {
   name?: string;
 }
 
-export function ObsidianPreview({ theme, name }: ObsidianPreviewProps) {
-  const defaultColors = ['#FBBF24', '#374151', '#E5E7EB'];
-  const colors = theme?.colors || defaultColors;
+export function ObsidianPreview({ name }: { name?: string }) {
+  const colors = ['#FBBF24', '#374151', '#E5E7EB'];
   const [primary, accent, background] = colors;
   const isDark = parseInt(background.substring(1, 3), 16) < 128;
   const textColor = isDark ? '#FFFFFF' : '#1F2937';
   const mutedTextColor = isDark ? '#D1D5DB' : '#6B7280';
   const paperBg = isDark ? 'rgba(0,0,0,0.5)' : 'white';
-  const displayName = name || 'John Smith';
+  const displayName = name || 'Jane Doe';
   const [firstName, ...lastName] = displayName.split(' ');
 
   return (

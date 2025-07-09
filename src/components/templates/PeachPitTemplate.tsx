@@ -5,47 +5,13 @@ import type { ResumeData } from '@/lib/types';
 import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
 
-const themes = {
-  original: {
-    bg: 'bg-[#FFF8F5]',
-    text: 'text-[#3D3D3D]',
-    headerBg: 'bg-[#FA8072]',
-    accentBg: 'bg-[#FA8072]',
-    accentText: 'text-white',
-    linkHover: 'hover:text-[#FA8072]',
-  },
-  mint: {
-    bg: 'bg-green-50',
-    text: 'text-gray-800',
-    headerBg: 'bg-emerald-300',
-    accentBg: 'bg-emerald-400',
-    accentText: 'text-white',
-    linkHover: 'hover:text-emerald-500',
-  },
-  butter: {
-    bg: 'bg-amber-50',
-    text: 'text-indigo-900',
-    headerBg: 'bg-amber-300',
-    accentBg: 'bg-indigo-800',
-    accentText: 'text-white',
-    linkHover: 'hover:text-indigo-600',
-  },
-  sky: {
-    bg: 'bg-sky-50',
-    text: 'text-sky-900',
-    headerBg: 'bg-sky-300',
-    accentBg: 'bg-sky-500',
-    accentText: 'text-white',
-    linkHover: 'hover:text-sky-600',
-  },
-  lilac: {
-    bg: 'bg-violet-50',
-    text: 'text-violet-900',
-    headerBg: 'bg-violet-300',
-    accentBg: 'bg-violet-500',
-    accentText: 'text-white',
-    linkHover: 'hover:text-violet-600',
-  },
+const theme = {
+  bg: 'bg-[#FFF8F5]',
+  text: 'text-[#3D3D3D]',
+  headerBg: 'bg-[#FA8072]',
+  accentBg: 'bg-[#FA8072]',
+  accentText: 'text-white',
+  linkHover: 'hover:text-[#FA8072]',
 };
 
 interface TemplateProps {
@@ -53,7 +19,7 @@ interface TemplateProps {
   pdfMode?: boolean;
 }
 
-const Section = ({ title, children, className, theme, pdfMode }: { title: string, children: React.ReactNode, className?: string, theme: typeof themes.original, pdfMode?: boolean }) => (
+const Section = ({ title, children, className, theme, pdfMode }: { title: string, children: React.ReactNode, className?: string, theme: typeof theme, pdfMode?: boolean }) => (
     pdfMode ? (
         <section className={`mb-10 ${className}`}>
             <div className={cn("inline-block", theme.accentBg)}>
@@ -83,7 +49,6 @@ const Section = ({ title, children, className, theme, pdfMode }: { title: string
 
 export function PeachPitTemplate({ data, pdfMode }: TemplateProps) {
     const { about, contact, experience, education, skills, portfolio, references, custom } = data;
-    const theme = themes[data.theme as keyof typeof themes] || themes.original;
 
     return (
         <div className={cn("font-sans min-h-screen", theme.bg, theme.text)}>

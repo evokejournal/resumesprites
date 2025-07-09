@@ -25,29 +25,18 @@ export default function ResumeLinkPage() {
     try {
       const db = getFirestore(firebaseApp);
       
-      // Find the user who owns this link by searching all users
-      const usersRef = collection(db, 'users');
-      const usersSnapshot = await getDocs(usersRef);
+      // Search in the global links collection using shortId
+      const linksRef = collection(db, 'links');
+      const linkQuery = query(linksRef, where('shortId', '==', id));
+      const linkSnapshot = await getDocs(linkQuery);
       
-      let linkData: any = null;
-      
-      // Search through all users to find the link
-      for (const userDoc of usersSnapshot.docs) {
-        const linksRef = collection(db, 'users', userDoc.id, 'links');
-        const linkQuery = query(linksRef, where('id', '==', id));
-        const linkSnapshot = await getDocs(linkQuery);
-        
-        if (!linkSnapshot.empty) {
-          linkData = linkSnapshot.docs[0].data();
-          break;
-        }
-      }
-      
-      if (!linkData) {
+      if (linkSnapshot.empty) {
         setError("Link not found.");
         setLoading(false);
         return;
       }
+      
+      const linkData = linkSnapshot.docs[0].data();
       
       if (linkData.password !== passcode) {
         setError("Incorrect passcode.");
@@ -59,6 +48,7 @@ export default function ResumeLinkPage() {
       setShowResume(true);
       setLoading(false);
     } catch (err) {
+      console.error('Error loading resume:', err);
       setError("Failed to load resume.");
       setLoading(false);
     }

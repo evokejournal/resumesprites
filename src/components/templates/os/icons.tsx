@@ -93,3 +93,12 @@ export const WindowsFlagIcon = ({ className }: { className?: string }) => (
       <path d="M52 53L104 46V88L52 95V53Z" fill="#FFC90E"/>
     </svg>
 );
+
+export const CoverLetterIcon = ({ className }: { className?: string }) => (
+    <svg className={className} viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M6 2H22L28 8V30H6V2Z" fill="white"/>
+        <path d="M8 4V28H26V9H21V4H8Z" fill="white"/>
+        <path d="M10 12H20V14H10V12ZM10 16H20V18H10V16ZM10 20H18V22H10V20Z" fill="#2E3192"/>
+        <path d="M22 4L26 8H22V4Z" fill="#C0C0C0"/>
+    </svg>
+);

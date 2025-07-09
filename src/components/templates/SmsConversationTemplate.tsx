@@ -11,8 +11,6 @@ import { User } from 'lucide-react';
 
 interface TemplateProps {
   data: ResumeData;
-  isCoverLetterOpen: boolean;
-  setCoverLetterOpen: (open: boolean) => void;
 }
 
 const TypingIndicator = ({ name }: { name: string }) => (
@@ -55,12 +53,100 @@ const MessageBubble = ({ sender, children }: { sender: 'recruiter' | 'candidate'
   );
 };
 
-export function SmsConversationTemplate({ data, isCoverLetterOpen, setCoverLetterOpen }: TemplateProps) {
+const CoverLetterMessageBubble = ({ children }: { children: React.ReactNode }) => {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="flex mb-4 justify-end"
+    >
+      <div className="max-w-[80%] rounded-2xl px-4 py-2.5 text-sm bg-blue-500 text-white rounded-br-none">
+        {children}
+      </div>
+    </motion.div>
+  );
+};
+
+export function SmsConversationTemplate({ data }: TemplateProps) {
   const [messages, setMessages] = useState<React.ReactNode[]>([]);
   const [typingUser, setTypingUser] = useState<string | null>(null);
-  const { about, experience, skills, education, portfolio, custom, references } = data;
+  const [showCoverLetter, setShowCoverLetter] = useState(true);
+  // --- New state for animated cover letter ---
+  const [coverLetterStep, setCoverLetterStep] = useState(0); // 0 = first paragraph
+  const [showTyping, setShowTyping] = useState(false);
+  const coverLetterTimeouts = useRef<NodeJS.Timeout[]>([]);
+  const { about, experience, skills, education, portfolio, custom, references, coverLetter } = data;
+
+  // Render cover letter content as SMS messages
+  const renderCoverLetterContent = () => {
+    if (!coverLetter || coverLetter.trim() === '') {
+      return [
+        <CoverLetterMessageBubble key="no-cover">
+          <div className="text-center text-gray-300">
+            No cover letter available
+          </div>
+        </CoverLetterMessageBubble>
+      ];
+    }
+
+    const paragraphs = coverLetter.split('\n\n').filter(p => p.trim());
+    return paragraphs.map((paragraph, index) => (
+      <CoverLetterMessageBubble key={index}>
+        <div className="whitespace-pre-line">{paragraph.trim()}</div>
+      </CoverLetterMessageBubble>
+    ));
+  };
+
+  // --- Refactored: Animated cover letter with typing indicator ---
+  const coverLetterParagraphs = useMemo(() => {
+    if (!coverLetter || coverLetter.trim() === '') return [];
+    return coverLetter.split('\n\n').filter(p => p.trim());
+  }, [coverLetter]);
+
+  useEffect(() => {
+    if (!showCoverLetter) return;
+    // Reset animation state when opening cover letter
+    setCoverLetterStep(0);
+    setShowTyping(false);
+    coverLetterTimeouts.current.forEach(clearTimeout);
+    coverLetterTimeouts.current = [];
+    if (coverLetterParagraphs.length === 0) return;
+    
+    // Start with typing indicator before first paragraph
+    setShowTyping(true);
+    const initialTypingTimeout = setTimeout(() => {
+      setShowTyping(false);
+      setCoverLetterStep(1);
+      
+      // Continue with remaining paragraphs
+      const animateStep = (step: number) => {
+        if (step >= coverLetterParagraphs.length) return;
+        
+        // Show typing indicator after current paragraph
+        const showTypingTimeout = setTimeout(() => {
+          setShowTyping(true);
+          // After typing indicator, show next paragraph
+          const nextStepTimeout = setTimeout(() => {
+            setShowTyping(false);
+            setCoverLetterStep(step + 1);
+            animateStep(step + 1);
+          }, 1200 + Math.random() * 600); // Typing indicator duration
+          coverLetterTimeouts.current.push(nextStepTimeout);
+        }, 1500 + Math.random() * 800); // Paragraph visible duration
+        coverLetterTimeouts.current.push(showTypingTimeout);
+      };
+      
+      animateStep(1);
+    }, 1200 + Math.random() * 600); // Initial typing duration
+    coverLetterTimeouts.current.push(initialTypingTimeout);
+    
+    return () => {
+      coverLetterTimeouts.current.forEach(clearTimeout);
+    };
+  }, [showCoverLetter, coverLetterParagraphs.length]);
 
   const conversationFlow = useMemo(() => [
+    { type: 'typing', who: 'recruiter', delay: 2000 },
     { type: 'recruiter', content: `Hi there! I came across your profile. I'm looking for a top-tier ${about.jobTitle}. Is that you?` },
     
     { type: 'typing', who: 'candidate', delay: 2000 },
@@ -110,15 +196,9 @@ export function SmsConversationTemplate({ data, isCoverLetterOpen, setCoverLette
     { type: 'recruiter', content: "This is all great. I'm very interested. Let's schedule a call for next week." },
   ].filter(item => item.content || item.type === 'typing'), [about, experience, skills, education, custom, portfolio, references]);
 
-  // Force scrollbar to be visible to prevent layout jank
   useEffect(() => {
-    document.documentElement.style.overflowY = 'scroll';
-    return () => {
-      document.documentElement.style.overflowY = 'auto';
-    };
-  }, []);
-
-  useEffect(() => {
+    if (showCoverLetter) return; // Pause conversation when cover letter is open
+    
     setMessages([]);
     let currentMessageIndex = 0;
     const timeouts: NodeJS.Timeout[] = [];
@@ -132,7 +212,7 @@ export function SmsConversationTemplate({ data, isCoverLetterOpen, setCoverLette
       const item = conversationFlow[currentMessageIndex];
       
       if (item.type === 'typing') {
-        const randomDelay = Math.random() * 2000 + 1000; // 1-3 seconds
+        const randomDelay = Math.random() * 1500; // 0-1.5 seconds
         const delayTimeout = setTimeout(() => {
             const typerName = (item as any).who === 'candidate' ? data.about.name.split(' ')[0] : 'Recruiter';
             setTypingUser(typerName);
@@ -162,10 +242,10 @@ export function SmsConversationTemplate({ data, isCoverLetterOpen, setCoverLette
     timeouts.push(startTimeout);
 
     return () => timeouts.forEach(clearTimeout);
-  }, [conversationFlow, data.about.name]);
+  }, [conversationFlow, data.about.name, showCoverLetter]);
 
   useEffect(() => {
-    if (messages.length > 0) {
+    if (messages.length > 0 && !showCoverLetter) {
       // A short delay to allow the new element to render before scrolling
       setTimeout(() => {
           window.scrollTo({
@@ -174,10 +254,21 @@ export function SmsConversationTemplate({ data, isCoverLetterOpen, setCoverLette
           });
       }, 100);
     }
-  }, [messages]);
+  }, [messages, showCoverLetter]);
+
+  // Apply scrollbar-hide to html and body elements
+  useEffect(() => {
+    document.documentElement.classList.add('scrollbar-hide');
+    document.body.classList.add('scrollbar-hide');
+    
+    return () => {
+      document.documentElement.classList.remove('scrollbar-hide');
+      document.body.classList.remove('scrollbar-hide');
+    };
+  }, []);
 
   return (
-    <div className="bg-white min-h-screen p-4 font-sans">
+    <div className="bg-white min-h-screen p-4 font-sans overflow-y-auto scrollbar-hide">
         <div className="w-full max-w-lg mx-auto">
             <div className="flex items-center justify-center mb-8 p-4 bg-gray-50 rounded-lg">
                 <div className="relative">
@@ -187,16 +278,77 @@ export function SmsConversationTemplate({ data, isCoverLetterOpen, setCoverLette
                     <span className="absolute bottom-0 right-0 block h-4 w-4 rounded-full bg-green-500 border-2 border-gray-50"></span>
                 </div>
                 <div className="ml-4">
-                    <h2 className="text-xl font-bold text-gray-800">{data.about.name}</h2>
+                    <h2 
+                      className="text-xl font-bold text-gray-800 cursor-pointer hover:text-blue-600 transition-colors"
+                      onClick={() => setShowCoverLetter(true)}
+                    >
+                      {data.about.name}
+                    </h2>
                     <p className="text-sm text-gray-500">Online</p>
                 </div>
             </div>
             
             <div>
-                <AnimatePresence>
-                    {messages.map((msg) => msg)}
-                </AnimatePresence>
-                {typingUser && <TypingIndicator name={typingUser} />}
+                {showCoverLetter ? (
+                  // Cover Letter Modal Content
+                  <div className="relative">
+                    <div className="flex items-center justify-between mb-4 p-3 bg-gray-50 rounded-lg">
+                      <div className="flex items-center space-x-2">
+                        <div className="w-3 h-3 bg-red-500 rounded-full"></div>
+                        <div className="w-3 h-3 bg-yellow-500 rounded-full"></div>
+                        <div className="w-3 h-3 bg-green-500 rounded-full"></div>
+                      </div>
+                      <span className="text-sm text-gray-600 font-medium">Cover Letter</span>
+                      <button
+                        onClick={() => setShowCoverLetter(false)}
+                        className="text-gray-400 hover:text-gray-600 transition-colors"
+                      >
+                        ✕
+                      </button>
+                    </div>
+                    <AnimatePresence>
+                      {/* If no cover letter, show message */}
+                      {coverLetterParagraphs.length === 0 && (
+                        <motion.div
+                          key="no-cover"
+                          initial={{ opacity: 0, y: 20 }}
+                          animate={{ opacity: 1, y: 0 }}
+                        >
+                          <CoverLetterMessageBubble>
+                            <div className="text-center text-gray-300">
+                              No cover letter available
+                            </div>
+                          </CoverLetterMessageBubble>
+                        </motion.div>
+                      )}
+                      {/* Show paragraphs up to current step */}
+                      {coverLetterParagraphs.slice(0, coverLetterStep).map((paragraph, idx) => (
+                        <motion.div
+                          key={idx}
+                          initial={{ opacity: 0, y: 20 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ delay: idx * 0.2 }}
+                        >
+                          <CoverLetterMessageBubble>
+                            <div className="whitespace-pre-line">{paragraph.trim()}</div>
+                          </CoverLetterMessageBubble>
+                        </motion.div>
+                      ))}
+                      {/* Typing indicator appears below all visible paragraphs */}
+                      {showTyping && (
+                        <TypingIndicator name={data.about.name.split(' ')[0]} key="typing-indicator" />
+                      )}
+                    </AnimatePresence>
+                  </div>
+                ) : (
+                  // Regular Conversation
+                  <>
+                    <AnimatePresence>
+                        {messages.map((msg) => msg)}
+                    </AnimatePresence>
+                    {typingUser && <TypingIndicator name={typingUser} />}
+                  </>
+                )}
             </div>
         </div>
       <div className="h-[50vh]" />

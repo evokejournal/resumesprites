@@ -12,7 +12,6 @@ import { useRouter } from 'next/navigation';
 import { CareerPathPreview } from "@/components/templates/previews/CareerPathPreview";
 import { RetroTerminalPreview } from "@/components/templates/previews/RetroTerminalPreview";
 import { OperatingSystemPreview } from "@/components/templates/previews/OperatingSystemPreview";
-import { ScarletTimelinePreview } from "@/components/templates/previews/ScarletTimelinePreview";
 import { TypographicGridPreview } from "@/components/templates/previews/TypographicGridPreview";
 import { ObsidianPreview } from "@/components/templates/previews/ObsidianPreview";
 import { MutedElegancePreview } from "@/components/templates/previews/MutedElegancePreview";
