@@ -102,3 +102,12 @@ export const CoverLetterIcon = ({ className }: { className?: string }) => (
         <path d="M22 4L26 8H22V4Z" fill="#C0C0C0"/>
     </svg>
 );
+
+export const DownloadIcon = ({ className }: { className?: string }) => (
+  <svg className={className} viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <rect x="6" y="4" width="20" height="24" rx="2" fill="#C0C0C0" stroke="#888" strokeWidth="2"/>
+    <rect x="10" y="8" width="12" height="8" rx="1" fill="#fff" stroke="#888" strokeWidth="1"/>
+    <path d="M16 12v8m0 0l-4-4m4 4l4-4" stroke="#2E3192" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+    <rect x="10" y="22" width="12" height="2" rx="1" fill="#2E3192"/>
+  </svg>
+);

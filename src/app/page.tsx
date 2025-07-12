@@ -9,14 +9,8 @@ import { ArrowRight } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { useRouter } from 'next/navigation';
 
-import { CareerPathPreview } from "@/components/templates/previews/CareerPathPreview";
 import { RetroTerminalPreview } from "@/components/templates/previews/RetroTerminalPreview";
 import { OperatingSystemPreview } from "@/components/templates/previews/OperatingSystemPreview";
-import { TypographicGridPreview } from "@/components/templates/previews/TypographicGridPreview";
-import { ObsidianPreview } from "@/components/templates/previews/ObsidianPreview";
-import { MutedElegancePreview } from "@/components/templates/previews/MutedElegancePreview";
-import { PeachPitPreview } from "@/components/templates/previews/PeachPitPreview";
-import { ExtremelyProfessionalPreview } from "@/components/templates/previews/ExtremelyProfessionalPreview";
 import { YoublePreview } from "@/components/templates/previews/GoobleItPreview";
 import { ForTaxPurposesPreview } from "@/components/templates/previews/ReceiptRollPreview";
 import { ExplosivePotentialPreview } from "@/components/templates/previews/ExplosivePotentialPreview";
@@ -76,18 +70,54 @@ export default function HeroPage() {
     );
   }
 
-  // To ensure no two same templates appear at once, we'll shuffle the order for each column.
-  const column1Templates = [...templates];
-  // Offset by a third
-  const column2Templates = [...templates.slice(4), ...templates.slice(0, 4)];
-  // Offset by two thirds
-  const column3Templates = [...templates.slice(8), ...templates.slice(0, 8)];
+  // Only show these templates in the hero carousel
+  const HERO_TEMPLATE_IDS = [
+    'youble',
+    'operating-system',
+    'for-tax-purposes',
+    'code-syntax',
+    'snakebite-resume',
+    'bouncing-resume',
+    'explosive-potential',
+    'sms-conversation',
+    'retro-terminal',
+  ];
+  const heroTemplates = templates.filter(t => HERO_TEMPLATE_IDS.includes(t.id));
+
+  // To ensure no two same templates appear at once, offset each column
+  const column1Templates = [...heroTemplates];
+  const column2Templates = [...heroTemplates.slice(3), ...heroTemplates.slice(0, 3)];
+  const column3Templates = [...heroTemplates.slice(6), ...heroTemplates.slice(0, 6)];
 
   return (
     <div className="relative isolate min-h-screen w-full overflow-hidden bg-background">
       <div
         className="[--aurora:repeating-linear-gradient(100deg,hsl(var(--primary)/0.1)_10%,hsl(var(--accent)/0.15)_15%,hsl(var(--primary)/0.1)_20%)] [background-image:var(--aurora),var(--aurora)] [background-size:200%_100%] [background-position:50%_50%,50%_50%] filter blur-[10px] after:content-[''] after:absolute after:inset-0 after:bg-background/80 after:z-[-1] animate-[aurora_15s_linear_infinite] fixed inset-0"
       ></div>
+
+      {/* Flying firefly-like pixels */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">
+        {[...Array(20)].map((_, i) => (
+          <motion.div
+            key={i}
+            className="absolute w-2 h-2 bg-primary/30 rounded-full"
+            animate={{
+              x: [0, 100, 0],
+              y: [0, -100, 0],
+              opacity: [0, 1, 0],
+            }}
+            transition={{
+              duration: 8 + Math.random() * 4,
+              repeat: Infinity,
+              delay: Math.random() * 5,
+            }}
+            style={{
+              left: `${Math.random() * 100}%`,
+              top: `${Math.random() * 100}%`,
+            }}
+          />
+        ))}
+      </div>
 
       <main className="relative z-10 flex flex-col items-center justify-center min-h-screen text-center p-4">
         

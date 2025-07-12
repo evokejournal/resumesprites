@@ -9,6 +9,7 @@ import { DesktopIcon } from './os/DesktopIcon';
 import { Calculator } from './os/Calculator';
 import * as Icons from './os/icons';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { DownloadIcon } from './os/icons';
 
 interface WindowState {
   id: string;
@@ -98,6 +99,25 @@ export function OperatingSystemTemplate({ data }: OperatingSystemTemplateProps) 
     });
   };
 
+  const handleDownloadResume = async () => {
+    // Call the API to generate and download the PDF
+    const res = await fetch('/api/resumes/os-pdf', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ resumeData: data }),
+    });
+    if (!res.ok) return;
+    const blob = await res.blob();
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'resume-operating-system.pdf';
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    window.URL.revokeObjectURL(url);
+  };
+
   const desktopItems = [
     { id: 'coverLetter', title: 'Cover Letter', icon: Icons.CoverLetterIcon, content: (
       <div className="space-y-3 min-h-[300px]">
@@ -135,6 +155,7 @@ export function OperatingSystemTemplate({ data }: OperatingSystemTemplateProps) 
     { id: 'references', title: 'References', icon: Icons.UsersIcon, content: <div className="space-y-2">{data.references.map(r => <div key={r.id}><b>{r.name}</b> ({r.relation}) - {r.contact}</div>)}</div>, hasContent: data.references.length > 0 },
     { id: 'custom', title: data.custom.title, icon: Icons.StarIcon, content: <ul className="list-disc list-inside">{data.custom.items.map(i => <li key={i.id}>{i.description}</li>)}</ul>, hasContent: data.custom.items.length > 0 },
     { id: 'calculator', title: 'Calculator', icon: Icons.CalculatorIcon, content: <Calculator />, hasContent: true },
+    { id: 'download', title: 'Download Resume', icon: DownloadIcon, content: null, hasContent: true },
   ];
 
   return (
@@ -145,7 +166,7 @@ export function OperatingSystemTemplate({ data }: OperatingSystemTemplateProps) 
             key={item.id}
             label={item.title}
             Icon={item.icon}
-            onDoubleClick={() => openWindow(item.id, `${item.title.toLowerCase().replace(' ', '_')}.txt`, item.icon, item.content)}
+            onDoubleClick={item.id === 'download' ? handleDownloadResume : () => openWindow(item.id, `${item.title.toLowerCase().replace(' ', '_')}.txt`, item.icon, item.content)}
           />
         ))}
       </div>

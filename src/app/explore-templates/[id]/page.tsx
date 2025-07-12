@@ -3,14 +3,8 @@
 
 import { initialResumeData } from '@/lib/data';
 import React, { useState } from 'react';
-import { CareerPathTemplate } from '@/components/templates/CareerPathTemplate';
 import { RetroTerminalTemplate } from '@/components/templates/RetroTerminalTemplate';
 import { OperatingSystemTemplate } from '@/components/templates/OperatingSystemTemplate';
-import { TypographicGridTemplate } from '@/components/templates/TypographicGridTemplate';
-import { ObsidianTemplate } from '@/components/templates/ObsidianTemplate';
-import { MutedEleganceTemplate } from '@/components/templates/MutedEleganceTemplate';
-import { PeachPitTemplate } from '@/components/templates/PeachPitTemplate';
-import { ExtremelyProfessionalTemplate } from '@/components/templates/ExtremelyProfessionalTemplate';
 import { YoubleTemplate } from '@/components/templates/GoobleItTemplate';
 import { ForTaxPurposesTemplate } from '@/components/templates/ReceiptRollTemplate';
 import { ExplosivePotentialTemplate } from '@/components/templates/ExplosivePotentialTemplate';
@@ -20,12 +14,14 @@ import { ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { CodeSyntaxTemplate } from '@/components/templates/CodeSyntaxTemplate';
+import { SnakebiteResumeTemplate } from '@/components/templates/SnakebiteResumeTemplate';
+import { BouncingResumeTemplate } from '@/components/templates/BouncingResumeTemplate';
 
 
 export default function PublicPreviewPage() {
   const params = useParams();
   const id = Array.isArray(params.id) ? params.id[0] : params.id;
-  const resumeData = { ...initialResumeData, template: id || 'career-path' };
+  const resumeData = { ...initialResumeData, template: id || 'youble' };
   const [isCoverLetterOpen, setCoverLetterOpen] = useState(false);
 
   React.useEffect(() => {
@@ -48,16 +44,6 @@ export default function PublicPreviewPage() {
         return <RetroTerminalTemplate {...props} />;
       case 'operating-system':
         return <OperatingSystemTemplate {...props} />;
-      case 'typographic-grid':
-        return <TypographicGridTemplate {...props} />;
-      case 'obsidian':
-        return <ObsidianTemplate {...props} />;
-      case 'muted-elegance':
-        return <MutedEleganceTemplate {...props} />;
-      case 'peach-pit':
-        return <PeachPitTemplate {...props} />;
-      case 'extremely-professional':
-        return <ExtremelyProfessionalTemplate {...props} />;
       case 'youble':
         return <YoubleTemplate {...props} />;
       case 'for-tax-purposes':
@@ -66,9 +52,12 @@ export default function PublicPreviewPage() {
         return <ExplosivePotentialTemplate {...props} />;
       case 'sms-conversation':
         return <SmsConversationTemplate {...props} />;
-      case 'career-path':
+      case 'snakebite-resume':
+        return <SnakebiteResumeTemplate {...props} />;
+      case 'bouncing-resume':
+        return <BouncingResumeTemplate {...props} />;
       default:
-        return <CareerPathTemplate {...props} />;
+        return <YoubleTemplate {...props} />;
     }
   };
 

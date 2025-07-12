@@ -20,13 +20,10 @@ import { templates } from '@/lib/templates';
 import { Textarea } from '@/components/ui/textarea';
 
 export default function DashboardPage() {
-  const { generatedLinks, generateResumeLink, deleteGeneratedLink, refreshLinks, resumeData } = useResume();
+  const { generatedLinks, deleteGeneratedLink, refreshLinks, resumeData } = useResume();
   const { user } = useAuth();
   const { toast } = useToast();
-  const [password, setPassword] = useState('');
-  const [isGenerating, setIsGenerating] = useState(false);
   const [isDeleting, setIsDeleting] = useState<string | null>(null);
-  const [modalOpen, setModalOpen] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [coverLetterModal, setCoverLetterModal] = useState<{ open: boolean, linkId: string | null }>({ open: false, linkId: null });
   const [coverLetterFields, setCoverLetterFields] = useState({
@@ -65,7 +62,7 @@ export default function DashboardPage() {
     return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
   }, [refreshLinks]);
 
-  const currentTemplate = templates.find(t => t.id === resumeData.template);
+
 
   const handleRefreshLinks = async () => {
     setIsRefreshing(true);
@@ -86,34 +83,7 @@ export default function DashboardPage() {
     }
   };
 
-  const handleGenerateLink = async () => {
-    if (!password.trim()) {
-      toast({
-        title: "Password required",
-        description: "Please enter a password for your resume link.",
-        variant: "destructive",
-      });
-      return;
-    }
-    setIsGenerating(true);
-    try {
-      const newLink = await generateResumeLink(password);
-      setPassword('');
-      setModalOpen(false);
-      toast({
-        title: "Link generated!",
-        description: `Your resume link has been created with ID: ${newLink.shortId}`,
-      });
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to generate resume link. Please try again.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsGenerating(false);
-    }
-  };
+
 
   const handleCopyLink = (shortId: string) => {
     const link = `${window.location.origin}/resume/${shortId}`;
@@ -250,10 +220,10 @@ export default function DashboardPage() {
           <div className="mb-8">
             <div className="flex items-center justify-between">
               <div>
-                <h1 className="text-3xl font-bold mb-2">Link Dashboard</h1>
-                <p className="text-muted-foreground">
-                  Generate and manage password-protected resume links for sharing your professional profile.
-                </p>
+            <h1 className="text-3xl font-bold mb-2">Link Dashboard</h1>
+            <p className="text-muted-foreground">
+              Generate and manage password-protected resume links for sharing your professional profile.
+            </p>
               </div>
               <Button
                 variant="outline"
@@ -267,68 +237,7 @@ export default function DashboardPage() {
             </div>
           </div>
 
-          {/* Generate New Link */}
-          <Card className="mb-8">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Lock className="h-5 w-5" />
-                Generate New Resume Link
-              </CardTitle>
-              <CardDescription>
-                Create a new password-protected link to share your current resume. Each link takes a snapshot of your current data and template.
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Dialog open={modalOpen} onOpenChange={setModalOpen}>
-                <DialogTrigger asChild>
-                  <Button className="min-w-[140px]">Generate Link</Button>
-                </DialogTrigger>
-                <DialogContent className="max-w-md">
-                  <DialogHeader>
-                    <DialogTitle>Set Password & Confirm</DialogTitle>
-                    <DialogDescription>
-                      This link will use your current template and data snapshot.
-                    </DialogDescription>
-                  </DialogHeader>
-                  <form autoComplete="off">
-                  <div className="flex flex-col items-center gap-4 py-2">
-                    {currentTemplate && (
-                      <div className="mb-2">
-                        <div className="flex flex-col items-center">
-                          <span className="text-xs text-muted-foreground mb-1">Current Template</span>
-                          <div className="w-32 h-20 flex items-center justify-center border rounded bg-muted">
-                            {currentTemplate.previewComponent}
-                          </div>
-                          <span className="text-sm mt-1">{currentTemplate.name}</span>
-                        </div>
-                      </div>
-                    )}
-                    <div className="w-full">
-                      <Label htmlFor="password">Password</Label>
-                      <Input
-                        id="password"
-                        type="password"
-                        placeholder="Enter password for this link"
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                        onKeyPress={(e) => e.key === 'Enter' && handleGenerateLink()}
-                        autoFocus
-                        autoComplete="new-password"
-                      />
-                    </div>
-                    <Button
-                      onClick={handleGenerateLink}
-                      disabled={isGenerating || !password.trim()}
-                      className="w-full mt-2"
-                    >
-                      {isGenerating ? 'Generating...' : 'Confirm & Generate'}
-                    </Button>
-                  </div>
-                  </form>
-                </DialogContent>
-              </Dialog>
-            </CardContent>
-          </Card>
+
 
 
 
@@ -351,7 +260,7 @@ export default function DashboardPage() {
                 const template = templates.find(t => t.id === link.templateSnapshot);
                 return (
                   <Card key={link.id} className="hover:shadow-lg transition-shadow rounded-xl border border-gray-200 bg-white/90 group">
-                    <CardContent className="p-6">
+                  <CardContent className="p-6">
                       <div className="flex items-start gap-6">
                         {/* Template Preview */}
                         <div className="flex-shrink-0">
@@ -370,35 +279,35 @@ export default function DashboardPage() {
                               <div className="flex items-center gap-1">{formatDateDDMMYY(link.createdAt)}</div>
                               <div className="flex items-center gap-1"><Users className="h-4 w-4" />{getTotalViews(link)} view{getTotalViews(link) !== 1 ? 's' : ''}</div>
                               <div className="flex items-center gap-1"><Eye className="h-4 w-4" />Last viewed {getLastViewed(link)}</div>
-                            </div>
+                      </div>
                             {/* Move action buttons below info */}
                             <div className="flex flex-col sm:flex-row gap-2 mt-2">
                               <Button variant="outline" size="sm" onClick={() => handleCopyLink(link.shortId)} className="flex-1"><Copy className="h-4 w-4 mr-2" />Copy</Button>
                               <Button variant="outline" size="sm" onClick={() => window.open(`/resume/${link.shortId}`, '_blank')} className="flex-1"><ExternalLink className="h-4 w-4 mr-2" />View</Button>
                               <Button variant="outline" size="sm" onClick={() => handleDownloadPDF(link)} className="flex-1">Download PDF</Button>
-                              <AlertDialog>
-                                <AlertDialogTrigger asChild>
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
                                   <Button variant="outline" size="sm" disabled={isDeleting === link.id} className="flex-1"><Trash2 className="h-4 w-4" /></Button>
-                                </AlertDialogTrigger>
-                                <AlertDialogContent>
-                                  <AlertDialogHeader>
-                                    <AlertDialogTitle>Delete Resume Link</AlertDialogTitle>
-                                    <AlertDialogDescription>
-                                      Are you sure you want to delete the link "{link.shortId}"? This action cannot be undone and the link will no longer be accessible.
-                                    </AlertDialogDescription>
-                                  </AlertDialogHeader>
-                                  <AlertDialogFooter>
-                                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>Delete Resume Link</AlertDialogTitle>
+                              <AlertDialogDescription>
+                                Are you sure you want to delete the link "{link.shortId}"? This action cannot be undone and the link will no longer be accessible.
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>Cancel</AlertDialogCancel>
                                     <AlertDialogAction onClick={() => handleDeleteLink(link.id)} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">Delete</AlertDialogAction>
-                                  </AlertDialogFooter>
-                                </AlertDialogContent>
-                              </AlertDialog>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
                             </div>
                           </div>
-                        </div>
                       </div>
-                    </CardContent>
-                  </Card>
+                    </div>
+                  </CardContent>
+                </Card>
                 );
               })
             )}

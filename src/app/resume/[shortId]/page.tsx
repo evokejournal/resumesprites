@@ -9,18 +9,17 @@ import { db } from '@/lib/firebase';
 import { collection, query, where, getDocs, updateDoc, doc } from 'firebase/firestore';
 import { GeneratedLink, ResumeData } from '@/lib/types';
 import { getTemplateComponent } from '@/lib/templates';
-import {
+import { 
   CodeSyntaxPasswordScreen,
   RetroTerminalPasswordScreen,
   OperatingSystemPasswordScreen,
-  ObsidianPasswordScreen,
   ModernPasswordScreen,
   YoublePasswordScreen,
-  PeachPitPasswordScreen,
   SmsConversationPasswordScreen,
   ReceiptRollPasswordScreen,
   ExplosivePotentialPasswordScreen,
-  SnakebitePasswordScreen
+  SnakebitePasswordScreen,
+  BouncingResumePasswordScreen
 } from '@/components/templates/password-screens';
 
 export default function ResumeViewPage() {
@@ -183,14 +182,6 @@ export default function ResumeViewPage() {
               error={error}
             />
           );
-        case 'obsidian':
-          return (
-            <ObsidianPasswordScreen
-              onSubmit={handlePasswordSubmit}
-              isSubmitting={isSubmitting}
-              error={error}
-            />
-          );
         case 'modern':
           return (
             <ModernPasswordScreen
@@ -202,14 +193,6 @@ export default function ResumeViewPage() {
         case 'youble':
           return (
             <YoublePasswordScreen
-              onSubmit={handlePasswordSubmit}
-              isSubmitting={isSubmitting}
-              error={error}
-            />
-          );
-        case 'peach-pit':
-          return (
-            <PeachPitPasswordScreen
               onSubmit={handlePasswordSubmit}
               isSubmitting={isSubmitting}
               error={error}
@@ -243,6 +226,15 @@ export default function ResumeViewPage() {
         case 'snakebite-resume':
           return (
             <SnakebitePasswordScreen
+              onSubmit={handlePasswordSubmit}
+              loading={isSubmitting}
+              error={error}
+              name={link?.resumeDataSnapshot?.about?.name}
+            />
+          );
+        case 'bouncing-resume':
+          return (
+            <BouncingResumePasswordScreen
               onSubmit={handlePasswordSubmit}
               loading={isSubmitting}
               error={error}

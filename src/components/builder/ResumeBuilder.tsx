@@ -195,9 +195,9 @@ export function ResumeBuilder() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-headline font-bold">Resume Builder</h1>
-          <p className="text-muted-foreground">Fill in your details to create a professional, interactive resume.</p>
+      <div>
+        <h1 className="text-3xl font-headline font-bold">Resume Builder</h1>
+        <p className="text-muted-foreground">Fill in your details to create a professional, interactive resume.</p>
         </div>
         <div className="flex gap-2">
           <Button variant="secondary" onClick={generateTestData}>Generate Test Information</Button>

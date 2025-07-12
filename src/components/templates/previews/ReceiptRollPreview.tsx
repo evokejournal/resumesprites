@@ -21,7 +21,7 @@ export function ForTaxPurposesPreview({ name }: { name?: string }) {
         <path d="M80 100 H 220 V 270 L 215 265 L 210 270 L 205 265 L 200 270 L 195 265 L 190 270 L 185 265 L 180 270 L 175 265 L 170 270 L 165 265 L 160 270 L 155 265 L 150 270 L 145 265 L 140 270 L 135 265 L 130 270 L 125 265 L 120 270 L 115 265 L 110 270 L 105 265 L 100 270 L 95 265 L 90 270 L 85 265 L 80 270 V 100 Z" fill="#fdfdf2" />
         
         {/* Receipt Content */}
-        <text x="150" y="120" textAnchor="middle" fontSize="10" fontWeight="bold" fill="black">LINKSTONE.</text>
+        <text x="150" y="120" textAnchor="middle" fontSize="10" fontWeight="bold" fill="black">{name || 'Your Name'}</text>
         <text x="150" y="130" textAnchor="middle" fontSize="6" fill="black">*****************</text>
         <text x="90" y="145" fontSize="6" fill="black">EXPERIENCE</text>
         <text x="210" y="145" textAnchor="end" fontSize="6" fill="black">100.00</text>

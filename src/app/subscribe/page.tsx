@@ -30,7 +30,7 @@ export default function SubscribePage() {
                         <CardTitle className="text-3xl font-bold">Lifetime Access</CardTitle>
                         <CardDescription>One-time purchase. All features, forever.</CardDescription>
                         <div className="flex items-baseline justify-center gap-2 pt-4">
-                           <span className="text-5xl font-bold">$49</span>
+                           <span className="text-5xl font-bold">$20</span>
                            <span className="text-xl text-muted-foreground">one-time</span>
                         </div>
                     </CardHeader>

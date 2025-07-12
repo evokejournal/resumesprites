@@ -3,21 +3,8 @@
 
 import { useResume } from '@/context/ResumeContext';
 import React, { useState } from 'react';
-import { CareerPathTemplate } from '@/components/templates/CareerPathTemplate';
-import { RetroTerminalTemplate } from '@/components/templates/RetroTerminalTemplate';
-import { OperatingSystemTemplate } from '@/components/templates/OperatingSystemTemplate';
-import { TypographicGridTemplate } from '@/components/templates/TypographicGridTemplate';
-import { ObsidianTemplate } from '@/components/templates/ObsidianTemplate';
-import { MutedEleganceTemplate } from '@/components/templates/MutedEleganceTemplate';
-import { PeachPitTemplate } from '@/components/templates/PeachPitTemplate';
-import { ExtremelyProfessionalTemplate } from '@/components/templates/ExtremelyProfessionalTemplate';
-import { YoubleTemplate } from '@/components/templates/GoobleItTemplate';
-import { ForTaxPurposesTemplate } from '@/components/templates/ReceiptRollTemplate';
-import { ExplosivePotentialTemplate } from '@/components/templates/ExplosivePotentialTemplate';
-import { SmsConversationTemplate } from '@/components/templates/SmsConversationTemplate';
 import { FullScreenPreview } from '@/components/FullScreenPreview';
 import { Loader2 } from 'lucide-react';
-import { CodeSyntaxTemplate } from '@/components/templates/CodeSyntaxTemplate';
 
 import { templateComponentMap } from '@/lib/templates';
 import { useParams } from 'next/navigation';

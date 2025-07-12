@@ -184,19 +184,19 @@ export const ResumeProvider = ({ children }: { children: ReactNode }) => {
           console.log('Resume data saved successfully to Firestore');
         })
         .catch((err) => {
-          console.error('Failed to save resume data:', err);
-          console.error('Error details:', {
-            code: err.code,
-            message: err.message,
-            details: err.details
-          });
-          if (err.message?.includes('CORS') || err.message?.includes('502') || err.code === 'unavailable') {
-            console.warn('Firebase connectivity issue detected. Resume data not saved');
-            setIsOffline(true);
-          } else {
-            setError('Failed to save resume data.');
-          }
+        console.error('Failed to save resume data:', err);
+        console.error('Error details:', {
+          code: err.code,
+          message: err.message,
+          details: err.details
         });
+        if (err.message?.includes('CORS') || err.message?.includes('502') || err.code === 'unavailable') {
+          console.warn('Firebase connectivity issue detected. Resume data not saved');
+          setIsOffline(true);
+        } else {
+          setError('Failed to save resume data.');
+        }
+      });
     }
     // eslint-disable-next-line
   }, [resumeData, user, isHydrated]);
