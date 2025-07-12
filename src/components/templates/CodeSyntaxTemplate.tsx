@@ -4,6 +4,7 @@
 import React, { useRef, useState, useEffect, useCallback } from 'react';
 import type { ResumeData } from '@/lib/types';
 import { motion } from 'framer-motion';
+import { Photo } from './Photo';
 
 // --- Pong Game Constants ---
 const PADDLE_HEIGHT = 80;
@@ -389,14 +390,19 @@ export function CodeSyntaxTemplate({ data }: TemplateProps) {
 
       <div ref={contentRef} className="relative z-10 max-w-4xl mx-auto bg-[#252526] p-6 rounded-lg shadow-2xl border border-gray-700">
         <div className="text-center mb-8 border-b border-gray-700 pb-4">
-          <h1 
-            className="font-pixelify text-5xl md:text-7xl text-green-400 cursor-pointer hover:text-green-300 transition-colors" 
-            style={{ textShadow: '0 0 8px rgba(52, 211, 153, 0.5)'}}
-            onClick={() => setShowCoverLetter(true)}
-          >
-            Hello, World!
-          </h1>
-          <p className="text-gray-400 mt-2">// My name is {about.name}, and this is my resume.</p>
+          <div className="flex flex-col items-center gap-4">
+            <Photo photo={about.photo} name={about.name} size="lg" className="border-4 border-green-400/30" />
+            <div>
+              <h1 
+                className="font-pixelify text-5xl md:text-7xl text-green-400 cursor-pointer hover:text-green-300 transition-colors" 
+                style={{ textShadow: '0 0 8px rgba(52, 211, 153, 0.5)'}}
+                onClick={() => setShowCoverLetter(true)}
+              >
+                Hello, World!
+              </h1>
+              <p className="text-gray-400 mt-2">// My name is {about.name}, and this is my resume.</p>
+            </div>
+          </div>
         </div>
 
         <div>

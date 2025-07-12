@@ -13,7 +13,6 @@ import {
   CodeSyntaxPasswordScreen,
   RetroTerminalPasswordScreen,
   OperatingSystemPasswordScreen,
-  ModernPasswordScreen,
   YoublePasswordScreen,
   SmsConversationPasswordScreen,
   ReceiptRollPasswordScreen,
@@ -182,14 +181,7 @@ export default function ResumeViewPage() {
               error={error}
             />
           );
-        case 'modern':
-          return (
-            <ModernPasswordScreen
-              onSubmit={handlePasswordSubmit}
-              isSubmitting={isSubmitting}
-              error={error}
-            />
-          );
+
         case 'youble':
           return (
             <YoublePasswordScreen
@@ -243,7 +235,7 @@ export default function ResumeViewPage() {
           );
         default:
           return (
-            <ModernPasswordScreen
+            <YoublePasswordScreen
               onSubmit={handlePasswordSubmit}
               isSubmitting={isSubmitting}
               error={error}

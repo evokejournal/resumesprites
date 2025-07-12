@@ -5,6 +5,7 @@ import type { ResumeData } from '@/lib/types';
 import { Search } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Image from 'next/image';
+import { Photo } from './Photo';
 
 const YoubleLogo = ({ size = 'large' }: { size?: 'large' | 'small' }) => (
     <h1 className={`font-headline select-none ${size === 'large' ? 'text-6xl md:text-8xl' : 'text-2xl'}`}>
@@ -208,34 +209,14 @@ export function YoubleTemplate({ data, pdfMode }: TemplateProps) {
 
                                 {/* About Section */}
                                 <div className="bg-gray-50 border border-gray-200 p-4 rounded-lg mb-8">
-                                    {about.photo ? (
-                                        <div className="flex items-start gap-4">
-                                            <Image
-                                                src={about.photo}
-                                                alt={about.name}
-                                                width={80}
-                                                height={80}
-                                                className="rounded-lg object-cover flex-shrink-0"
-                                                data-ai-hint="profile picture"
-                                            />
-                                            <div>
-                                                <h2 
-                                                    className="text-xl font-semibold cursor-pointer hover:text-[#1a0dab] transition-colors"
-                                                    onClick={() => setShowCoverLetter(true)}
-                                                >
-                                                    {about.name}
-                                                </h2>
-                                                <p className="text-gray-600">{about.jobTitle}</p>
-                                                <p className="text-sm mt-2">{about.summary}</p>
-                                                <div className="text-xs mt-3 space-x-4 text-gray-500">
-                                                    <span>{contact.email}</span>
-                                                    <span>{contact.phone}</span>
-                                                    <span>{contact.location}</span>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    ) : (
-                                        <>
+                                    <div className="flex items-start gap-4">
+                                        <Photo 
+                                            photo={about.photo} 
+                                            name={about.name} 
+                                            size="lg" 
+                                            className="rounded-lg flex-shrink-0"
+                                        />
+                                        <div>
                                             <h2 
                                                 className="text-xl font-semibold cursor-pointer hover:text-[#1a0dab] transition-colors"
                                                 onClick={() => setShowCoverLetter(true)}
@@ -249,8 +230,8 @@ export function YoubleTemplate({ data, pdfMode }: TemplateProps) {
                                                 <span>{contact.phone}</span>
                                                 <span>{contact.location}</span>
                                             </div>
-                                        </>
-                                    )}
+                                        </div>
+                                    </div>
                                 </div>
 
                                 {/* Other Sections as Search Results */}

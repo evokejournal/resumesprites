@@ -116,17 +116,7 @@ function getTemplateStyle(templateId: string) {
     
 
     
-    case 'modern':
-      return {
-        backgroundColor: { r: 1, g: 1, b: 1 }, // white
-        cardBackground: { r: 0.98, g: 0.98, b: 0.98 }, // #fafafa
-        borderColor: { r: 0.9, g: 0.9, b: 0.9 }, // #e5e5e5
-        textColor: { r: 0.2, g: 0.2, b: 0.2 }, // #333
-        accentColor: { r: 0.2, g: 0.6, b: 1 }, // #3399ff
-        font: StandardFonts.Helvetica,
-        title: "Password Required",
-        subtitle: "Enter password to access resume"
-      };
+
     
     default:
       return {

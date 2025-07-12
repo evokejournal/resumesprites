@@ -47,7 +47,7 @@ const SkillSchema = z.object({
 
 const PortfolioItemSchema = z.object({
   title: z.string().describe('The title of the portfolio project.'),
-  url: z.string().url().describe('The URL to the project.'),
+  url: z.string().describe('The URL to the project.'),
   description: z.string().describe('A brief description of the project.'),
 });
 

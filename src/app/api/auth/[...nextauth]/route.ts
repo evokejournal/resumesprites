@@ -1,8 +1,10 @@
 import NextAuth from 'next-auth';
 import { auth } from '@/lib/firebase';
 import { signInWithEmailAndPassword } from 'firebase/auth';
+import { authConfig } from '@/lib/auth-config';
 
 const handler = NextAuth({
+  ...authConfig,
   providers: [
     {
       id: 'firebase',
@@ -36,26 +38,6 @@ const handler = NextAuth({
       }
     }
   ],
-  session: {
-    strategy: 'jwt',
-  },
-  pages: {
-    signIn: '/auth/signin',
-  },
-  callbacks: {
-    async jwt({ token, user }) {
-      if (user) {
-        token.id = user.id;
-      }
-      return token;
-    },
-    async session({ session, token }) {
-      if (token) {
-        session.user.id = token.id as string;
-      }
-      return session;
-    },
-  },
 });
 
 export { handler as GET, handler as POST }; 

@@ -89,7 +89,7 @@ export default function ResumeLinkPage() {
   }
 
   // Render the actual resume using the correct template and theme
-  const TemplateComponent = templateComponentMap[resumeData?.template || 'modern'];
+  const TemplateComponent = templateComponentMap[resumeData?.template || 'youble'];
   
   if (!TemplateComponent) {
     return (

@@ -1,7 +1,6 @@
 export { CodeSyntaxPasswordScreen } from './CodeSyntaxPasswordScreen';
 export { RetroTerminalPasswordScreen } from './RetroTerminalPasswordScreen';
 export { OperatingSystemPasswordScreen } from './OperatingSystemPasswordScreen';
-export { ModernPasswordScreen } from './ModernPasswordScreen';
 export { YoublePasswordScreen } from './YoublePasswordScreen';
 export { SmsConversationPasswordScreen } from './SmsConversationPasswordScreen';
 export { ReceiptRollPasswordScreen } from './ReceiptRollPasswordScreen'; 

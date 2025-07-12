@@ -10,18 +10,14 @@ import { CodeSyntaxPreview } from '@/components/templates/previews/CodeSyntaxPre
 import { SnakebiteResumePreview } from "@/components/templates/previews/SnakebiteResumePreview";
 import { BouncingResumePreview } from "@/components/templates/previews/BouncingResumePreview";
 
-import { ModernTemplate } from "@/components/templates/ModernTemplate";
 import { YoubleTemplate } from "@/components/templates/GoobleItTemplate";
-import { MineHireTemplate } from "@/components/templates/MineHireTemplate";
 import { ForTaxPurposesTemplate } from "@/components/templates/ReceiptRollTemplate";
 import { RetroTerminalTemplate } from "@/components/templates/RetroTerminalTemplate";
 import { SmsConversationTemplate } from "@/components/templates/SmsConversationTemplate";
 import { SnakebiteResumeTemplate } from "@/components/templates/SnakebiteResumeTemplate";
-import { OperationTemplate } from "@/components/templates/OperationTemplate";
 import { CodeSyntaxTemplate } from "@/components/templates/CodeSyntaxTemplate";
 import { ExplosivePotentialTemplate } from "@/components/templates/ExplosivePotentialTemplate";
 import { BouncingResumeTemplate } from "@/components/templates/BouncingResumeTemplate";
-
 import { OperatingSystemTemplate } from "@/components/templates/OperatingSystemTemplate";
 
 export const templates = [
@@ -82,14 +78,11 @@ export const templates = [
 ];
 
 export const templateComponentMap: Record<string, React.ComponentType<any>> = {
-  'modern': ModernTemplate,
   'youble': YoubleTemplate,
-  'mine-hire': MineHireTemplate,
   'for-tax-purposes': ForTaxPurposesTemplate,
   'retro-terminal': RetroTerminalTemplate,
   'sms-conversation': SmsConversationTemplate,
   'snakebite-resume': SnakebiteResumeTemplate,
-  'operation': OperationTemplate,
   'code-syntax': CodeSyntaxTemplate,
   'explosive-potential': ExplosivePotentialTemplate,
   'operating-system': OperatingSystemTemplate,
@@ -99,27 +92,24 @@ export const templateComponentMap: Record<string, React.ComponentType<any>> = {
 export function getTemplateComponent(templateName: string): React.ComponentType<any> {
   const Component = templateComponentMap[templateName];
   if (!Component) {
-    console.warn(`Template component not found for: ${templateName}, falling back to modern`);
-    return templateComponentMap['modern'] || ModernTemplate;
+    console.warn(`Template component not found for: ${templateName}, falling back to youble`);
+    return templateComponentMap['youble'] || YoubleTemplate;
   }
   return Component;
 }
 
 export const templateStyleMap: Record<string, { background: string; fontFamily: string; textColor: string }> = {
-  'modern': { background: '#fff', fontFamily: 'Inter, sans-serif', textColor: '#222' },
   'youble': { background: '#fff', fontFamily: 'Arial, sans-serif', textColor: '#222' },
-  'mine-hire': { background: '#f7f6e7', fontFamily: 'Inter, sans-serif', textColor: '#222' },
   'for-tax-purposes': { background: '#fff', fontFamily: 'Menlo, monospace', textColor: '#222' },
   'retro-terminal': { background: '#18181b', fontFamily: 'Menlo, monospace', textColor: '#00ff00' },
   'sms-conversation': { background: '#f5f5f5', fontFamily: 'Inter, sans-serif', textColor: '#222' },
   'snakebite-resume': { background: '#fff', fontFamily: 'Inter, sans-serif', textColor: '#222' },
   'bouncing-resume': { background: '#000', fontFamily: 'Orbitron, sans-serif', textColor: '#fff' },
-  'operation': { background: '#f3f4f6', fontFamily: 'Inter, sans-serif', textColor: '#222' },
   'code-syntax': { background: '#18181b', fontFamily: 'Menlo, monospace', textColor: '#a6e22e' },
   'explosive-potential': { background: '#fff', fontFamily: 'Inter, sans-serif', textColor: '#222' },
   'operating-system': { background: '#e5e7eb', fontFamily: 'Inter, sans-serif', textColor: '#222' },
 };
 
 export function getTemplateStyle(templateId: string) {
-  return templateStyleMap[templateId] || templateStyleMap['modern'];
+  return templateStyleMap[templateId] || templateStyleMap['youble'];
 }
