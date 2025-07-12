@@ -13,7 +13,7 @@ import {
   SidebarFooter,
   SidebarSeparator,
 } from '@/components/ui/sidebar';
-import { LayoutGrid, FileText, Link as LinkIcon, LogOut, Eye, Sparkles, Settings, Lightbulb } from 'lucide-react';
+import { LayoutGrid, FileText, Link as LinkIcon, LogOut, Eye, Sparkles, Settings, Lightbulb, Shield } from 'lucide-react';
 import { Button } from './ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
 import { useResume } from '@/context/ResumeContext';
@@ -21,6 +21,7 @@ import { useAuth } from '@/context/AuthContext';
 import { signOut } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
 import { useRouter } from 'next/navigation';
+import { isAdminUser } from '@/lib/admin-config';
 
 export function SidebarNav() {
   const pathname = usePathname();
@@ -59,6 +60,12 @@ export function SidebarNav() {
     { href: '/dashboard', label: 'Link Dashboard', icon: <LinkIcon /> },
     { href: '/settings', label: 'Settings', icon: <Settings /> },
   ];
+
+  // Add admin menu item if user is admin
+  const isAdmin = isAdminUser(user?.uid || '') || user?.email === 'admin@resumesprites.com';
+  if (isAdmin) {
+    menuItems.push({ href: '/admin', label: 'Admin', icon: <Shield /> });
+  }
 
   const subscribeItem = { href: '/subscribe', label: 'Purchase for Life!' };
   const suggestItem = { href: '/suggest-template', label: 'Suggest a Template!' };

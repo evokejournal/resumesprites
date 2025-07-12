@@ -71,16 +71,7 @@ export const ResumeProvider = ({ children }: { children: ReactNode }) => {
       return String(obj);
     };
 
-    // Create a copy of the data and exclude the photo field
-    const dataWithoutPhoto = {
-      ...data,
-      about: {
-        ...data.about,
-        photo: '' // Clear photo field to prevent Firestore issues
-      }
-    };
-
-    return clean(dataWithoutPhoto) as ResumeData;
+    return clean(data) as ResumeData;
   };
 
   // Generate a unique short ID

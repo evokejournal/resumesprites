@@ -4,9 +4,28 @@ import { collection, addDoc, getDocs, query, where, doc, getDoc, updateDoc, dele
 import { db } from '@/lib/firebase';
 import { getTemplateStyle } from '@/lib/templates';
 import { PDFDocument, rgb, StandardFonts } from 'pdf-lib';
+import { rateLimiters } from '@/lib/rate-limiter';
+import { validateWithErrors, pdfGenerationSchema, getResumeSchema, updateResumeSchema } from '@/lib/validation';
 
 export async function POST(req: NextRequest) {
-  const { name, occupation, company, address, content, templateId, resumeUrl, password } = await req.json();
+  // Apply rate limiting
+  const rateLimitResult = await rateLimiters.api(req);
+  if (rateLimitResult) {
+    return rateLimitResult;
+  }
+
+  const body = await req.json();
+  
+  // Validate input
+  const validation = validateWithErrors(pdfGenerationSchema, body);
+  if (!validation.success) {
+    return NextResponse.json(
+      { error: 'Invalid input', details: validation.errors },
+      { status: 400 }
+    );
+  }
+  
+  const { name, occupation, company, address, content, templateId, resumeUrl, password } = validation.data;
   const style = getTemplateStyle(templateId);
 
   // Create PDF
@@ -96,10 +115,25 @@ function splitTextIntoLines(text: string, maxLen: number) {
 }
 
 export async function GET(request: NextRequest) {
+  // Apply rate limiting
+  const rateLimitResult = await rateLimiters.api(request);
+  if (rateLimitResult) {
+    return rateLimitResult;
+  }
+
   try {
     const { searchParams } = new URL(request.url);
     const userId = searchParams.get('userId');
     const resumeId = searchParams.get('id');
+    
+    // Validate query parameters
+    const validation = validateWithErrors(getResumeSchema, { userId, id: resumeId });
+    if (!validation.success) {
+      return NextResponse.json(
+        { error: 'Invalid query parameters', details: validation.errors },
+        { status: 400 }
+      );
+    }
 
     if (resumeId) {
       // Get specific resume
@@ -147,16 +181,25 @@ export async function GET(request: NextRequest) {
 }
 
 export async function PUT(request: NextRequest) {
+  // Apply rate limiting
+  const rateLimitResult = await rateLimiters.api(request);
+  if (rateLimitResult) {
+    return rateLimitResult;
+  }
+
   try {
     const body = await request.json();
-    const { id, resumeData } = body;
-
-    if (!id) {
+    
+    // Validate input
+    const validation = validateWithErrors(updateResumeSchema, body);
+    if (!validation.success) {
       return NextResponse.json(
-        { success: false, message: 'Resume ID required' },
+        { error: 'Invalid input', details: validation.errors },
         { status: 400 }
       );
     }
+    
+    const { id, resumeData } = validation.data;
 
     const docRef = doc(db, 'resumes', id);
     await updateDoc(docRef, {
@@ -178,6 +221,12 @@ export async function PUT(request: NextRequest) {
 }
 
 export async function DELETE(request: NextRequest) {
+  // Apply rate limiting
+  const rateLimitResult = await rateLimiters.api(request);
+  if (rateLimitResult) {
+    return rateLimitResult;
+  }
+
   try {
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');

@@ -1,0 +1,65 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Helper functions
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+    
+    function isValidLinkData() {
+      // More flexible validation - only require essential fields
+      return request.resource.data.keys().hasAll(['shortId', 'password', 'resumeDataSnapshot', 'templateSnapshot', 'userId']) &&
+             request.resource.data.shortId is string &&
+             request.resource.data.shortId.size() > 0 &&
+             request.resource.data.password is string &&
+             request.resource.data.password.size() > 0 &&
+             request.resource.data.resumeDataSnapshot is map &&
+             request.resource.data.templateSnapshot is string &&
+             request.resource.data.userId is string;
+    }
+
+    // User resume data - users can only access their own resume data
+    match /users/{userId}/resume/{document=**} {
+      allow read, write: if isOwner(userId);
+    }
+    
+    // Public links - optimized for recruiter access
+    match /links/{linkId} {
+      // Anyone can read links (needed for password verification)
+      allow read: if true;
+      
+      // Only authenticated users can create links
+      allow create: if isAuthenticated() && 
+                       isValidLinkData() && 
+                       request.resource.data.userId == request.auth.uid;
+      
+      // Only owners can update/delete links, but allow view tracking
+      allow update: if (
+        // Owner can update anything
+        (isAuthenticated() && request.resource.data.userId == request.auth.uid) ||
+        // Anyone can update views array for tracking (limited to specific fields)
+        (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['views', 'lastViewed']) &&
+         request.resource.data.views is list &&
+         request.resource.data.views.size() <= resource.data.views.size() + 1)
+      );
+      
+      // Only owners can delete
+      allow delete: if isAuthenticated() && resource.data.userId == request.auth.uid;
+    }
+    
+    // Admin access for admin users
+    match /admin/{document=**} {
+      allow read, write: if isAuthenticated() && 
+                           request.auth.token.admin == true;
+    }
+    
+    // Deny all other access
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+} 

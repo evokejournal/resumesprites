@@ -2,6 +2,8 @@ import NextAuth from 'next-auth';
 import { auth } from '@/lib/firebase';
 import { signInWithEmailAndPassword } from 'firebase/auth';
 import { authConfig } from '@/lib/auth-config';
+import { rateLimiters } from '@/lib/rate-limiter';
+import { NextRequest } from 'next/server';
 
 const handler = NextAuth({
   ...authConfig,
@@ -40,4 +42,13 @@ const handler = NextAuth({
   ],
 });
 
-export { handler as GET, handler as POST }; 
+// Rate limiting wrapper for auth endpoints
+async function rateLimitedHandler(req: NextRequest, context: any) {
+  const rateLimitResult = await rateLimiters.auth(req);
+  if (rateLimitResult) {
+    return rateLimitResult;
+  }
+  return handler(req, context);
+}
+
+export { rateLimitedHandler as GET, rateLimitedHandler as POST }; 

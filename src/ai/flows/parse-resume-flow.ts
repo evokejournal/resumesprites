@@ -91,8 +91,14 @@ const ParseResumeOutputSchema = z.object({
 export type ParseResumeOutput = z.infer<typeof ParseResumeOutputSchema>;
 
 
+// Rate limiting for AI parsing
+import { rateLimiters } from '@/lib/rate-limiter';
+
 // The exported function that the client will call
 export async function parseResume(input: ParseResumeInput): Promise<ParseResumeOutput> {
+  // Note: Rate limiting is handled at the API route level
+  // This function is called from server actions, so rate limiting 
+  // should be implemented in the calling API route
   return parseResumeFlow(input);
 }
 
