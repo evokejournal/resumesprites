@@ -44,6 +44,7 @@ export const ResumeProvider = ({ children }: { children: ReactNode }) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isOffline, setIsOffline] = useState(false);
+  const [hasLoadedInitialData, setHasLoadedInitialData] = useState(false);
 
   // Data sanitization function to clean data before saving to Firestore
   const sanitizeResumeData = (data: ResumeData): ResumeData => {
@@ -113,10 +114,12 @@ export const ResumeProvider = ({ children }: { children: ReactNode }) => {
       setGeneratedLinks([]);
       setIsHydrated(true);
       setLoading(false);
+      setHasLoadedInitialData(false);
       return;
     }
     setLoading(true);
     setError(null);
+    setHasLoadedInitialData(false);
     const loadData = async () => {
       try {
         console.log('Loading resume data from Firestore for user:', user.uid);
@@ -140,6 +143,7 @@ export const ResumeProvider = ({ children }: { children: ReactNode }) => {
           await setDoc(resumeDocRef, initialResumeData);
           setResumeData(initialResumeData);
         }
+        setHasLoadedInitialData(true);
         
         // Load generatedLinks for current user
         const userLinksQuery = query(linksColRef, where('userId', '==', user.uid));
@@ -170,7 +174,8 @@ export const ResumeProvider = ({ children }: { children: ReactNode }) => {
 
   // Save resumeData to Firestore whenever it changes
   useEffect(() => {
-    if (user && isHydrated) {
+    if (user && isHydrated && !loading && hasLoadedInitialData) {
+      // Don't save if we're still loading data or haven't loaded initial data yet
       const sanitizedData = sanitizeResumeData(resumeData);
       
       console.log('Auto-saving resume data to Firestore...', { 
@@ -199,7 +204,7 @@ export const ResumeProvider = ({ children }: { children: ReactNode }) => {
         }
       });
     }
-  }, [resumeData, user, isHydrated]);
+  }, [resumeData, user, isHydrated, loading, hasLoadedInitialData]);
 
   const updateField = <T extends keyof ResumeData>(section: T, value: ResumeData[T]) => {
     setResumeData(prev => ({
