@@ -45,10 +45,6 @@ export const ResumeProvider = ({ children }: { children: ReactNode }) => {
   const [error, setError] = useState<string | null>(null);
   const [isOffline, setIsOffline] = useState(false);
 
-  // Helper: Firestore doc refs
-  const resumeDocRef = user ? doc(db, 'users', user.uid, 'resume', 'main') : null;
-  const linksColRef = collection(db, 'links'); // Global links collection
-
   // Data sanitization function to clean data before saving to Firestore
   const sanitizeResumeData = (data: ResumeData): ResumeData => {
     const clean = (obj: any): any => {
@@ -88,6 +84,7 @@ export const ResumeProvider = ({ children }: { children: ReactNode }) => {
 
   // Generate a unique short ID
   const generateUniqueShortId = async (): Promise<string> => {
+    const linksColRef = collection(db, 'links');
     let shortId: string;
     let attempts = 0;
     const maxAttempts = 100;
@@ -124,8 +121,12 @@ export const ResumeProvider = ({ children }: { children: ReactNode }) => {
       try {
         console.log('Loading resume data from Firestore for user:', user.uid);
         
+        // Create doc references inside the effect
+        const resumeDocRef = doc(db, 'users', user.uid, 'resume', 'main');
+        const linksColRef = collection(db, 'links');
+        
         // Load resumeData
-        const resumeSnap = await getDoc(resumeDocRef!);
+        const resumeSnap = await getDoc(resumeDocRef);
         if (resumeSnap.exists()) {
           const loadedData = resumeSnap.data() as ResumeData;
           console.log('Resume data loaded from Firestore:', { 
@@ -136,7 +137,7 @@ export const ResumeProvider = ({ children }: { children: ReactNode }) => {
           setResumeData(loadedData);
         } else {
           console.log('No existing resume data found, creating initial data');
-          await setDoc(resumeDocRef!, initialResumeData);
+          await setDoc(resumeDocRef, initialResumeData);
           setResumeData(initialResumeData);
         }
         
@@ -165,7 +166,6 @@ export const ResumeProvider = ({ children }: { children: ReactNode }) => {
       }
     };
     loadData();
-    // eslint-disable-next-line
   }, [user]);
 
   // Save resumeData to Firestore whenever it changes
@@ -179,7 +179,8 @@ export const ResumeProvider = ({ children }: { children: ReactNode }) => {
         template: resumeData.template 
       });
       
-      setDoc(resumeDocRef!, sanitizedData)
+      const resumeDocRef = doc(db, 'users', user.uid, 'resume', 'main');
+      setDoc(resumeDocRef, sanitizedData)
         .then(() => {
           console.log('Resume data saved successfully to Firestore');
         })
@@ -198,7 +199,6 @@ export const ResumeProvider = ({ children }: { children: ReactNode }) => {
         }
       });
     }
-    // eslint-disable-next-line
   }, [resumeData, user, isHydrated]);
 
   const updateField = <T extends keyof ResumeData>(section: T, value: ResumeData[T]) => {
@@ -214,6 +214,7 @@ export const ResumeProvider = ({ children }: { children: ReactNode }) => {
     }
     
     try {
+      const linksColRef = collection(db, 'links');
       const shortId = await generateUniqueShortId();
       const now = new Date().toISOString();
       
@@ -248,6 +249,7 @@ export const ResumeProvider = ({ children }: { children: ReactNode }) => {
     if (!user) return;
     
     try {
+      const linksColRef = collection(db, 'links');
       // Find and delete the link from Firestore
       const userLinksQuery = query(linksColRef, where('userId', '==', user.uid));
       const linksSnap = await getDocs(userLinksQuery);
@@ -271,6 +273,7 @@ export const ResumeProvider = ({ children }: { children: ReactNode }) => {
     }
     
     try {
+      const linksColRef = collection(db, 'links');
       // Reload generatedLinks from Firestore
       const userLinksQuery = query(linksColRef, where('userId', '==', user.uid));
       const linksSnap = await getDocs(userLinksQuery);
