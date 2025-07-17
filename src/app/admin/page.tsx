@@ -23,17 +23,26 @@ import {
   TrendingDown
 } from 'lucide-react';
 
+import { useAuth } from '@/context/AuthContext';
+
 // Admin dashboard components
 import { SecurityOverview } from "@/components/admin/SecurityOverview";
 import { UserManagement } from "@/components/admin/UserManagement";
 import { SystemMetrics } from "@/components/admin/SystemMetrics";
 import { SecurityLogs } from "@/components/admin/SecurityLogs";
 import { BackupManagement } from "@/components/admin/BackupManagement";
+import QuickStats from '@/components/admin/QuickStats';
 
 export default function AdminDashboard() {
   const [activeTab, setActiveTab] = useState('overview');
   const [isLoading, setIsLoading] = useState(true);
   const [adminUserId, setAdminUserId] = useState<string>('');
+  const { user } = useAuth();
+
+  // Debug log for current user
+  if (typeof window !== 'undefined') {
+    console.log('Current signed-in user:', user);
+  }
 
   useEffect(() => {
     // Get admin user ID from localStorage or use default
@@ -124,62 +133,7 @@ export default function AdminDashboard() {
           </div>
 
           {/* Quick Stats */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Total Users</CardTitle>
-                <Users className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">1,234</div>
-                <p className="text-xs text-muted-foreground">
-                  <TrendingUp className="h-3 w-3 inline mr-1 text-green-500" />
-                  +12% from last month
-                </p>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Active Sessions</CardTitle>
-                <Activity className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">89</div>
-                <p className="text-xs text-muted-foreground">
-                  <TrendingDown className="h-3 w-3 inline mr-1 text-red-500" />
-                  -5% from yesterday
-                </p>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Security Alerts</CardTitle>
-                <AlertTriangle className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold text-orange-600">3</div>
-                <p className="text-xs text-muted-foreground">
-                  <Clock className="h-3 w-3 inline mr-1" />
-                  Last 24 hours
-                </p>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">System Health</CardTitle>
-                <Database className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold text-green-600">98%</div>
-                <p className="text-xs text-muted-foreground">
-                  All systems operational
-                </p>
-              </CardContent>
-            </Card>
-          </div>
+          <QuickStats adminUserId={adminUserId} />
 
           {/* Main Dashboard Tabs */}
           <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">

@@ -85,7 +85,7 @@ export function YoublePasswordScreen({ onSubmit, isSubmitting, error }: YoublePa
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   className="w-full border border-gray-300 px-4 py-3 rounded-full focus:border-[#4285F4] focus:ring-2 focus:ring-[#4285F4]/20 outline-none transition-all"
-                  autoComplete="new-password"
+                  autoComplete="off"
                   autoFocus
                 />
                 <button

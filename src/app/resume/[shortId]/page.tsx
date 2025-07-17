@@ -5,8 +5,6 @@ import { useParams } from 'next/navigation';
 import { Card, CardContent } from '@/components/ui/card';
 import { Lock } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { db } from '@/lib/firebase';
-import { collection, query, where, getDocs, updateDoc, doc } from 'firebase/firestore';
 import { GeneratedLink, ResumeData } from '@/lib/types';
 import { getTemplateComponent } from '@/lib/templates';
 import { 
@@ -38,23 +36,27 @@ export default function ResumeViewPage() {
       if (!shortId) return;
       
       try {
-        // Search for the link in all users' collections
-        const linksRef = collection(db, 'links');
-        const q = query(linksRef, where('shortId', '==', shortId));
-        const querySnapshot = await getDocs(q);
+        const response = await fetch(`/api/resume/links/public/by-short-id/${shortId}`);
         
-        if (querySnapshot.empty) {
-          toast({
-            title: "Link not found",
-            description: "This resume link does not exist or has been deleted.",
-            variant: "destructive",
-          });
+        if (!response.ok) {
+          if (response.status === 404) {
+            toast({
+              title: "Link not found",
+              description: "This resume link does not exist or has been deleted.",
+              variant: "destructive",
+            });
+          } else {
+            toast({
+              title: "Error",
+              description: "Failed to load resume link. Please try again.",
+              variant: "destructive",
+            });
+          }
           setIsLoading(false);
           return;
         }
 
-        const linkDoc = querySnapshot.docs[0];
-        const linkData = { id: linkDoc.id, ...linkDoc.data() } as GeneratedLink;
+        const linkData = await response.json();
         setLink(linkData);
         setIsLoading(false);
       } catch (error) {
@@ -88,19 +90,13 @@ export default function ResumeViewPage() {
         userAgent: navigator.userAgent,
       };
 
-      // Update the link with the new view
-      const linksRef = collection(db, 'links');
-      const q = query(linksRef, where('shortId', '==', shortId));
-      const querySnapshot = await getDocs(q);
-      
-      if (!querySnapshot.empty) {
-        const linkDoc = querySnapshot.docs[0];
-        const currentViews = linkDoc.data().views || [];
-        await updateDoc(linkDoc.ref, {
-          views: [...currentViews, view],
-          lastViewed: view.timestamp,
-        });
-      }
+      await fetch(`/api/resume/links/public/${link.id}/view`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(view),
+      });
     } catch (error) {
       console.error('Error recording view:', error);
     }

@@ -65,7 +65,7 @@ export function BouncingResumePasswordScreen({ onSubmit, error, loading, name }:
             value={password}
             onChange={e => setPassword(e.target.value)}
             disabled={loading}
-            autoComplete="current-password"
+                          autoComplete="off"
             style={{ 
               fontFamily: 'Orbitron, sans-serif', 
               letterSpacing: '0.1em',

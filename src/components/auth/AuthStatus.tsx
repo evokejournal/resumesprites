@@ -5,19 +5,16 @@ import { useAuth } from '@/context/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { signOut } from 'firebase/auth';
-import { auth } from '@/lib/firebase';
 import { useRouter } from 'next/navigation';
 import { LogOut, User } from 'lucide-react';
 
 export function AuthStatus() {
-  const { user, loading } = useAuth();
+  const { user, loading, signOut } = useAuth();
   const router = useRouter();
 
   const handleSignOut = async () => {
     try {
-      await signOut(auth);
-      router.push('/');
+      await signOut();
     } catch (error) {
       console.error('Error signing out:', error);
     }
@@ -57,22 +54,14 @@ export function AuthStatus() {
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" className="relative h-8 w-8 rounded-full">
           <Avatar className="h-8 w-8">
-            <AvatarImage src={user.photoURL || undefined} alt={user.displayName || 'User'} />
+            <AvatarImage src={user.image || undefined} alt={user.name || 'User'} />
             <AvatarFallback className="text-xs">
-              {user.displayName ? getUserInitials(user.displayName) : user.email?.charAt(0).toUpperCase() || 'U'}
+              {user.name ? getUserInitials(user.name) : user.email?.charAt(0).toUpperCase() || 'U'}
             </AvatarFallback>
           </Avatar>
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent className="w-56" align="end" forceMount>
-        <div className="flex items-center justify-start gap-2 p-2">
-          <div className="flex flex-col space-y-1 leading-none">
-            <p className="font-medium">{user.displayName || 'User'}</p>
-            <p className="w-[200px] truncate text-sm text-muted-foreground">
-              {user.email}
-            </p>
-          </div>
-        </div>
         <DropdownMenuItem onClick={handleSignOut}>
           <LogOut className="mr-2 h-4 w-4" />
           <span>Log out</span>

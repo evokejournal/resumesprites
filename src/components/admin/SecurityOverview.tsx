@@ -34,6 +34,19 @@ interface SecurityMetrics {
   suspiciousActivity: number;
 }
 
+interface SecurityLog {
+  id: string;
+  timestamp: string;
+  level: string;
+  category: string;
+  message: string;
+  userId?: string;
+  userEmail?: string;
+  ipAddress?: string;
+  userAgent?: string;
+  details?: Record<string, any>;
+}
+
 export function SecurityOverview({ adminUserId }: SecurityOverviewProps) {
   const [metrics, setMetrics] = useState<SecurityMetrics>({
     totalUsers: 1234,
@@ -48,10 +61,13 @@ export function SecurityOverview({ adminUserId }: SecurityOverviewProps) {
   });
 
   const [isLoading, setIsLoading] = useState(true);
+  const [logs, setLogs] = useState<SecurityLog[]>([]);
+  const [logsLoading, setLogsLoading] = useState(true);
+  const [logsError, setLogsError] = useState('');
 
   useEffect(() => {
-    // Fetch real security metrics
     fetchSecurityMetrics();
+    fetchSecurityLogs();
   }, [adminUserId]);
 
   const fetchSecurityMetrics = async () => {
@@ -64,6 +80,20 @@ export function SecurityOverview({ adminUserId }: SecurityOverviewProps) {
     } catch (error) {
       console.error('Failed to fetch security metrics:', error);
       setIsLoading(false);
+    }
+  };
+
+  const fetchSecurityLogs = async () => {
+    try {
+      setLogsLoading(true);
+      const response = await fetch('/api/admin/security-logs');
+      if (!response.ok) throw new Error('Failed to fetch security logs');
+      const data = await response.json();
+      setLogs(data);
+      setLogsLoading(false);
+    } catch (error: any) {
+      setLogsError(error.message || 'Error loading logs');
+      setLogsLoading(false);
     }
   };
 
@@ -228,51 +258,36 @@ export function SecurityOverview({ adminUserId }: SecurityOverviewProps) {
           <CardDescription>Latest security events and actions</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="space-y-3">
-            <div className="flex items-center justify-between p-3 border rounded-lg">
-              <div className="flex items-center gap-3">
-                <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                <div>
-                  <div className="text-sm font-medium">User login successful</div>
-                  <div className="text-xs text-muted-foreground">user@example.com • 2 minutes ago</div>
-                </div>
-              </div>
-              <Badge variant="outline">Login</Badge>
+          {logsLoading ? (
+            <div className="animate-pulse space-y-3">
+              {[...Array(5)].map((_, i) => (
+                <div key={i} className="h-8 bg-gray-100 rounded" />
+              ))}
             </div>
-            
-            <div className="flex items-center justify-between p-3 border rounded-lg">
-              <div className="flex items-center gap-3">
-                <div className="w-2 h-2 bg-red-500 rounded-full"></div>
-                <div>
-                  <div className="text-sm font-medium">Rate limit exceeded</div>
-                  <div className="text-xs text-muted-foreground">192.168.1.100 • 5 minutes ago</div>
+          ) : logsError ? (
+            <div className="text-red-600">{logsError}</div>
+          ) : logs.length === 0 ? (
+            <div className="text-muted-foreground">No recent security activity.</div>
+          ) : (
+            <div className="space-y-3">
+              {logs.slice(0, 8).map((log) => (
+                <div key={log.id} className="flex items-center justify-between p-3 border rounded-lg">
+                  <div className="flex items-center gap-3">
+                    <div className={`w-2 h-2 rounded-full ${log.level === 'error' || log.level === 'critical' ? 'bg-red-500' : log.level === 'warning' ? 'bg-yellow-500' : 'bg-green-500'}`}></div>
+                    <div>
+                      <div className="text-sm font-medium">{log.message}</div>
+                      <div className="text-xs text-muted-foreground">
+                        {log.userEmail || log.userId || log.ipAddress || 'System'} • {new Date(log.timestamp).toLocaleString()}
+                      </div>
+                    </div>
+                  </div>
+                  <Badge variant={log.level === 'error' || log.level === 'critical' ? 'destructive' : log.level === 'warning' ? 'secondary' : 'outline'}>
+                    {log.category}
+                  </Badge>
                 </div>
-              </div>
-              <Badge variant="destructive">Rate Limit</Badge>
+              ))}
             </div>
-            
-            <div className="flex items-center justify-between p-3 border rounded-lg">
-              <div className="flex items-center gap-3">
-                <div className="w-2 h-2 bg-yellow-500 rounded-full"></div>
-                <div>
-                  <div className="text-sm font-medium">Permission denied</div>
-                  <div className="text-xs text-muted-foreground">user@example.com • 10 minutes ago</div>
-                </div>
-              </div>
-              <Badge variant="secondary">Access Denied</Badge>
-            </div>
-            
-            <div className="flex items-center justify-between p-3 border rounded-lg">
-              <div className="flex items-center gap-3">
-                <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                <div>
-                  <div className="text-sm font-medium">Backup completed</div>
-                  <div className="text-xs text-muted-foreground">System • 1 hour ago</div>
-                </div>
-              </div>
-              <Badge variant="outline">Backup</Badge>
-            </div>
-          </div>
+          )}
         </CardContent>
       </Card>
     </div>

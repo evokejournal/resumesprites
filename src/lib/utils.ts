@@ -33,3 +33,15 @@ export function formatDate(dateString: string): string {
     year: date.getFullYear() !== now.getFullYear() ? 'numeric' : undefined
   });
 }
+
+// Debounce utility for performance optimization
+export function debounce<T extends (...args: any[]) => any>(
+  func: T,
+  wait: number
+): (...args: Parameters<T>) => void {
+  let timeout: NodeJS.Timeout;
+  return (...args: Parameters<T>) => {
+    clearTimeout(timeout);
+    timeout = setTimeout(() => func(...args), wait);
+  };
+}

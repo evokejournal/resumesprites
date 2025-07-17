@@ -52,13 +52,13 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
           {user && (
             <div className="ml-auto flex items-center gap-2">
               <Avatar className="h-8 w-8">
-                <AvatarImage src={user.photoURL || undefined} alt={user.displayName || 'User'} />
+                <AvatarImage src={user.image || undefined} alt={user.name || 'User'} />
                 <AvatarFallback className="text-xs">
-                  {user.displayName ? getUserInitials(user.displayName) : user.email?.charAt(0).toUpperCase() || 'U'}
+                  {user.name ? getUserInitials(user.name) : user.email?.charAt(0).toUpperCase() || 'U'}
                 </AvatarFallback>
               </Avatar>
               <span className="text-sm text-muted-foreground hidden sm:block">
-                {user.displayName || user.email?.split('@')[0]}
+                {user.name || user.email?.split('@')[0]}
               </span>
             </div>
           )}

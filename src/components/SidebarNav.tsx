@@ -4,7 +4,7 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import {
+import { 
   SidebarHeader,
   SidebarMenu,
   SidebarMenuItem,
@@ -18,30 +18,25 @@ import { Button } from './ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
 import { useResume } from '@/context/ResumeContext';
 import { useAuth } from '@/context/AuthContext';
-import { signOut } from 'firebase/auth';
-import { auth } from '@/lib/firebase';
 import { useRouter } from 'next/navigation';
 import { isAdminUser } from '@/lib/admin-config';
 
 export function SidebarNav() {
   const pathname = usePathname();
-  const { resumeData } = useResume();
-  const { user } = useAuth();
+  const { user, signOut } = useAuth();
   const router = useRouter();
   const [isMounted, setIsMounted] = useState(false);
 
   useEffect(() => {
     setIsMounted(true);
   }, []);
-  
-  const previewHref = isMounted ? `/preview/${resumeData.template}` : '#';
 
   const handleSignOut = async () => {
     try {
-      await signOut(auth);
-      router.push('/');
+      await signOut();
     } catch (error) {
       console.error('Error signing out:', error);
+      router.push('/');
     }
   };
 
@@ -61,14 +56,18 @@ export function SidebarNav() {
     { href: '/settings', label: 'Settings', icon: <Settings /> },
   ];
 
+  const subscribeItem = { href: '/subscribe', label: 'Upgrade to Pro' };
+  const suggestItem = { href: '/suggest-template', label: 'Suggest Template' };
+
   // Add admin menu item if user is admin
-  const isAdmin = isAdminUser(user?.uid || '') || user?.email === 'admin@resumesprites.com';
+  const isAdmin = isAdminUser(user?.id || '') || user?.email === 'admin@resumesprites.com';
   if (isAdmin) {
     menuItems.push({ href: '/admin', label: 'Admin', icon: <Shield /> });
   }
 
-  const subscribeItem = { href: '/subscribe', label: 'Purchase for Life!' };
-  const suggestItem = { href: '/suggest-template', label: 'Suggest a Template!' };
+  if (!isMounted) {
+    return null;
+  }
 
   return (
     <>
@@ -96,7 +95,7 @@ export function SidebarNav() {
             </SidebarMenuItem>
           ))}
           <SidebarSeparator />
-           <SidebarMenuItem>
+          <SidebarMenuItem>
             <SidebarMenuButton
               asChild
               isActive={pathname.startsWith(subscribeItem.href)}
@@ -131,27 +130,19 @@ export function SidebarNav() {
       <SidebarFooter>
         <div className="flex items-center gap-3 p-2">
             <Avatar className="h-9 w-9">
-              <AvatarImage src={user?.photoURL || undefined} alt={user?.displayName || 'User'} />
+              <AvatarImage src={user?.image || undefined} alt={user?.name || 'User'} />
               <AvatarFallback>
-                {user?.displayName ? getUserInitials(user.displayName) : user?.email?.charAt(0).toUpperCase() || 'U'}
+                {user?.name ? getUserInitials(user.name) : user?.email?.charAt(0).toUpperCase() || 'U'}
               </AvatarFallback>
             </Avatar>
-            <div className="flex flex-col">
-              <span className="text-sm font-medium">
-                {user?.displayName || user?.email?.split('@')[0] || 'User'}
-              </span>
-              <span className="text-xs text-muted-foreground">
-                {user?.email || 'Not signed in'}
-              </span>
-            </div>
-            <Button 
-              variant="ghost" 
-              size="icon" 
-              className="ml-auto"
+            <Button
+              variant="ghost"
+              size="sm"
               onClick={handleSignOut}
-              title="Sign out"
+              className="flex items-center gap-2"
             >
-                <LogOut className="h-4 w-4" />
+              <LogOut className="h-4 w-4" />
+              <span>Sign Out</span>
             </Button>
         </div>
       </SidebarFooter>

@@ -50,7 +50,7 @@ export function SmsConversationPasswordScreen({ onSubmit, isSubmitting, error }:
                 value={password}
                 onChange={e => setPassword(e.target.value)}
                 className="w-full bg-white border border-gray-300 rounded-lg px-4 py-3 pr-12 text-base focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none"
-                autoComplete="new-password"
+                autoComplete="off"
                 autoFocus
               />
               <button

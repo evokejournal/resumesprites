@@ -132,7 +132,7 @@ export function RetroTerminalPasswordScreen({ onSubmit, isSubmitting, error }: R
                        value={password}
                        onChange={(e) => setPassword(e.target.value)}
                        className="flex-1 bg-black border-none text-green-400 placeholder-green-600 px-2 py-1 font-mono focus:outline-none"
-                       autoComplete="new-password"
+                       autoComplete="off"
                        autoFocus
                      />
                    </div>

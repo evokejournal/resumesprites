@@ -67,7 +67,7 @@ export function CodeSyntaxPasswordScreen({ onSubmit, isSubmitting, error }: Code
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   className="w-full bg-[#1E1E1E] border border-gray-600 text-white placeholder-gray-400 rounded-md px-4 py-3 font-code focus:border-green-400 focus:ring-2 focus:ring-green-400/20 outline-none"
-                  autoComplete="new-password"
+                  autoComplete="off"
                 />
                 <button
                   type="button"

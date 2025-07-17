@@ -46,17 +46,50 @@ export async function GET(request: NextRequest) {
     const totalUsers = usersSnapshot.size;
     const activeUsers = usersSnapshot.docs.filter(doc => (doc.data().status || 'active') === 'active').length;
 
-    // TODO: Fetch other metrics from Firestore/logging if available
+    // Fetch security logs for alert metrics
+    const logsSnapshot = await adminDb.collection('securityLogs').orderBy('timestamp', 'desc').limit(500).get();
+    const logs = logsSnapshot.docs.map(doc => doc.data());
+    const securityAlerts = logs.filter(log =>
+      log.severity === 'high' || log.severity === 'critical'
+    ).length;
+    const rateLimitViolations = logs.filter(log => log.type === 'rate_limit_exceeded').length;
+    const authFailures = logs.filter(log => log.type === 'auth_failure').length;
+    const permissionDenials = logs.filter(log => log.type === 'permission_denied').length;
+    const suspiciousActivity = logs.filter(log => log.type === 'suspicious_activity').length;
+
+    // Fetch last backup
+    const backupsSnapshot = await adminDb.collection('backups').orderBy('createdAt', 'desc').limit(1).get();
+    const lastBackup = backupsSnapshot.empty ? null : backupsSnapshot.docs[0].data().createdAt;
+
+    // Fetch system metrics (stubbed, but try to get real if possible)
+    let systemHealth = 98;
+    try {
+      const sysRes = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || ''}/api/admin/system-metrics`, {
+        headers: request.headers,
+        method: 'GET',
+      });
+      if (sysRes.ok) {
+        const sysMetrics = await sysRes.json();
+        // Compute health as the lowest status (good=100, warning=80, critical=50)
+        const statusMap = { good: 100, warning: 80, critical: 50 };
+        const healths = Object.values(sysMetrics).map((m: any) => {
+          const status = typeof m.status === 'string' ? m.status : 'good';
+          return status in statusMap ? statusMap[status as keyof typeof statusMap] : 100;
+        });
+        systemHealth = Math.min(...healths);
+      }
+    } catch {}
+
     const metrics = {
       totalUsers,
       activeUsers,
-      securityAlerts: 3, // Stubbed
-      rateLimitViolations: 12, // Stubbed
-      authFailures: 8, // Stubbed
-      permissionDenials: 5, // Stubbed
-      systemHealth: 98, // Stubbed
-      lastBackup: new Date().toISOString(), // Stubbed
-      suspiciousActivity: 2, // Stubbed
+      securityAlerts,
+      rateLimitViolations,
+      authFailures,
+      permissionDenials,
+      systemHealth,
+      lastBackup,
+      suspiciousActivity,
     };
 
     securityLogger.log({

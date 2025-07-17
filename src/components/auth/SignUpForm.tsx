@@ -3,8 +3,7 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { useRouter } from 'next/navigation';
-import { createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
-import { auth } from '@/lib/firebase';
+import { signIn } from 'next-auth/react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -52,27 +51,26 @@ export function SignUpForm() {
     }
 
     try {
-      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      const result = await signIn('credentials', {
+        redirect: false,
+        email,
+        password,
+        name, // Pass name for sign-up
+        isSignUp: 'true', // Flag to indicate this is a sign-up
+      });
       
-      // Update user profile with name
-      if (name.trim()) {
-        await updateProfile(userCredential.user, {
-          displayName: name.trim()
-        });
+      if (result?.error) {
+        setError(
+          result.error === 'CredentialsSignin'
+            ? 'An account with this email already exists.'
+            : 'Failed to create account. Please try again.'
+        );
+      } else {
+        router.push('/builder');
       }
-
-      router.push('/builder');
     } catch (error: any) {
       console.error('Sign up error:', error);
-      setError(
-        error.code === 'auth/email-already-in-use'
-          ? 'An account with this email already exists.'
-          : error.code === 'auth/weak-password'
-          ? 'Password is too weak. Please choose a stronger password.'
-          : error.code === 'auth/invalid-email'
-          ? 'Please enter a valid email address.'
-          : 'Failed to create account. Please try again.'
-      );
+      setError('Failed to create account. Please try again.');
     } finally {
       setLoading(false);
     }

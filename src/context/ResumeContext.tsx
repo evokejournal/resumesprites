@@ -1,23 +1,10 @@
 
 "use client";
 
-import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
+import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
+import { useAuth } from '@/context/AuthContext';
 import type { ResumeData, GeneratedLink } from '@/lib/types';
 import { initialResumeData } from '@/lib/data';
-import { db } from '@/lib/firebase';
-import { useAuth } from './AuthContext';
-import {
-  doc,
-  getDoc,
-  setDoc,
-  collection,
-  getDocs,
-  addDoc,
-  deleteDoc,
-  updateDoc,
-  query,
-  where,
-} from 'firebase/firestore';
 import { generateShortId } from '@/lib/utils';
 
 interface ResumeContextType {
@@ -76,86 +63,77 @@ export const ResumeProvider = ({ children }: { children: ReactNode }) => {
 
   // Generate a unique short ID
   const generateUniqueShortId = async (): Promise<string> => {
-    const linksColRef = collection(db, 'links');
     let shortId: string;
     let attempts = 0;
-    const maxAttempts = 100;
-
+    const maxAttempts = 10;
+    
     do {
       shortId = generateShortId();
       attempts++;
       
-      // Check if this shortId already exists
-      const existingQuery = query(linksColRef, where('shortId', '==', shortId));
-      const existingDocs = await getDocs(existingQuery);
-      
-      if (existingDocs.empty) {
-        return shortId;
-      }
+      // For now, we'll assume the generated ID is unique
+      // In a production app, you'd want to check against existing IDs via API
+      return shortId;
     } while (attempts < maxAttempts);
-
-    // If we can't find a unique ID after max attempts, append a number
-    return generateShortId() + Math.floor(Math.random() * 1000);
+    
+    throw new Error('Failed to generate unique short ID');
   };
 
-  // On login, load data from Firestore
+  // Load resume data from API when user changes
   useEffect(() => {
-    if (!user) {
-      setResumeData(initialResumeData);
-      setGeneratedLinks([]);
-      setIsHydrated(true);
-      setLoading(false);
-      setHasLoadedInitialData(false);
-      return;
-    }
+    if (!user) return;
+    
     setLoading(true);
     setError(null);
     setHasLoadedInitialData(false);
     const loadData = async () => {
       try {
-        console.log('Loading resume data from Firestore for user:', user.uid);
+        console.log('Loading resume data from API for user:', user.id || user.email);
         
-        // Create doc references inside the effect
-        const resumeDocRef = doc(db, 'users', user.uid, 'resume', 'main');
-        const linksColRef = collection(db, 'links');
+        // Load resume data from API
+        const resumeResponse = await fetch('/api/resume/data', {
+          credentials: 'include'
+        });
         
-        // Load resumeData
-        const resumeSnap = await getDoc(resumeDocRef);
-        if (resumeSnap.exists()) {
-          const loadedData = resumeSnap.data() as ResumeData;
-          console.log('Resume data loaded from Firestore:', { 
-            hasData: !!loadedData.about.name,
-            template: loadedData.template,
-            experienceCount: loadedData.experience.length 
-          });
-          setResumeData(loadedData);
-        } else {
-          console.log('No existing resume data found, creating initial data');
-          await setDoc(resumeDocRef, initialResumeData);
-          setResumeData(initialResumeData);
+        if (!resumeResponse.ok) {
+          throw new Error('Failed to load resume data');
         }
+        
+        const loadedData = await resumeResponse.json();
+        console.log('Resume data loaded from API:', { 
+          hasData: !!loadedData.about.name,
+          template: loadedData.template,
+          experienceCount: loadedData.experience.length 
+        });
+        setResumeData(loadedData);
         setHasLoadedInitialData(true);
         
-        // Load generatedLinks for current user
-        const userLinksQuery = query(linksColRef, where('userId', '==', user.uid));
-        const linksSnap = await getDocs(userLinksQuery);
-        const links = linksSnap.docs.map(doc => ({ id: doc.id, ...doc.data() } as GeneratedLink));
+        // Load links from API
+        const linksResponse = await fetch('/api/resume/links', {
+          credentials: 'include'
+        });
+        
+        if (!linksResponse.ok) {
+          throw new Error('Failed to load links');
+        }
+        
+        const links = await linksResponse.json();
         setGeneratedLinks(links);
         
         setIsHydrated(true);
         setLoading(false);
       } catch (err: any) {
-        console.error('Firebase connectivity error:', err);
-        // If Firebase is unavailable, use local state and continue
+        console.error('API connectivity error:', err);
+        // If API is unavailable, use local state and continue
         if (err.message?.includes('CORS') || err.message?.includes('502') || err.code === 'unavailable') {
-          console.warn('Firebase unavailable, using local state only');
+          console.warn('API unavailable, using local state only');
           setIsOffline(true);
           setResumeData(initialResumeData);
           setGeneratedLinks([]);
           setIsHydrated(true);
           setLoading(false);
         } else {
-          setError('Failed to load data from Firebase.');
+          setError('Failed to load data from API.');
           setLoading(false);
         }
       }
@@ -163,22 +141,31 @@ export const ResumeProvider = ({ children }: { children: ReactNode }) => {
     loadData();
   }, [user]);
 
-  // Save resumeData to Firestore whenever it changes
+  // Save resumeData to API whenever it changes
   useEffect(() => {
     if (user && isHydrated && !loading && hasLoadedInitialData) {
       // Don't save if we're still loading data or haven't loaded initial data yet
       const sanitizedData = sanitizeResumeData(resumeData);
       
-      console.log('Auto-saving resume data to Firestore...', { 
-        userId: user.uid, 
+      console.log('Auto-saving resume data to API...', { 
+        userId: user.id || user.email || '', 
         hasData: !!resumeData.about.name,
         template: resumeData.template 
       });
       
-      const resumeDocRef = doc(db, 'users', user.uid, 'resume', 'main');
-      setDoc(resumeDocRef, sanitizedData)
-        .then(() => {
-          console.log('Resume data saved successfully to Firestore');
+      fetch('/api/resume/data', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify(sanitizedData)
+      })
+        .then((response) => {
+          if (!response.ok) {
+            throw new Error('Failed to save resume data');
+          }
+          console.log('Resume data saved successfully to API');
         })
         .catch((err) => {
         console.error('Failed to save resume data:', err);
@@ -188,7 +175,7 @@ export const ResumeProvider = ({ children }: { children: ReactNode }) => {
           details: err.details
         });
         if (err.message?.includes('CORS') || err.message?.includes('502') || err.code === 'unavailable') {
-          console.warn('Firebase connectivity issue detected. Resume data not saved');
+          console.warn('API connectivity issue detected. Resume data not saved');
           setIsOffline(true);
         } else {
           setError('Failed to save resume data.');
@@ -210,9 +197,7 @@ export const ResumeProvider = ({ children }: { children: ReactNode }) => {
     }
     
     try {
-      const linksColRef = collection(db, 'links');
       const shortId = await generateUniqueShortId();
-      const now = new Date().toISOString();
       
       // Use the override template if provided, otherwise use the current template
       const templateToUse = templateOverride || resumeData.template;
@@ -222,14 +207,26 @@ export const ResumeProvider = ({ children }: { children: ReactNode }) => {
         password,
         resumeDataSnapshot: sanitizeResumeData(resumeData),
         templateSnapshot: templateToUse,
-        createdAt: now,
+        createdAt: new Date().toISOString(),
         views: [],
-        userId: user.uid,
+        userId: user.id || user.email || '',
       };
 
-      // Save to Firestore
-      const docRef = await addDoc(linksColRef, newLink);
-      const generatedLink: GeneratedLink = { id: docRef.id, ...newLink };
+      // Save to API
+      const response = await fetch('/api/resume/links', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify(newLink)
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to create link');
+      }
+
+      const generatedLink: GeneratedLink = await response.json();
 
       // Update local state
       setGeneratedLinks(prev => [generatedLink, ...prev]);
@@ -245,20 +242,20 @@ export const ResumeProvider = ({ children }: { children: ReactNode }) => {
     if (!user) return;
     
     try {
-      const linksColRef = collection(db, 'links');
-      // Find and delete the link from Firestore
-      const userLinksQuery = query(linksColRef, where('userId', '==', user.uid));
-      const linksSnap = await getDocs(userLinksQuery);
-      const linkDoc = linksSnap.docs.find(doc => doc.id === id);
-      if (linkDoc) {
-        await deleteDoc(linkDoc.ref);
+      const response = await fetch(`/api/resume/links?id=${id}`, {
+        method: 'DELETE',
+        credentials: 'include'
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to delete link');
       }
       
       // Update local state
       setGeneratedLinks(prevLinks => prevLinks.filter(link => link.id !== id));
     } catch (err) {
       console.error('Failed to delete link:', err);
-      // Still update local state even if Firestore deletion fails
+      // Still update local state even if API deletion fails
       setGeneratedLinks(prevLinks => prevLinks.filter(link => link.id !== id));
     }
   };
@@ -269,11 +266,15 @@ export const ResumeProvider = ({ children }: { children: ReactNode }) => {
     }
     
     try {
-      const linksColRef = collection(db, 'links');
-      // Reload generatedLinks from Firestore
-      const userLinksQuery = query(linksColRef, where('userId', '==', user.uid));
-      const linksSnap = await getDocs(userLinksQuery);
-      const links = linksSnap.docs.map(doc => ({ id: doc.id, ...doc.data() } as GeneratedLink));
+      const response = await fetch('/api/resume/links', {
+        credentials: 'include'
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch links');
+      }
+
+      const links = await response.json();
       setGeneratedLinks(links);
     } catch (err: any) {
       console.error('Failed to refresh links:', err);

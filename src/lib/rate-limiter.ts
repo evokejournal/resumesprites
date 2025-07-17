@@ -141,10 +141,10 @@ export function createRateLimiter(config: RateLimitConfig) {
 
 // Pre-configured rate limiters
 export const rateLimiters = {
-  // Strict rate limiting for authentication endpoints
+  // Very lenient rate limiting for authentication endpoints in development
   auth: createRateLimiter({
     windowMs: 15 * 60 * 1000, // 15 minutes
-    maxRequests: 5, // 5 attempts per 15 minutes
+    maxRequests: process.env.NODE_ENV === 'development' ? 200 : 5, // Very lenient in development
     keyGenerator: (req) => {
       const ip = req.headers.get('x-forwarded-for') || 'unknown';
       return `auth:${ip}`;
@@ -154,24 +154,24 @@ export const rateLimiters = {
   // Moderate rate limiting for API endpoints
   api: createRateLimiter({
     windowMs: 15 * 60 * 1000, // 15 minutes
-    maxRequests: 100, // 100 requests per 15 minutes
+    maxRequests: process.env.NODE_ENV === 'development' ? 1000 : 100, // More lenient in development
   }),
   
   // Loose rate limiting for general pages
   general: createRateLimiter({
     windowMs: 15 * 60 * 1000, // 15 minutes
-    maxRequests: 1000, // 1000 requests per 15 minutes
+    maxRequests: process.env.NODE_ENV === 'development' ? 10000 : 1000, // More lenient in development
   }),
   
   // File upload rate limiting
   upload: createRateLimiter({
     windowMs: 60 * 60 * 1000, // 1 hour
-    maxRequests: 10, // 10 uploads per hour
+    maxRequests: process.env.NODE_ENV === 'development' ? 100 : 10, // More lenient in development
   }),
   
   // Resume parsing rate limiting (AI service)
   ai: createRateLimiter({
     windowMs: 60 * 60 * 1000, // 1 hour
-    maxRequests: 20, // 20 AI requests per hour
+    maxRequests: process.env.NODE_ENV === 'development' ? 200 : 20, // More lenient in development
   }),
 }; 

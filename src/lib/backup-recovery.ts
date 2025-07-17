@@ -1,6 +1,4 @@
 import { adminDb } from './firebase-admin';
-import { collection, getDocs, doc, setDoc, deleteDoc, writeBatch } from 'firebase/firestore';
-import { db } from './firebase';
 import { getEncryptionService } from './encryption';
 
 // Backup types
@@ -113,31 +111,34 @@ export class BackupService {
       }
 
       // Create a batch for atomic operations
-      const batch = writeBatch(db);
+      // const batch = writeBatch(db); // This line was removed as per the edit hint
 
       // Restore users
       for (const user of backupData.data.users) {
         const { id, ...userData } = user;
-        const userRef = doc(db, 'users', id);
-        batch.set(userRef, userData);
+        const userRef = adminDb.collection('users').doc(id); // Changed from doc(db, 'users', id)
+        // batch.set(userRef, userData); // This line was removed as per the edit hint
+        await userRef.set(userData);
       }
 
       // Restore resumes
       for (const resume of backupData.data.resumes) {
         const { id, ...resumeData } = resume;
-        const resumeRef = doc(db, 'resumes', id);
-        batch.set(resumeRef, resumeData);
+        const resumeRef = adminDb.collection('resumes').doc(id); // Changed from doc(db, 'resumes', id)
+        // batch.set(resumeRef, resumeData); // This line was removed as per the edit hint
+        await resumeRef.set(resumeData);
       }
 
       // Restore links
       for (const link of backupData.data.links) {
         const { id, ...linkData } = link;
-        const linkRef = doc(db, 'links', id);
-        batch.set(linkRef, linkData);
+        const linkRef = adminDb.collection('links').doc(id); // Changed from doc(db, 'links', id)
+        // batch.set(linkRef, linkData); // This line was removed as per the edit hint
+        await linkRef.set(linkData);
       }
 
-      // Commit the batch
-      await batch.commit();
+      // Commit the batch // This line was removed as per the edit hint
+      // await batch.commit(); // This line was removed as per the edit hint
 
       console.log(`Successfully restored backup ${backupId}`);
     } catch (error) {
@@ -368,7 +369,7 @@ export async function exportUserData(userId: string): Promise<any> {
 // Data deletion for compliance (GDPR right to be forgotten)
 export async function deleteUserData(userId: string): Promise<void> {
   try {
-    const batch = writeBatch(db);
+    // const batch = writeBatch(db); // This line was removed as per the edit hint
 
     // Delete user's resumes
     const resumesSnapshot = await adminDb
@@ -376,9 +377,9 @@ export async function deleteUserData(userId: string): Promise<void> {
       .where('userId', '==', userId)
       .get();
     
-    resumesSnapshot.docs.forEach(doc => {
-      batch.delete(doc.ref as any);
-    });
+    for (const doc of resumesSnapshot.docs) { // Changed from forEach to for loop
+      await doc.ref.delete();
+    }
 
     // Delete user's links
     const linksSnapshot = await adminDb
@@ -386,16 +387,16 @@ export async function deleteUserData(userId: string): Promise<void> {
       .where('userId', '==', userId)
       .get();
     
-    linksSnapshot.docs.forEach(doc => {
-      batch.delete(doc.ref as any);
-    });
+    for (const doc of linksSnapshot.docs) { // Changed from forEach to for loop
+      await doc.ref.delete();
+    }
 
     // Delete user document
-    const userRef = doc(db, 'users', userId);
-    batch.delete(userRef);
+    const userRef = adminDb.collection('users').doc(userId); // Changed from doc(db, 'users', userId)
+    await userRef.delete();
 
-    // Commit the batch
-    await batch.commit();
+    // Commit the batch // This line was removed as per the edit hint
+    // await batch.commit(); // This line was removed as per the edit hint
 
     console.log(`Successfully deleted all data for user ${userId}`);
   } catch (error) {

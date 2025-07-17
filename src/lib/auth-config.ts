@@ -15,11 +15,6 @@ interface ExtendedSession extends Session {
 
 // Auth configuration that automatically handles different environments
 export const authConfig: Partial<NextAuthOptions> = {
-  // Automatically determine the NextAuth URL based on environment
-  url: process.env.NODE_ENV === 'production'
-    ? process.env.NEXTAUTH_URL || `https://${process.env.VERCEL_URL}`
-    : process.env.NEXTAUTH_URL || 'http://localhost:9002',
-  
   // Secret for JWT signing
   secret: process.env.NEXTAUTH_SECRET,
   
@@ -33,16 +28,19 @@ export const authConfig: Partial<NextAuthOptions> = {
   
   callbacks: {
     async jwt({ token, user }: { token: JWT; user?: User }) {
+      console.log('JWT callback:', { tokenId: token.id, userId: user?.id });
       if (user) {
         token.id = user.id;
       }
       return token;
     },
-    async session({ session, token }: { session: ExtendedSession; token: JWT }) {
+    async session({ session, token }: { session: Session; token: JWT }) {
+      console.log('Session callback:', { tokenId: token.id, sessionUserId: session.user?.id });
       if (token && session.user) {
-        session.user.id = token.id as string;
+        const extendedSession = session as ExtendedSession;
+        extendedSession.user.id = token.id as string;
       }
-      return session;
+      return session as ExtendedSession;
     },
   },
 }; 

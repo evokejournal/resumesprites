@@ -53,6 +53,7 @@ export function BackupManagement({ adminUserId }: BackupManagementProps) {
   const [isLoading, setIsLoading] = useState(true);
   const [isCreatingBackup, setIsCreatingBackup] = useState(false);
   const [backupProgress, setBackupProgress] = useState(0);
+  const [actionLoading, setActionLoading] = useState<string | null>(null);
 
   useEffect(() => {
     fetchBackups();
@@ -73,39 +74,53 @@ export function BackupManagement({ adminUserId }: BackupManagementProps) {
 
   const createBackup = async () => {
     setIsCreatingBackup(true);
-    setBackupProgress(0);
-    
-    // Simulate backup progress
-    const interval = setInterval(() => {
-      setBackupProgress(prev => {
-        if (prev >= 100) {
-          clearInterval(interval);
-          setIsCreatingBackup(false);
-          fetchBackups(); // Refresh the list
-          return 100;
-        }
-        return prev + 10;
+    setActionLoading('create');
+    try {
+      const response = await fetch('/api/admin/backups', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
       });
-    }, 500);
+      if (!response.ok) throw new Error('Failed to create backup');
+      await fetchBackups();
+    } catch (error) {
+      console.error('Failed to create backup:', error);
+    } finally {
+      setIsCreatingBackup(false);
+      setActionLoading(null);
+    }
   };
 
   const restoreBackup = async (backupId: string) => {
+    setActionLoading('restore-' + backupId);
     try {
-      // TODO: Implement actual restore functionality
-      console.log(`Restoring backup ${backupId}`);
-      alert(`Restore initiated for backup ${backupId}`);
+      const response = await fetch('/api/admin/backups', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ backupId }),
+      });
+      if (!response.ok) throw new Error('Failed to restore backup');
+      await fetchBackups();
     } catch (error) {
       console.error('Failed to restore backup:', error);
+    } finally {
+      setActionLoading(null);
     }
   };
 
   const deleteBackup = async (backupId: string) => {
+    setActionLoading('delete-' + backupId);
     try {
-      // TODO: Implement actual delete functionality
-      console.log(`Deleting backup ${backupId}`);
-      setBackups(prev => prev.filter(backup => backup.id !== backupId));
+      const response = await fetch('/api/admin/backups', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ backupId }),
+      });
+      if (!response.ok) throw new Error('Failed to delete backup');
+      await fetchBackups();
     } catch (error) {
       console.error('Failed to delete backup:', error);
+    } finally {
+      setActionLoading(null);
     }
   };
 
@@ -250,15 +265,15 @@ export function BackupManagement({ adminUserId }: BackupManagementProps) {
           <div className="flex gap-4">
             <Button 
               onClick={createBackup} 
-              disabled={isCreatingBackup}
+              disabled={isCreatingBackup || actionLoading === 'create'}
               className="flex items-center gap-2"
             >
-              {isCreatingBackup ? (
+              {isCreatingBackup || actionLoading === 'create' ? (
                 <RefreshCw className="h-4 w-4 animate-spin" />
               ) : (
                 <Play className="h-4 w-4" />
               )}
-              {isCreatingBackup ? 'Creating Backup...' : 'Create Backup'}
+              {isCreatingBackup || actionLoading === 'create' ? 'Creating Backup...' : 'Create Backup'}
             </Button>
             
             <Button variant="outline" className="flex items-center gap-2">
@@ -338,8 +353,10 @@ export function BackupManagement({ adminUserId }: BackupManagementProps) {
                               variant="ghost"
                               size="sm"
                               onClick={() => restoreBackup(backup.id)}
+                              disabled={actionLoading === 'restore-' + backup.id}
                             >
                               <Upload className="h-4 w-4" />
+                              {actionLoading === 'restore-' + backup.id ? 'Restoring...' : ''}
                             </Button>
                             <Button
                               variant="ghost"
@@ -358,8 +375,10 @@ export function BackupManagement({ adminUserId }: BackupManagementProps) {
                           size="sm"
                           onClick={() => deleteBackup(backup.id)}
                           className="text-red-600 hover:text-red-700"
+                          disabled={actionLoading === 'delete-' + backup.id}
                         >
                           <XCircle className="h-4 w-4" />
+                          {actionLoading === 'delete-' + backup.id ? 'Deleting...' : ''}
                         </Button>
                       </div>
                     </TableCell>

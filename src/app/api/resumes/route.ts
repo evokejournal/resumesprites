@@ -1,7 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { adminDb } from '@/lib/firebase-admin';
-import { collection, addDoc, getDocs, query, where, doc, getDoc, updateDoc, deleteDoc } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
 import { getTemplateStyle } from '@/lib/templates';
 import { PDFDocument, rgb, StandardFonts } from 'pdf-lib';
 import { rateLimiters } from '@/lib/rate-limiter';
@@ -137,10 +135,10 @@ export async function GET(request: NextRequest) {
 
     if (resumeId) {
       // Get specific resume
-      const docRef = doc(db, 'resumes', resumeId);
-      const docSnap = await getDoc(docRef);
+      const docRef = adminDb.collection('resumes').doc(resumeId);
+      const docSnap = await docRef.get();
       
-      if (docSnap.exists()) {
+      if (docSnap.exists) {
         return NextResponse.json({ 
           success: true, 
           resume: { id: docSnap.id, ...docSnap.data() } 
@@ -153,8 +151,8 @@ export async function GET(request: NextRequest) {
       }
     } else if (userId) {
       // Get all resumes for user
-      const q = query(collection(db, 'resumes'), where('userId', '==', userId));
-      const querySnapshot = await getDocs(q);
+      const q = adminDb.collection('resumes').where('userId', '==', userId);
+      const querySnapshot = await q.get();
       
       const resumes = querySnapshot.docs.map(doc => ({
         id: doc.id,
@@ -201,8 +199,8 @@ export async function PUT(request: NextRequest) {
     
     const { id, resumeData } = validation.data;
 
-    const docRef = doc(db, 'resumes', id);
-    await updateDoc(docRef, {
+    const docRef = adminDb.collection('resumes').doc(id);
+    await docRef.update({
       ...resumeData,
       updatedAt: new Date().toISOString(),
     });
@@ -238,8 +236,8 @@ export async function DELETE(request: NextRequest) {
       );
     }
 
-    const docRef = doc(db, 'resumes', id);
-    await deleteDoc(docRef);
+    const docRef = adminDb.collection('resumes').doc(id);
+    await docRef.delete();
 
     return NextResponse.json({ 
       success: true, 

@@ -59,6 +59,7 @@ export function UserManagement({ adminUserId }: UserManagementProps) {
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [roleFilter, setRoleFilter] = useState<string>('all');
   const [isLoading, setIsLoading] = useState(true);
+  const [actionLoading, setActionLoading] = useState<string | null>(null);
 
   useEffect(() => {
     fetchUsers();
@@ -107,27 +108,27 @@ export function UserManagement({ adminUserId }: UserManagementProps) {
 
   const handleUserAction = async (userId: string, action: string) => {
     try {
-      // TODO: Implement actual API calls
-      console.log(`Performing ${action} on user ${userId}`);
-      
-      // Update local state for demo
-      setUsers(prev => prev.map(user => {
-        if (user.id === userId) {
-          switch (action) {
-            case 'suspend':
-              return { ...user, status: 'suspended' as const };
-            case 'activate':
-              return { ...user, status: 'active' as const };
-            case 'delete':
-              return { ...user, status: 'suspended' as const };
-            default:
-              return user;
-          }
-        }
-        return user;
-      }));
+      setActionLoading(userId + action);
+      if (action === 'delete') {
+        const response = await fetch('/api/admin/users', {
+          method: 'DELETE',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ userId }),
+        });
+        if (!response.ok) throw new Error('Failed to delete user');
+      } else {
+        const response = await fetch('/api/admin/users', {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ userId, action }),
+        });
+        if (!response.ok) throw new Error('Failed to update user');
+      }
+      await fetchUsers();
     } catch (error) {
       console.error(`Failed to ${action} user:`, error);
+    } finally {
+      setActionLoading(null);
     }
   };
 
@@ -354,25 +355,28 @@ export function UserManagement({ adminUserId }: UserManagementProps) {
                             <DropdownMenuItem 
                               onClick={() => handleUserAction(user.id, 'suspend')}
                               className="text-red-600"
+                              disabled={actionLoading === user.id + 'suspend'}
                             >
                               <UserX className="h-4 w-4 mr-2" />
-                              Suspend User
+                              {actionLoading === user.id + 'suspend' ? 'Suspending...' : 'Suspend User'}
                             </DropdownMenuItem>
                           ) : (
                             <DropdownMenuItem 
                               onClick={() => handleUserAction(user.id, 'activate')}
                               className="text-green-600"
+                              disabled={actionLoading === user.id + 'activate'}
                             >
                               <UserCheck className="h-4 w-4 mr-2" />
-                              Activate User
+                              {actionLoading === user.id + 'activate' ? 'Activating...' : 'Activate User'}
                             </DropdownMenuItem>
                           )}
                           <DropdownMenuItem 
                             onClick={() => handleUserAction(user.id, 'delete')}
                             className="text-red-600"
+                            disabled={actionLoading === user.id + 'delete'}
                           >
                             <Trash2 className="h-4 w-4 mr-2" />
-                            Delete User
+                            {actionLoading === user.id + 'delete' ? 'Deleting...' : 'Delete User'}
                           </DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>

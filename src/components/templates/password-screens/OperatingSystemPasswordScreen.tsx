@@ -74,7 +74,7 @@ export function OperatingSystemPasswordScreen({ onSubmit, isSubmitting, error }:
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     className="w-full border-2 border-[#888] px-3 py-2 bg-white focus:border-[#000080] outline-none"
-                    autoComplete="new-password"
+                    autoComplete="off"
                     autoFocus
                   />
                   <button

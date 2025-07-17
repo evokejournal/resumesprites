@@ -44,7 +44,7 @@ export function ReceiptRollPasswordScreen({ onSubmit, error, loading }: ReceiptR
                 onChange={e => setPassword(e.target.value)}
                 disabled={loading}
                 autoFocus
-                autoComplete="current-password"
+                autoComplete="off"
               />
               <button
                 type="submit"

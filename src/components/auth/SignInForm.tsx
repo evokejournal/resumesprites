@@ -3,8 +3,7 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { useRouter } from 'next/navigation';
-import { signInWithEmailAndPassword } from 'firebase/auth';
-import { auth } from '@/lib/firebase';
+import { signIn } from 'next-auth/react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -25,17 +24,23 @@ export function SignInForm() {
     setError('');
 
     try {
-      await signInWithEmailAndPassword(auth, email, password);
-      router.push('/builder');
+      const result = await signIn('credentials', {
+        redirect: false,
+        email,
+        password,
+      });
+      if (result?.error) {
+        setError(
+          result.error === 'CredentialsSignin'
+            ? 'Invalid email or password'
+            : 'Failed to sign in. Please try again.'
+        );
+      } else {
+        router.push('/builder');
+      }
     } catch (error: any) {
       console.error('Sign in error:', error);
-      setError(
-        error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password'
-          ? 'Invalid email or password'
-          : error.code === 'auth/too-many-requests'
-          ? 'Too many failed attempts. Please try again later.'
-          : 'Failed to sign in. Please try again.'
-      );
+      setError('Failed to sign in. Please try again.');
     } finally {
       setLoading(false);
     }

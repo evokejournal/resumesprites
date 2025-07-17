@@ -1,7 +1,7 @@
 
 "use client";
 
-import { initialResumeData } from '@/lib/data';
+import { previewResumeData } from '@/lib/data';
 import React, { useState } from 'react';
 import { RetroTerminalTemplate } from '@/components/templates/RetroTerminalTemplate';
 import { OperatingSystemTemplate } from '@/components/templates/OperatingSystemTemplate';
@@ -21,7 +21,7 @@ import { BouncingResumeTemplate } from '@/components/templates/BouncingResumeTem
 export default function PublicPreviewPage() {
   const params = useParams();
   const id = Array.isArray(params.id) ? params.id[0] : params.id;
-  const resumeData = { ...initialResumeData, template: id || 'youble' };
+  const resumeData = { ...previewResumeData, template: id || 'youble' };
   const [isCoverLetterOpen, setCoverLetterOpen] = useState(false);
 
   React.useEffect(() => {

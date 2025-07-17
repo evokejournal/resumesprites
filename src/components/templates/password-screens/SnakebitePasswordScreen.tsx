@@ -34,7 +34,7 @@ export function SnakebitePasswordScreen({ onSubmit, error, loading, name }: Snak
             value={password}
             onChange={e => setPassword(e.target.value)}
             disabled={loading}
-            autoComplete="current-password"
+                          autoComplete="off"
             style={{ fontFamily: 'inherit', letterSpacing: '0.1em' }}
           />
           <button

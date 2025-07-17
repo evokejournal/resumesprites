@@ -89,3 +89,69 @@ export async function GET(request: NextRequest) {
     );
   }
 } 
+
+export async function PATCH(request: NextRequest) {
+  try {
+    // Rate limiting
+    const rateLimitResult = await rateLimiters.api(request);
+    if (rateLimitResult) return rateLimitResult;
+    // Admin authentication
+    const authResult = await authenticateAdmin(request);
+    if (!authResult.success) return NextResponse.json({ error: authResult.error }, { status: authResult.status });
+    const adminUser = authResult.user;
+    if (!adminUser) return NextResponse.json({ error: 'Admin user not found' }, { status: 404 });
+    // Parse body
+    const { userId, action } = await request.json();
+    if (!userId || !action) return NextResponse.json({ error: 'Missing userId or action' }, { status: 400 });
+    const userRef = adminDb.collection('users').doc(userId);
+    let update: any = {};
+    if (action === 'suspend') update.status = 'suspended';
+    else if (action === 'activate') update.status = 'active';
+    else return NextResponse.json({ error: 'Invalid action' }, { status: 400 });
+    await userRef.update(update);
+    securityLogger.log({
+      type: SecurityEventType.API_ACCESS,
+      severity: SecuritySeverity.MEDIUM,
+      userId: adminUser.id,
+      ip: request.headers.get('x-forwarded-for') || 'unknown',
+      userAgent: request.headers.get('user-agent') || 'unknown',
+      endpoint: '/api/admin/users',
+      method: 'PATCH',
+      details: { action, targetUser: userId }
+    });
+    return NextResponse.json({ success: true });
+  } catch (error) {
+    return NextResponse.json({ error: error instanceof Error ? error.message : 'Unknown error' }, { status: 500 });
+  }
+}
+
+export async function DELETE(request: NextRequest) {
+  try {
+    // Rate limiting
+    const rateLimitResult = await rateLimiters.api(request);
+    if (rateLimitResult) return rateLimitResult;
+    // Admin authentication
+    const authResult = await authenticateAdmin(request);
+    if (!authResult.success) return NextResponse.json({ error: authResult.error }, { status: authResult.status });
+    const adminUser = authResult.user;
+    if (!adminUser) return NextResponse.json({ error: 'Admin user not found' }, { status: 404 });
+    // Parse body
+    const { userId } = await request.json();
+    if (!userId) return NextResponse.json({ error: 'Missing userId' }, { status: 400 });
+    const userRef = adminDb.collection('users').doc(userId);
+    await userRef.delete();
+    securityLogger.log({
+      type: SecurityEventType.API_ACCESS,
+      severity: SecuritySeverity.HIGH,
+      userId: adminUser.id,
+      ip: request.headers.get('x-forwarded-for') || 'unknown',
+      userAgent: request.headers.get('user-agent') || 'unknown',
+      endpoint: '/api/admin/users',
+      method: 'DELETE',
+      details: { action: 'delete', targetUser: userId }
+    });
+    return NextResponse.json({ success: true });
+  } catch (error) {
+    return NextResponse.json({ error: error instanceof Error ? error.message : 'Unknown error' }, { status: 500 });
+  }
+} 

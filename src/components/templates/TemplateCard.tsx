@@ -170,7 +170,7 @@ export function TemplateCard({ template, isSelected, name, onSelect, onPreview }
                                 onChange={(e) => setPassword(e.target.value)}
                                 onKeyPress={handleGenerateLinkKey}
                                 autoFocus
-                                autoComplete="new-password"
+                                autoComplete="off"
                               />
                             </div>
                             <Button

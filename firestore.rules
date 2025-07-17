@@ -23,11 +23,13 @@ service cloud.firestore {
     }
 
     // User resume data - users can only access their own resume data
+    // Note: This is now primarily accessed through API routes with NextAuth
     match /users/{userId}/resume/{document=**} {
       allow read, write: if isOwner(userId);
     }
     
     // Public links - optimized for recruiter access
+    // Note: This is now primarily accessed through API routes
     match /links/{linkId} {
       // Anyone can read links (needed for password verification)
       allow read: if true;
@@ -53,6 +55,22 @@ service cloud.firestore {
     
     // Admin access for admin users
     match /admin/{document=**} {
+      allow read, write: if isAuthenticated() && 
+                           request.auth.token.admin == true;
+    }
+    
+    // Backup and system collections - admin only
+    match /backups/{document=**} {
+      allow read, write: if isAuthenticated() && 
+                           request.auth.token.admin == true;
+    }
+    
+    match /backupData/{document=**} {
+      allow read, write: if isAuthenticated() && 
+                           request.auth.token.admin == true;
+    }
+    
+    match /securityLogs/{document=**} {
       allow read, write: if isAuthenticated() && 
                            request.auth.token.admin == true;
     }

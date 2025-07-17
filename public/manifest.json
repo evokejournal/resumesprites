@@ -1,0 +1,27 @@
+{
+  "name": "ResumeSprites - Interactive Resume Builder",
+  "short_name": "ResumeSprites",
+  "description": "Create stunning, interactive resumes with unique animated templates. Stand out to employers with password-protected resume links and real-time tracking.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#649E97",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable any"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable any"
+    }
+  ],
+  "categories": ["business", "productivity", "education"],
+  "lang": "en",
+  "dir": "ltr"
+} 
