@@ -137,8 +137,7 @@ export function SignInForm() {
           variant="link"
           className="text-sm text-muted-foreground hover:text-primary"
           onClick={() => {
-            // TODO: Implement password reset
-            alert('Password reset functionality coming soon!');
+            window.location.href = '/auth/forgot-password';
           }}
         >
           Forgot your password?

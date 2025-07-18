@@ -187,6 +187,7 @@ export default function DashboardPageClient() {
           occupation: link.resumeDataSnapshot?.about?.jobTitle || '',
           resumeUrl: `${window.location.origin}/resume/${link.shortId}`,
           password: link.password,
+          templateId: link.templateSnapshot,
         }),
       });
       if (!res.ok) throw new Error('Failed to generate PDF');

@@ -169,6 +169,13 @@ export default function AuthPage() {
                   </>
                 )}
               </Button>
+              {!isSignUp && (
+                <div className="mt-2">
+                  <Link href="/auth/forgot-password" className="text-xs text-muted-foreground hover:text-primary underline">
+                    Forgot your password?
+                  </Link>
+                </div>
+              )}
             </motion.div>
           </motion.div>
         </div>
