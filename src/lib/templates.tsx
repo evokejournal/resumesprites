@@ -1,28 +1,25 @@
 
 import React from 'react';
-import dynamic from 'next/dynamic';
 
-// Lazy load template components
-const YoubleTemplate = dynamic(() => import('@/components/templates/GoobleItTemplate').then(mod => ({ default: mod.YoubleTemplate })), { ssr: false });
-const OperatingSystemTemplate = dynamic(() => import('@/components/templates/OperatingSystemTemplate').then(mod => ({ default: mod.OperatingSystemTemplate })), { ssr: false });
-const ForTaxPurposesTemplate = dynamic(() => import('@/components/templates/ReceiptRollTemplate').then(mod => ({ default: mod.ForTaxPurposesTemplate })), { ssr: false });
-const CodeSyntaxTemplate = dynamic(() => import('@/components/templates/CodeSyntaxTemplate').then(mod => ({ default: mod.CodeSyntaxTemplate })), { ssr: false });
-const SnakebiteResumeTemplate = dynamic(() => import('@/components/templates/SnakebiteResumeTemplate').then(mod => ({ default: mod.SnakebiteResumeTemplate })), { ssr: false });
-const BouncingResumeTemplate = dynamic(() => import('@/components/templates/BouncingResumeTemplate').then(mod => ({ default: mod.BouncingResumeTemplate })), { ssr: false });
-const ExplosivePotentialTemplate = dynamic(() => import('@/components/templates/ExplosivePotentialTemplate').then(mod => ({ default: mod.ExplosivePotentialTemplate })), { ssr: false });
-const SmsConversationTemplate = dynamic(() => import('@/components/templates/SmsConversationTemplate').then(mod => ({ default: mod.SmsConversationTemplate })), { ssr: false });
-const RetroTerminalTemplate = dynamic(() => import('@/components/templates/RetroTerminalTemplate').then(mod => ({ default: mod.RetroTerminalTemplate })), { ssr: false });
+import { YoubleTemplate } from "@/components/templates/GoobleItTemplate";
+import { ForTaxPurposesTemplate } from "@/components/templates/ReceiptRollTemplate";
+import { RetroTerminalTemplate } from "@/components/templates/RetroTerminalTemplate";
+import { SmsConversationTemplate } from "@/components/templates/SmsConversationTemplate";
+import { SnakebiteResumeTemplate } from "@/components/templates/SnakebiteResumeTemplate";
+import { CodeSyntaxTemplate } from "@/components/templates/CodeSyntaxTemplate";
+import { ExplosivePotentialTemplate } from "@/components/templates/ExplosivePotentialTemplate";
+import { BouncingResumeTemplate } from "@/components/templates/BouncingResumeTemplate";
+import { OperatingSystemTemplate } from "@/components/templates/OperatingSystemTemplate";
 
-// Lazy load preview components
-const YoublePreview = dynamic(() => import('@/components/templates/previews/GoobleItPreview').then(mod => ({ default: mod.YoublePreview })), { ssr: false });
-const OperatingSystemPreview = dynamic(() => import('@/components/templates/previews/OperatingSystemPreview').then(mod => ({ default: mod.OperatingSystemPreview })), { ssr: false });
-const ForTaxPurposesPreview = dynamic(() => import('@/components/templates/previews/ReceiptRollPreview').then(mod => ({ default: mod.ForTaxPurposesPreview })), { ssr: false });
-const CodeSyntaxPreview = dynamic(() => import('@/components/templates/previews/CodeSyntaxPreview').then(mod => ({ default: mod.CodeSyntaxPreview })), { ssr: false });
-const SnakebiteResumePreview = dynamic(() => import('@/components/templates/previews/SnakebiteResumePreview').then(mod => ({ default: mod.SnakebiteResumePreview })), { ssr: false });
-const BouncingResumePreview = dynamic(() => import('@/components/templates/previews/BouncingResumePreview').then(mod => ({ default: mod.BouncingResumePreview })), { ssr: false });
-const ExplosivePotentialPreview = dynamic(() => import('@/components/templates/previews/ExplosivePotentialPreview').then(mod => ({ default: mod.ExplosivePotentialPreview })), { ssr: false });
-const SmsConversationPreview = dynamic(() => import('@/components/templates/previews/SmsConversationPreview').then(mod => ({ default: mod.SmsConversationPreview })), { ssr: false });
-const RetroTerminalPreview = dynamic(() => import('@/components/templates/previews/RetroTerminalPreview').then(mod => ({ default: mod.RetroTerminalPreview })), { ssr: false });
+import { RetroTerminalPreview } from "@/components/templates/previews/RetroTerminalPreview";
+import { OperatingSystemPreview } from "@/components/templates/previews/OperatingSystemPreview";
+import { YoublePreview } from "@/components/templates/previews/GoobleItPreview";
+import { ForTaxPurposesPreview } from "@/components/templates/previews/ReceiptRollPreview";
+import { ExplosivePotentialPreview } from "@/components/templates/previews/ExplosivePotentialPreview";
+import { SmsConversationPreview } from '@/components/templates/previews/SmsConversationPreview';
+import { CodeSyntaxPreview } from '@/components/templates/previews/CodeSyntaxPreview';
+import { SnakebiteResumePreview } from "@/components/templates/previews/SnakebiteResumePreview";
+import { BouncingResumePreview } from "@/components/templates/previews/BouncingResumePreview";
 
 export const templates = [
   {
