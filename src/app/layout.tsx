@@ -103,9 +103,17 @@ export default function RootLayout({
           href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Bungee&family=Gloock&family=Orbitron:wght@400;700&family=Rock+Salt&family=Space+Grotesk:wght@400;500;700&family=Ultra&display=swap"
           rel="stylesheet"
           media="print"
-          onLoad={(e) => {
-            const target = e.target as HTMLLinkElement;
-            target.media = 'all';
+        />
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              (function() {
+                var link = document.querySelector('link[href*="fonts.googleapis.com/css2?family=Archivo+Black"]');
+                if (link) {
+                  link.media = 'all';
+                }
+              })();
+            `
           }}
         />
         <link rel="icon" href="/favicon.ico" />
