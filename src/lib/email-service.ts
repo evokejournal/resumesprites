@@ -75,14 +75,14 @@ function getBrandedEmailHtml({
   extraHtml?: string;
 }) {
   return `
-    <!DOCTYPE html>
-    <html>
-    <head>
-      <meta charset="utf-8">
-      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <meta charset="utf-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
       <title>${title}</title>
       <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&family=Pixelify+Sans:wght@700&display=swap" rel="stylesheet">
-      <style>
+          <style>
         body { background: hsl(40, 33%, 97%); font-family: 'Inter', Arial, sans-serif; color: hsl(220, 10%, 25%); margin: 0; padding: 0; }
         .container { max-width: 520px; margin: 32px auto; background: hsl(0, 0%, 100%); border-radius: 18px; box-shadow: 0 4px 32px 0 #e6b17c22; overflow: hidden; }
         .header { background: linear-gradient(120deg, hsl(25, 80%, 65%) 0%, hsl(10, 89%, 82%) 100%); color: #fff; padding: 36px 32px 18px 32px; text-align: center; border-radius: 18px 18px 0 0; }
@@ -99,15 +99,15 @@ function getBrandedEmailHtml({
         ul { padding-left: 1.2em; }
         li { margin-bottom: 0.3em; }
         @media (max-width: 600px) { .container, .content, .header { padding: 16px !important; } .content { font-size: 1rem; } }
-      </style>
-    </head>
-    <body>
-      <div class="container">
-        <div class="header">
+          </style>
+        </head>
+        <body>
+          <div class="container">
+            <div class="header">
           <img src="${logoUrl}" alt="ResumeSprites" width="220" height="48" style="display:block;margin:0 auto 12px auto;max-width:90%;height:auto;" />
           <h1>${title}</h1>
-        </div>
-        <div class="content">
+            </div>
+            <div class="content">
           ${body}
           ${ctaLabel && ctaUrl ? `<div style="text-align:center;"><a href="${ctaUrl}" class="button">${ctaLabel}</a></div>` : ""}
           ${extraHtml}
@@ -132,14 +132,14 @@ export async function sendWelcomeEmail(data: WelcomeEmailData) {
   try {
     const body = `
       <p>Hi <b>${data.name}</b>,<br />We're excited to have you on board!</p>
-      <p>You now have access to:</p>
+              <p>You now have access to:</p>
       <ul style="margin-bottom:18px;">
-        <li>🎨 Beautiful animated templates</li>
-        <li>🔗 Password-protected resume links</li>
-        <li>📊 Real-time view tracking</li>
-        <li>📄 Professional PDF generation</li>
-        <li>✉️ Cover letter creation</li>
-      </ul>
+                <li>🎨 Beautiful animated templates</li>
+                <li>🔗 Password-protected resume links</li>
+                <li>📊 Real-time view tracking</li>
+                <li>📄 Professional PDF generation</li>
+                <li>✉️ Cover letter creation</li>
+              </ul>
     `;
     const html = getBrandedEmailHtml({
       title: 'Welcome to ResumeSprites! 🎉',
@@ -251,17 +251,17 @@ export async function sendSubscriptionEmail(data: SubscriptionEmailData) {
       <h3 style="margin:18px 0 8px 0;">Your subscription is now active!</h3>
       <div style="background:#fff;padding:16px 18px;border-radius:7px;margin-bottom:18px;border-left:4px solid #667eea;">
         <h4 style="margin:0 0 8px 0;">Order Details:</h4>
-        <p><strong>Plan:</strong> ${data.plan}</p>
-        <p><strong>Amount:</strong> ${data.amount}</p>
-        <p><strong>Transaction ID:</strong> ${data.transactionId}</p>
-      </div>
+                <p><strong>Plan:</strong> ${data.plan}</p>
+                <p><strong>Amount:</strong> ${data.amount}</p>
+                <p><strong>Transaction ID:</strong> ${data.transactionId}</p>
+              </div>
       <ul style="margin-bottom:18px;">
-        <li>✨ Unlimited resume templates</li>
-        <li>📊 Advanced analytics</li>
-        <li>🔗 Unlimited resume links</li>
-        <li>📄 Priority PDF generation</li>
-        <li>🎨 Premium template designs</li>
-      </ul>
+                <li>✨ Unlimited resume templates</li>
+                <li>📊 Advanced analytics</li>
+                <li>🔗 Unlimited resume links</li>
+                <li>📄 Priority PDF generation</li>
+                <li>🎨 Premium template designs</li>
+              </ul>
     `;
     const html = getBrandedEmailHtml({
       title: '🎉 Welcome to ResumeSprites Premium!',
