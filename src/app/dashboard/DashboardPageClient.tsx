@@ -274,13 +274,17 @@ export default function DashboardPageClient() {
                         <div className="flex-1 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-3 mb-2 flex-wrap">
-                              {/* badges removed */}
+                              {link.companyName && (
+                                <Badge variant="secondary" className="text-xs">
+                                  {link.companyName}
+                                </Badge>
+                              )}
                             </div>
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-2 mb-2 text-xs text-gray-500">
                               <div className="flex items-center gap-1">{formatDateDDMMYY(link.createdAt)}</div>
                               <div className="flex items-center gap-1"><Users className="h-4 w-4" />{getTotalViews(link)} view{getTotalViews(link) !== 1 ? 's' : ''}</div>
                               <div className="flex items-center gap-1"><Eye className="h-4 w-4" />Last viewed {getLastViewed(link)}</div>
-                      </div>
+                            </div>
                             {/* Move action buttons below info */}
                             <div className="flex flex-col sm:flex-row gap-2 mt-2">
                               <Button variant="outline" size="sm" onClick={() => handleCopyLink(link.shortId)} className="flex-1"><Copy className="h-4 w-4 mr-2" />Copy</Button>

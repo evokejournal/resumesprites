@@ -90,9 +90,11 @@ export default function AuthPage() {
                 initial={{ scale: 0 }}
                 animate={{ scale: 1 }}
                 transition={{ duration: 0.5, delay: 0.2 }}
-                className="w-16 h-16 bg-gradient-to-br from-primary to-accent rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg"
+                className="mb-4"
               >
-                <Sparkles className="w-8 h-8 text-primary-foreground" />
+                <h1 className="text-2xl font-bold font-headline flex items-baseline justify-center gap-x-1">
+                  <span>Resume</span><span className="font-pixelify text-3xl text-primary">Sprites</span>
+                </h1>
               </motion.div>
               
               <motion.h1

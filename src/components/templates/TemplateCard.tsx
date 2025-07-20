@@ -40,6 +40,7 @@ export function TemplateCard({ template, isSelected, name, onSelect, onPreview }
   // State for Create URL modal and password
   const [modalOpen, setModalOpen] = useState(false);
   const [password, setPassword] = useState('');
+  const [companyName, setCompanyName] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
 
   // Preview handler
@@ -62,9 +63,10 @@ export function TemplateCard({ template, isSelected, name, onSelect, onPreview }
     setIsGenerating(true);
     try {
       // Pass the template ID directly to ensure it's used in the link
-      const newLink = await generateResumeLink(password, template.id);
+      const newLink = await generateResumeLink(password, template.id, companyName.trim());
       
       setPassword('');
+      setCompanyName('');
       setModalOpen(false);
       toast({
         title: "Link generated!",
@@ -159,6 +161,17 @@ export function TemplateCard({ template, isSelected, name, onSelect, onPreview }
                                 </div>
                                 <span className="text-sm mt-1">{template.name}</span>
                               </div>
+                            </div>
+                            <div className="w-full">
+                              <Label htmlFor="companyName">Company Name (optional)</Label>
+                              <Input
+                                id="companyName"
+                                type="text"
+                                placeholder="Enter company name for easy reference"
+                                value={companyName}
+                                onChange={(e) => setCompanyName(e.target.value)}
+                                autoComplete="off"
+                              />
                             </div>
                             <div className="w-full">
                               <Label htmlFor="password">Password</Label>

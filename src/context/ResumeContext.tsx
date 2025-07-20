@@ -12,7 +12,7 @@ interface ResumeContextType {
   setResumeData: React.Dispatch<React.SetStateAction<ResumeData>>;
   updateField: <T extends keyof ResumeData>(section: T, value: ResumeData[T]) => void;
   generatedLinks: GeneratedLink[];
-  generateResumeLink: (password: string, templateOverride?: string) => Promise<GeneratedLink>;
+  generateResumeLink: (password: string, templateOverride?: string, companyName?: string) => Promise<GeneratedLink>;
   deleteGeneratedLink: (id: string) => Promise<void>;
   refreshLinks: () => Promise<void>;
   isHydrated: boolean;
@@ -191,7 +191,7 @@ export const ResumeProvider = ({ children }: { children: ReactNode }) => {
     }));
   };
 
-  const generateResumeLink = async (password: string, templateOverride?: string): Promise<GeneratedLink> => {
+  const generateResumeLink = async (password: string, templateOverride?: string, companyName?: string): Promise<GeneratedLink> => {
     if (!user) {
       throw new Error('User not authenticated');
     }
@@ -205,6 +205,7 @@ export const ResumeProvider = ({ children }: { children: ReactNode }) => {
       const newLink: Omit<GeneratedLink, 'id'> = {
         shortId,
         password,
+        companyName: companyName || undefined,
         resumeDataSnapshot: sanitizeResumeData(resumeData),
         templateSnapshot: templateToUse,
         createdAt: new Date().toISOString(),
