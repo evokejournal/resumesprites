@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import Link from "next/link";
+import { useRecaptcha } from "@/hooks/use-recaptcha";
 
 function ResetPasswordContent() {
   const searchParams = useSearchParams();
@@ -17,6 +18,7 @@ function ResetPasswordContent() {
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState("");
   const [error, setError] = useState("");
+  const { execute: executeRecaptcha } = useRecaptcha();
 
   useEffect(() => {
     if (!token) {
@@ -40,10 +42,13 @@ function ResetPasswordContent() {
       return;
     }
     try {
+      // Get reCAPTCHA token
+      const recaptchaToken = await executeRecaptcha();
+      
       const res = await fetch("/api/auth/reset-password", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ token, newPassword: password }),
+        body: JSON.stringify({ token, newPassword: password, recaptchaToken }),
       });
       const data = await res.json();
       if (res.ok && data.success) {

@@ -1,7 +1,8 @@
 import React, { useState, useRef } from 'react';
+import { useRecaptcha } from '@/hooks/use-recaptcha';
 
 interface BouncingResumePasswordScreenProps {
-  onSubmit: (password: string) => void;
+  onSubmit: (password: string, recaptchaToken?: string) => void;
   error?: string;
   loading?: boolean;
   name?: string;
@@ -10,10 +11,19 @@ interface BouncingResumePasswordScreenProps {
 export function BouncingResumePasswordScreen({ onSubmit, error, loading, name }: BouncingResumePasswordScreenProps) {
   const [password, setPassword] = useState('');
   const inputRef = useRef<HTMLInputElement>(null);
+  const { execute: executeRecaptcha } = useRecaptcha();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!loading) onSubmit(password);
+    if (!loading) {
+      try {
+        const recaptchaToken = await executeRecaptcha();
+        onSubmit(password, recaptchaToken);
+      } catch (error) {
+        console.error('reCAPTCHA error:', error);
+        onSubmit(password); // Fallback without reCAPTCHA
+      }
+    }
   };
 
   const colors = [
@@ -65,7 +75,7 @@ export function BouncingResumePasswordScreen({ onSubmit, error, loading, name }:
             value={password}
             onChange={e => setPassword(e.target.value)}
             disabled={loading}
-                          autoComplete="off"
+            autoComplete="off"
             style={{ 
               fontFamily: 'Orbitron, sans-serif', 
               letterSpacing: '0.1em',

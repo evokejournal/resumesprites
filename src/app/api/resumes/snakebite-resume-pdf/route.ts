@@ -38,58 +38,67 @@ export async function POST(request: NextRequest) {
       font = await pdfDoc.embedFont(StandardFonts.Helvetica);
     }
     
-    // Colors matching the template
-    const black = rgb(0, 0, 0);
-    const white = rgb(1, 1, 1);
-    const colors = [
-      rgb(1, 1, 1), // White
-      rgb(1, 1, 0), // Yellow
-      rgb(1, 0, 0), // Red
-      rgb(0, 0, 1), // Blue
-      rgb(0, 1, 0), // Green
-      rgb(0.5, 0, 0.5), // Purple
-      rgb(1, 0.65, 0), // Orange
-      rgb(0, 1, 1), // Cyan
-      rgb(1, 0.41, 0.71), // Pink
-      rgb(0.66, 0.66, 0.66), // Gray
-    ];
+    // Colors matching the Game Boy template
+    const gameBoyGreen = rgb(0.13, 0.55, 0.13); // #219621
+    const darkGreen = rgb(0.07, 0.35, 0.07); // #125812
+    const lightGreen = rgb(0.2, 0.65, 0.2); // #33A633
 
     // Create cover letter page first
     const coverLetterPage = pdfDoc.addPage([width, height]);
-    
-    // Set black background for cover letter
     coverLetterPage.drawRectangle({
       x: 0,
       y: 0,
       width,
       height,
-      color: black,
+      color: gameBoyGreen,
+    });
+
+    // Cover letter screen border
+    const screenMargin = 40;
+    const screenWidth = width - (screenMargin * 2);
+    const screenHeight = height - (screenMargin * 2);
+    
+    coverLetterPage.drawRectangle({
+      x: screenMargin - 4,
+      y: screenMargin - 4,
+      width: screenWidth + 8,
+      height: screenHeight + 8,
+      color: darkGreen,
+    });
+    
+    coverLetterPage.drawRectangle({
+      x: screenMargin - 2,
+      y: screenMargin - 2,
+      width: screenWidth + 4,
+      height: screenHeight + 4,
+      color: lightGreen,
+    });
+    
+    coverLetterPage.drawRectangle({
+      x: screenMargin,
+      y: screenMargin,
+      width: screenWidth,
+      height: screenHeight,
+      color: gameBoyGreen,
     });
 
     // Cover letter header
     coverLetterPage.drawText("COVER LETTER", {
-      x: (width - font.widthOfTextAtSize("COVER LETTER", 32)) / 2,
-      y: height - 100,
-      size: 32,
+      x: (width - font.widthOfTextAtSize("COVER LETTER", 24)) / 2,
+      y: height - 120,
+      size: 24,
       font,
-      color: white,
+      color: darkGreen,
     });
 
     // Cover letter content
-    let coverY = height - 150;
+    let coverY = height - 160;
     const coverLineHeight = 18;
 
-    coverLetterPage.drawText("Dear Hiring Manager,", {
-      x: 50,
-      y: coverY,
-      size: 16,
-      font,
-      color: white,
-    });
-    coverY -= coverLineHeight * 2;
-
     const coverLetterText = resumeData.coverLetter || 
-      `I am writing to express my strong interest in the position at your company. With my background in ${resumeData.about.jobTitle || 'my field'}, I believe I would be a valuable addition to your team.
+      `Dear Hiring Manager,
+
+I am writing to express my strong interest in the position at your company. With my background in ${resumeData.about.jobTitle || 'my field'}, I believe I would be a valuable addition to your team.
 
 Throughout my career, I have demonstrated a strong ability to deliver exceptional results and drive innovation. My experience includes diverse projects and challenges that have honed my skills and prepared me for this opportunity.
 
@@ -102,116 +111,123 @@ ${resumeData.about.name || 'Your Name'}
 ${resumeData.about.jobTitle || 'Your Title'}
 ${resumeData.contact?.email || ''}`;
 
-    const coverLines = wrapText(coverLetterText, font, 14, width - 100);
+    const coverLines = wrapText(coverLetterText, font, 14, screenWidth - 40);
     coverLines.forEach(line => {
-      if (coverY > 50) {
+      if (coverY > screenMargin + 40) {
         coverLetterPage.drawText(line, {
-          x: 50,
+          x: screenMargin + 20,
           y: coverY,
           size: 14,
           font,
-          color: white,
+          color: darkGreen,
         });
         coverY -= coverLineHeight;
       }
     });
 
-    // Create resume page second
+    // Create Game Boy resume page second
     const resumePage = pdfDoc.addPage([width, height]);
-    
-    // Set black background for resume
     resumePage.drawRectangle({
       x: 0,
       y: 0,
       width,
       height,
-      color: black,
+      color: gameBoyGreen,
     });
 
-    // Draw bouncing logo at the top
-    const logoColor = colors[0]; // White
-    const logoWidth = 200;
-    const logoHeight = 100;
-    const logoX = (width - logoWidth) / 2;
-    const logoY = height - 150;
-
-    // Draw logo background (simplified version)
+    // Game Boy screen border
     resumePage.drawRectangle({
-      x: logoX,
-      y: logoY,
-      width: logoWidth,
-      height: logoHeight,
-      color: logoColor,
-      opacity: 0.1,
+      x: screenMargin - 4,
+      y: screenMargin - 4,
+      width: screenWidth + 8,
+      height: screenHeight + 8,
+      color: darkGreen,
+    });
+    
+    resumePage.drawRectangle({
+      x: screenMargin - 2,
+      y: screenMargin - 2,
+      width: screenWidth + 4,
+      height: screenHeight + 4,
+      color: lightGreen,
+    });
+    
+    resumePage.drawRectangle({
+      x: screenMargin,
+      y: screenMargin,
+      width: screenWidth,
+      height: screenHeight,
+      color: gameBoyGreen,
     });
 
-    // Draw name in logo
-    const nameFontSize = 24;
-    const nameText = resumeData.about.name.toUpperCase();
-    const nameWidth = font.widthOfTextAtSize(nameText, nameFontSize);
-    resumePage.drawText(nameText, {
-      x: logoX + (logoWidth - nameWidth) / 2,
-      y: logoY + 60,
-      size: nameFontSize,
-      font,
-      color: logoColor,
-    });
+    // Draw pixel grid overlay
+    const pixelSize = 4;
+    for (let x = screenMargin; x < screenMargin + screenWidth; x += pixelSize) {
+      for (let y = screenMargin; y < screenMargin + screenHeight; y += pixelSize) {
+        resumePage.drawRectangle({
+          x,
+          y,
+          width: 1,
+          height: 1,
+          color: darkGreen,
+          opacity: 0.1,
+        });
+      }
+    }
 
-    // Draw "RESUME" text
-    const resumeText = "RESUME";
-    const resumeFontSize = 16;
-    const resumeWidth = font.widthOfTextAtSize(resumeText, resumeFontSize);
-    resumePage.drawText(resumeText, {
-      x: logoX + (logoWidth - resumeWidth) / 2,
-      y: logoY + 30,
-      size: resumeFontSize,
-      font,
-      color: black,
-    });
-
-    // Draw resume content
-    let currentY = logoY - 50;
+    // Resume content
+    let currentY = height - 120;
     const lineHeight = 20;
     const sectionSpacing = 30;
 
-    // Name and title
-    resumePage.drawText(resumeData.about.name || 'Your Name', {
-      x: 50,
+    // Title
+    resumePage.drawText("› RESUME", {
+      x: screenMargin + 20,
       y: currentY,
-      size: 28,
+      size: 24,
       font,
-      color: white,
+      color: darkGreen,
+    });
+    currentY -= lineHeight * 2;
+
+    // Name and title
+    resumePage.drawText(`› ${resumeData.about.name || 'Your Name'}`, {
+      x: screenMargin + 20,
+      y: currentY,
+      size: 20,
+      font,
+      color: darkGreen,
     });
     currentY -= lineHeight;
 
-    resumePage.drawText(resumeData.about.jobTitle || 'Your Title', {
-      x: 50,
+    resumePage.drawText(`› ${resumeData.about.jobTitle || 'Your Title'}`, {
+      x: screenMargin + 40,
       y: currentY,
-      size: 18,
+      size: 16,
       font,
-      color: white,
+      color: darkGreen,
     });
     currentY -= sectionSpacing;
 
     // About section
     if (resumeData.about.summary && resumeData.about.summary.trim()) {
-      resumePage.drawText("ABOUT ME", {
-        x: 50,
+      resumePage.drawText("› About", {
+        x: screenMargin + 20,
         y: currentY,
         size: 20,
         font,
-        color: white,
+        color: darkGreen,
       });
       currentY -= lineHeight;
 
-      const aboutLines = wrapText(resumeData.about.summary, font, 16, width - 100);
+      const aboutLines = wrapText(resumeData.about.summary, font, 14, screenWidth - 40);
       aboutLines.forEach(line => {
         resumePage.drawText(line, {
-          x: 50,
+          x: screenMargin + 40,
           y: currentY,
-          size: 16,
+          size: 14,
           font,
-          color: white,
+          color: darkGreen,
         });
         currentY -= lineHeight;
       });
@@ -220,12 +236,12 @@ ${resumeData.contact?.email || ''}`;
 
     // Experience section
     if (resumeData.experience && resumeData.experience.length > 0) {
-      resumePage.drawText("EXPERIENCE", {
-        x: 50,
+      resumePage.drawText("› Experience", {
+        x: screenMargin + 20,
         y: currentY,
         size: 20,
         font,
-        color: white,
+        color: darkGreen,
       });
       currentY -= lineHeight;
 
@@ -233,11 +249,11 @@ ${resumeData.contact?.email || ''}`;
         const role = job.role || 'Role';
         const company = job.company || 'Company';
         resumePage.drawText(`${role} at ${company}`, {
-          x: 50,
+          x: screenMargin + 40,
           y: currentY,
           size: 16,
           font,
-          color: white,
+          color: darkGreen,
         });
         currentY -= lineHeight;
       });
@@ -246,34 +262,34 @@ ${resumeData.contact?.email || ''}`;
 
     // Skills section
     if (resumeData.skills && resumeData.skills.length > 0) {
-      resumePage.drawText("SKILLS", {
-        x: 50,
+      resumePage.drawText("› Skills", {
+        x: screenMargin + 20,
         y: currentY,
         size: 20,
         font,
-        color: white,
+        color: darkGreen,
       });
       currentY -= lineHeight;
 
       const skillsText = resumeData.skills.map((s: any) => s.name || 'Skill').join(' / ');
       resumePage.drawText(skillsText, {
-        x: 50,
+        x: screenMargin + 40,
         y: currentY,
-        size: 16,
+        size: 14,
         font,
-        color: white,
+        color: darkGreen,
       });
       currentY -= sectionSpacing;
     }
 
     // Education section
     if (resumeData.education && resumeData.education.length > 0) {
-      resumePage.drawText("EDUCATION", {
-        x: 50,
+      resumePage.drawText("› Education", {
+        x: screenMargin + 20,
         y: currentY,
         size: 20,
         font,
-        color: white,
+        color: darkGreen,
       });
       currentY -= lineHeight;
 
@@ -281,11 +297,36 @@ ${resumeData.contact?.email || ''}`;
         const degree = edu.degree || 'Degree';
         const institution = edu.institution || 'Institution';
         resumePage.drawText(`${degree} - ${institution}`, {
-          x: 50,
+          x: screenMargin + 40,
           y: currentY,
           size: 16,
           font,
-          color: white,
+          color: darkGreen,
+        });
+        currentY -= lineHeight;
+      });
+      currentY -= sectionSpacing;
+    }
+
+    // Portfolio section
+    if (resumeData.portfolio && resumeData.portfolio.length > 0) {
+      resumePage.drawText("› Portfolio", {
+        x: screenMargin + 20,
+        y: currentY,
+        size: 20,
+        font,
+        color: darkGreen,
+      });
+      currentY -= lineHeight;
+
+      resumeData.portfolio.forEach((item: any) => {
+        const title = item.title || 'Project';
+        resumePage.drawText(title, {
+          x: screenMargin + 40,
+          y: currentY,
+          size: 16,
+          font,
+          color: darkGreen,
         });
         currentY -= lineHeight;
       });
@@ -294,12 +335,12 @@ ${resumeData.contact?.email || ''}`;
 
     // Contact section
     if (resumeData.contact && (resumeData.contact.email || resumeData.contact.phone)) {
-      resumePage.drawText("CONTACT", {
-        x: 50,
+      resumePage.drawText("› Contact", {
+        x: screenMargin + 20,
         y: currentY,
         size: 20,
         font,
-        color: white,
+        color: darkGreen,
       });
       currentY -= lineHeight;
 
@@ -307,11 +348,11 @@ ${resumeData.contact?.email || ''}`;
       const phone = resumeData.contact.phone || '';
       const contactText = email && phone ? `${email} | ${phone}` : email || phone;
       resumePage.drawText(contactText, {
-        x: 50,
+        x: screenMargin + 40,
         y: currentY,
-        size: 16,
+        size: 14,
         font,
-        color: white,
+        color: darkGreen,
       });
     }
 
@@ -320,11 +361,11 @@ ${resumeData.contact?.email || ''}`;
     return new NextResponse(pdfBytes, {
       headers: {
         'Content-Type': 'application/pdf',
-        'Content-Disposition': 'attachment; filename="resume-bouncing.pdf"',
+        'Content-Disposition': 'attachment; filename="resume-snakebite.pdf"',
       },
     });
   } catch (error: any) {
-    console.error('Error generating bouncing resume PDF:', error);
+    console.error('Error generating snakebite resume PDF:', error);
     return NextResponse.json({ error: 'Failed to generate PDF', details: error.message }, { status: 500 });
   }
 }

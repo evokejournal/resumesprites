@@ -179,7 +179,7 @@ export default function DashboardPageClient() {
 
   const handleDownloadPDF = async (link: any) => {
     try {
-      const res = await fetch('/api/resumes/minimal-link-pdf', {
+      const res = await fetch('/api/resumes/clean-password-pdf', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -187,7 +187,6 @@ export default function DashboardPageClient() {
           occupation: link.resumeDataSnapshot?.about?.jobTitle || '',
           resumeUrl: `${window.location.origin}/resume/${link.shortId}`,
           password: link.password,
-          templateId: link.templateSnapshot,
         }),
       });
       if (!res.ok) throw new Error('Failed to generate PDF');

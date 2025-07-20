@@ -384,6 +384,56 @@ export function CodeSyntaxTemplate({ data }: TemplateProps) {
 
   return (
     <div className="font-code bg-[#1E1E1E] text-white min-h-screen p-4 sm:p-8 relative overflow-hidden">
+      {/* Cover Letter Button */}
+      <button
+        onClick={() => setShowCoverLetter(true)}
+        className="fixed top-4 right-16 z-50 bg-[#252526] border border-gray-700 rounded-lg p-3 hover:bg-[#2d2d30] transition-all duration-200 shadow-lg"
+        title="View Cover Letter"
+      >
+        <svg 
+          width="20" 
+          height="20" 
+          viewBox="0 0 24 24" 
+          fill="currentColor" 
+          className="text-green-400"
+        >
+          <path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/>
+        </svg>
+      </button>
+
+      {/* Download Button */}
+      <button
+        onClick={async () => {
+          const res = await fetch('/api/resumes/code-syntax-pdf', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ resumeData: data }),
+          });
+          if (!res.ok) return;
+          const blob = await res.blob();
+          const url = window.URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = 'resume-code.pdf';
+          document.body.appendChild(a);
+          a.click();
+          a.remove();
+          window.URL.revokeObjectURL(url);
+        }}
+        className="fixed top-4 right-4 z-50 bg-[#252526] border border-gray-700 rounded-lg p-3 hover:bg-[#2d2d30] transition-all duration-200 shadow-lg"
+        title="Download Resume PDF"
+      >
+        <svg 
+          width="20" 
+          height="20" 
+          viewBox="0 0 24 24" 
+          fill="currentColor" 
+          className="text-green-400"
+        >
+          <path d="M12 16l-5-5h3V4h4v7h3l-5 5zm-5 4h10v-2H7v2z"/>
+        </svg>
+      </button>
+
       <PongGame contentRef={contentRef} isPaused={showCoverLetter} />
 
 

@@ -214,6 +214,56 @@ export function ExplosivePotentialTemplate({ data }: TemplateProps) {
   
   return (
     <div className="font-win-sans bg-[#008080] h-svh p-4 sm:p-8 text-black">
+      {/* Cover Letter Button */}
+      <button
+        onClick={() => setShowCoverLetter(true)}
+        className="fixed top-4 right-16 z-50 bg-win-gray border-2 border-outset p-3 hover:border-inset transition-all duration-200 shadow-lg"
+        title="View Cover Letter"
+      >
+        <svg 
+          width="20" 
+          height="20" 
+          viewBox="0 0 24 24" 
+          fill="currentColor" 
+          className="text-black"
+        >
+          <path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/>
+        </svg>
+      </button>
+
+      {/* Download Button */}
+      <button
+        onClick={async () => {
+          const res = await fetch('/api/resumes/explosive-potential-pdf', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ resumeData: data }),
+          });
+          if (!res.ok) return;
+          const blob = await res.blob();
+          const url = window.URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = 'resume-explosive.pdf';
+          document.body.appendChild(a);
+          a.click();
+          a.remove();
+          window.URL.revokeObjectURL(url);
+        }}
+        className="fixed top-4 right-4 z-50 bg-win-gray border-2 border-outset p-3 hover:border-inset transition-all duration-200 shadow-lg"
+        title="Download Resume PDF"
+      >
+        <svg 
+          width="20" 
+          height="20" 
+          viewBox="0 0 24 24" 
+          fill="currentColor" 
+          className="text-black"
+        >
+          <path d="M12 16l-5-5h3V4h4v7h3l-5 5zm-5 4h10v-2H7v2z"/>
+        </svg>
+      </button>
+
       <div className="h-full flex flex-col lg:flex-row items-center justify-center gap-8">
         <div className="flex flex-col items-center flex-shrink-0">
           <div className="bg-win-gray p-2 border-2 border-outset w-fit">

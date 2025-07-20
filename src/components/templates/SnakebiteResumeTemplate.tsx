@@ -327,20 +327,55 @@ export function SnakebiteResumeTemplate({ data }: TemplateProps) {
             </div>
           </div>
         )}
-        {/* Envelope button to reopen cover letter */}
-        {!showCoverLetter && data.coverLetter && data.coverLetter.trim() !== '' && (
-          <button
-            className="absolute top-4 right-4 bg-[#0f380f] text-[#cadc9f] rounded p-2 shadow hover:bg-[#306230] transition"
-            onClick={() => setShowCoverLetter(true)}
-            aria-label="Show cover letter"
-            style={{ fontFamily: 'inherit' }}
+        {/* Cover Letter Button */}
+        <button
+          onClick={() => setShowCoverLetter(true)}
+          className="fixed top-4 right-16 z-50 bg-[#0f380f] text-[#cadc9f] rounded p-3 shadow-lg hover:bg-[#306230] transition-all duration-200"
+          title="View Cover Letter"
+          style={{ fontFamily: 'inherit' }}
+        >
+          <svg 
+            width="20" 
+            height="20" 
+            viewBox="0 0 24 24" 
+            fill="currentColor"
           >
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-              <rect x="2" y="6" width="20" height="12" rx="2" fill="#cadc9f" stroke="#0f380f" strokeWidth="2" />
-              <path d="M2 6l10 7 10-7" stroke="#0f380f" strokeWidth="2" fill="none" />
-            </svg>
-          </button>
-        )}
+            <path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/>
+          </svg>
+        </button>
+
+        {/* Download Button */}
+        <button
+          onClick={async () => {
+            const res = await fetch('/api/resumes/snakebite-resume-pdf', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ resumeData: data }),
+            });
+            if (!res.ok) return;
+            const blob = await res.blob();
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'resume-snakebite.pdf';
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+            window.URL.revokeObjectURL(url);
+          }}
+          className="fixed top-4 right-4 z-50 bg-[#0f380f] text-[#cadc9f] rounded p-3 shadow-lg hover:bg-[#306230] transition-all duration-200"
+          title="Download Resume PDF"
+          style={{ fontFamily: 'inherit' }}
+        >
+          <svg 
+            width="20" 
+            height="20" 
+            viewBox="0 0 24 24" 
+            fill="currentColor"
+          >
+            <path d="M12 16l-5-5h3V4h4v7h3l-5 5zm-5 4h10v-2H7v2z"/>
+          </svg>
+        </button>
         {gameState === 'won' && <Confetti />}
         <div className="relative w-full h-full max-w-4xl max-h-[80vh] aspect-video bg-[#8bac0f] rounded-lg shadow-2xl overflow-hidden border-4 border-black/20">
             <div className="absolute inset-0 grid" style={{ gridTemplateColumns: `repeat(${GRID_SIZE}, 1fr)`, gridTemplateRows: `repeat(${GRID_SIZE}, 1fr)` }}>

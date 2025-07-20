@@ -187,6 +187,8 @@ export function OperatingSystemTemplate({ data }: OperatingSystemTemplateProps) 
         </Window>
       ))}
 
+
+
       <div className="absolute bottom-0 left-0 right-0 h-9 bg-win-gray border-t-2 border-white flex items-center px-1 z-[1000]">
         <button className="h-full px-2 flex items-center gap-1 bg-win-gray border-2 border-outset">
           <Icons.WindowsFlagIcon className="w-6 h-6" />

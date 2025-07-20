@@ -9,6 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Eye, EyeOff, Mail, Lock, User, Loader2, Check, X } from 'lucide-react';
+import { useRecaptcha } from '@/hooks/use-recaptcha';
 
 export function SignUpForm() {
   const [name, setName] = useState('');
@@ -20,6 +21,7 @@ export function SignUpForm() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const router = useRouter();
+  const { execute: executeRecaptcha } = useRecaptcha();
 
   // Password validation
   const passwordRequirements = {
@@ -51,12 +53,16 @@ export function SignUpForm() {
     }
 
     try {
+      // Get reCAPTCHA token
+      const recaptchaToken = await executeRecaptcha();
+      
       const result = await signIn('credentials', {
         redirect: false,
         email,
         password,
         name, // Pass name for sign-up
         isSignUp: 'true', // Flag to indicate this is a sign-up
+        recaptchaToken,
       });
       
       if (result?.error) {

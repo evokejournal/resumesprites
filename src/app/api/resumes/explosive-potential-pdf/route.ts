@@ -1,124 +1,414 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { PDFDocument, rgb, PDFName, PDFNumber, PDFString, StandardFonts } from 'pdf-lib';
+import { PDFDocument, rgb, StandardFonts } from 'pdf-lib';
 
-export async function POST(req: NextRequest) {
-  const { name, resumeUrl, password } = await req.json();
-  const pdfDoc = await PDFDocument.create();
-  const page = pdfDoc.addPage([595, 842]); // A4
-  const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
+export async function POST(request: NextRequest) {
+  try {
+    const body = await request.json();
+    const { resumeData } = body;
+    
+    if (!resumeData) {
+      console.error('No resume data provided:', body);
+      return NextResponse.json({ error: 'No resume data provided' }, { status: 400 });
+    }
+    
+    // Ensure about section exists with fallbacks
+    if (!resumeData.about) {
+      resumeData.about = { name: 'Your Name', jobTitle: 'Your Title', summary: '', photo: '' };
+    }
+    
+    // Ensure other sections exist
+    if (!resumeData.contact) resumeData.contact = { email: '', phone: '', website: '', location: '' };
+    if (!resumeData.experience) resumeData.experience = [];
+    if (!resumeData.education) resumeData.education = [];
+    if (!resumeData.skills) resumeData.skills = [];
+    if (!resumeData.portfolio) resumeData.portfolio = [];
+    if (!resumeData.references) resumeData.references = [];
+    if (!resumeData.custom) resumeData.custom = { title: '', items: [] };
+    
+    const pdfDoc = await PDFDocument.create();
+    const { width, height } = { width: 612, height: 792 }; // US Letter size
+    
+    // Embed fonts
+    let font;
+    try {
+      const fontBytes = await fetch('https://fonts.gstatic.com/s/roboto/v30/KFOmCnqEu92Fr1Mu4mxK.ttf').then(res => res.arrayBuffer());
+      font = await pdfDoc.embedFont(fontBytes);
+    } catch (error) {
+      // Fallback to standard font
+      font = await pdfDoc.embedFont(StandardFonts.Helvetica);
+    }
+    
+    // Colors matching the Windows template
+    const white = rgb(1, 1, 1);
+    const black = rgb(0, 0, 0);
+    const teal = rgb(0, 0.5, 0.5);
+    const winGray = rgb(0.9, 0.9, 0.9);
+    const darkGray = rgb(0.4, 0.4, 0.4);
 
-  // Background: teal
-  page.drawRectangle({
-    x: 0, y: 0, width: 595, height: 842,
-    color: rgb(0, 0.5, 0.5) // #008080
-  });
+    // Create cover letter page first
+    const coverLetterPage = pdfDoc.addPage([width, height]);
+    coverLetterPage.drawRectangle({
+      x: 0,
+      y: 0,
+      width,
+      height,
+      color: teal,
+    });
 
-  // Card: Windows gray, outset border
-  const cardWidth = 420;
-  const cardHeight = 180;
-  const cardX = (595 - cardWidth) / 2;
-  const cardY = (842 - cardHeight) / 2;
-  page.drawRectangle({
-    x: cardX, y: cardY, width: cardWidth, height: cardHeight,
-    color: rgb(0.75, 0.75, 0.75) // #C0C0C0
-  });
-  // Outset border (simulate with a darker border)
-  page.drawRectangle({
-    x: cardX, y: cardY, width: cardWidth, height: cardHeight,
-    borderWidth: 2,
-    borderColor: rgb(0.53, 0.53, 0.53) // #888
-  });
+    // Cover letter window
+    const windowMargin = 50;
+    const windowWidth = width - (windowMargin * 2);
+    const windowHeight = height - (windowMargin * 2);
+    const titleBarHeight = 30;
+    
+    coverLetterPage.drawRectangle({
+      x: windowMargin - 2,
+      y: windowMargin - 2,
+      width: windowWidth + 4,
+      height: windowHeight + 4,
+      color: darkGray,
+    });
+    
+    coverLetterPage.drawRectangle({
+      x: windowMargin,
+      y: windowMargin,
+      width: windowWidth,
+      height: windowHeight,
+      color: winGray,
+    });
 
-  // Inner content: white, inset border
-  const innerPad = 14;
-  page.drawRectangle({
-    x: cardX + innerPad, y: cardY + innerPad, width: cardWidth - 2 * innerPad, height: cardHeight - 2 * innerPad,
-    color: rgb(1, 1, 1)
-  });
-  // Inset border (simulate with a lighter border)
-  page.drawRectangle({
-    x: cardX + innerPad, y: cardY + innerPad, width: cardWidth - 2 * innerPad, height: cardHeight - 2 * innerPad,
-    borderWidth: 2,
-    borderColor: rgb(0.9, 0.9, 0.9) // #e5e5e5
-  });
+    // Cover letter title bar
+    coverLetterPage.drawRectangle({
+      x: windowMargin,
+      y: height - windowMargin - titleBarHeight,
+      width: windowWidth,
+      height: titleBarHeight,
+      color: teal,
+    });
 
-  // Title: bold, black, centered
-  const title = 'Minesweeper Resume';
-  const titleSize = 20;
-  const titleWidth = font.widthOfTextAtSize(title, titleSize);
-  const titleX = cardX + (cardWidth - titleWidth) / 2;
-  const titleY = cardY + cardHeight - 36;
-  page.drawText(title, {
-    x: titleX, y: titleY,
-    size: titleSize,
-    font,
-    color: rgb(0, 0, 0)
-  });
+    coverLetterPage.drawText("Cover Letter - " + (resumeData.about.name || 'Your Name'), {
+      x: windowMargin + 10,
+      y: height - windowMargin - 20,
+      size: 14,
+      font,
+      color: white,
+    });
 
-  // Subtitle: black, centered
-  const subtitle = 'Click to reveal the password field';
-  const subtitleSize = 12;
-  const subtitleWidth = font.widthOfTextAtSize(subtitle, subtitleSize);
-  const subtitleX = cardX + (cardWidth - subtitleWidth) / 2;
-  const subtitleY = titleY - 28;
-  page.drawText(subtitle, {
-    x: subtitleX, y: subtitleY,
-    size: subtitleSize,
-    font,
-    color: rgb(0, 0, 0)
-  });
+    // Cover letter content
+    let coverY = height - windowMargin - titleBarHeight - 40;
+    const coverLineHeight = 18;
 
-  // Link area (blue, underlined)
-  const linkText = 'My online resume can be viewed here';
-  const linkSize = 13;
-  const linkWidth = font.widthOfTextAtSize(linkText, linkSize);
-  const linkX = cardX + (cardWidth - linkWidth) / 2;
-  const linkY = subtitleY - 36;
-  page.drawText(linkText, {
-    x: linkX, y: linkY,
-    size: linkSize,
-    font,
-    color: rgb(0.2, 0.4, 1) // Windows blue
-  });
-  // Add hyperlink annotation
-  const linkRect = [linkX, linkY, linkX + linkWidth, linkY + linkSize];
-  const linkAnnot = pdfDoc.context.obj({
-    Type: PDFName.of('Annot'),
-    Subtype: PDFName.of('Link'),
-    Rect: pdfDoc.context.obj(linkRect.map(n => PDFNumber.of(n))),
-    Border: pdfDoc.context.obj([PDFNumber.of(0), PDFNumber.of(0), PDFNumber.of(0)]),
-    A: pdfDoc.context.obj({
-      Type: PDFName.of('Action'),
-      S: PDFName.of('URI'),
-      URI: PDFString.of(resumeUrl),
-    }),
-  });
-  let annots = page.node.Annots();
-  if (!annots) {
-    annots = pdfDoc.context.obj([]);
-    page.node.set(PDFName.of('Annots'), annots);
+    const coverLetterText = resumeData.coverLetter || 
+      `Dear Hiring Manager,
+
+I am writing to express my strong interest in the position at your company. With my background in ${resumeData.about.jobTitle || 'my field'}, I believe I would be a valuable addition to your team.
+
+Throughout my career, I have demonstrated a strong ability to deliver exceptional results and drive innovation. My experience includes diverse projects and challenges that have honed my skills and prepared me for this opportunity.
+
+I am particularly drawn to this role because it aligns perfectly with my passion for excellence and innovation. I am excited about the possibility of contributing to your organization's success.
+
+Thank you for considering my application. I look forward to discussing how my skills and experience can benefit your team.
+
+Best regards,
+${resumeData.about.name || 'Your Name'}
+${resumeData.about.jobTitle || 'Your Title'}
+${resumeData.contact?.email || ''}`;
+
+    const coverLines = wrapText(coverLetterText, font, 14, windowWidth - 40);
+    coverLines.forEach(line => {
+      if (coverY > windowMargin + 40) {
+        coverLetterPage.drawText(line, {
+          x: windowMargin + 20,
+          y: coverY,
+          size: 14,
+          font,
+          color: black,
+        });
+        coverY -= coverLineHeight;
+      }
+    });
+
+    // Create Windows-style resume page second
+    const resumePage = pdfDoc.addPage([width, height]);
+    resumePage.drawRectangle({
+      x: 0,
+      y: 0,
+      width,
+      height,
+      color: teal,
+    });
+
+    // Resume window
+    resumePage.drawRectangle({
+      x: windowMargin - 2,
+      y: windowMargin - 2,
+      width: windowWidth + 4,
+      height: windowHeight + 4,
+      color: darkGray,
+    });
+    
+    resumePage.drawRectangle({
+      x: windowMargin,
+      y: windowMargin,
+      width: windowWidth,
+      height: windowHeight,
+      color: winGray,
+    });
+
+    // Resume title bar
+    resumePage.drawRectangle({
+      x: windowMargin,
+      y: height - windowMargin - titleBarHeight,
+      width: windowWidth,
+      height: titleBarHeight,
+      color: teal,
+    });
+
+    resumePage.drawText("Resume - " + (resumeData.about.name || 'Your Name'), {
+      x: windowMargin + 10,
+      y: height - windowMargin - 20,
+      size: 14,
+      font,
+      color: white,
+    });
+
+    // Resume content
+    let currentY = height - windowMargin - titleBarHeight - 40;
+    const lineHeight = 20;
+    const sectionSpacing = 30;
+
+    // Name and title
+    resumePage.drawText(resumeData.about.name || 'Your Name', {
+      x: windowMargin + 20,
+      y: currentY,
+      size: 24,
+      font,
+      color: black,
+    });
+    currentY -= lineHeight;
+
+    resumePage.drawText(resumeData.about.jobTitle || 'Your Title', {
+      x: windowMargin + 20,
+      y: currentY,
+      size: 18,
+      font,
+      color: black,
+    });
+    currentY -= sectionSpacing;
+
+    // About section
+    if (resumeData.about.summary && resumeData.about.summary.trim()) {
+      // Section header
+      resumePage.drawRectangle({
+        x: windowMargin + 20,
+        y: currentY - 25,
+        width: windowWidth - 40,
+        height: 25,
+        color: winGray,
+        borderWidth: 1,
+        borderColor: black,
+      });
+
+      resumePage.drawText("About", {
+        x: windowMargin + 25,
+        y: currentY - 10,
+        size: 16,
+        font,
+        color: black,
+      });
+      currentY -= 35;
+
+      const aboutLines = wrapText(resumeData.about.summary, font, 14, windowWidth - 40);
+      aboutLines.forEach(line => {
+        resumePage.drawText(line, {
+          x: windowMargin + 30,
+          y: currentY,
+          size: 14,
+          font,
+          color: black,
+        });
+        currentY -= lineHeight;
+      });
+      currentY -= sectionSpacing;
+    }
+
+    // Experience section
+    if (resumeData.experience && resumeData.experience.length > 0) {
+      // Section header
+      resumePage.drawRectangle({
+        x: windowMargin + 20,
+        y: currentY - 25,
+        width: windowWidth - 40,
+        height: 25,
+        color: winGray,
+        borderWidth: 1,
+        borderColor: black,
+      });
+
+      resumePage.drawText("Experience", {
+        x: windowMargin + 25,
+        y: currentY - 10,
+        size: 16,
+        font,
+        color: black,
+      });
+      currentY -= 35;
+
+      resumeData.experience.forEach((job: any) => {
+        const role = job.role || 'Role';
+        const company = job.company || 'Company';
+        resumePage.drawText(`${role} at ${company}`, {
+          x: windowMargin + 30,
+          y: currentY,
+          size: 16,
+          font,
+          color: black,
+        });
+        currentY -= lineHeight;
+      });
+      currentY -= sectionSpacing;
+    }
+
+    // Skills section
+    if (resumeData.skills && resumeData.skills.length > 0) {
+      // Section header
+      resumePage.drawRectangle({
+        x: windowMargin + 20,
+        y: currentY - 25,
+        width: windowWidth - 40,
+        height: 25,
+        color: winGray,
+        borderWidth: 1,
+        borderColor: black,
+      });
+
+      resumePage.drawText("Skills", {
+        x: windowMargin + 25,
+        y: currentY - 10,
+        size: 16,
+        font,
+        color: black,
+      });
+      currentY -= 35;
+
+      const skillsText = resumeData.skills.map((s: any) => s.name || 'Skill').join(', ');
+      resumePage.drawText(skillsText, {
+        x: windowMargin + 30,
+        y: currentY,
+        size: 14,
+        font,
+        color: black,
+      });
+      currentY -= sectionSpacing;
+    }
+
+    // Education section
+    if (resumeData.education && resumeData.education.length > 0) {
+      // Section header
+      resumePage.drawRectangle({
+        x: windowMargin + 20,
+        y: currentY - 25,
+        width: windowWidth - 40,
+        height: 25,
+        color: winGray,
+        borderWidth: 1,
+        borderColor: black,
+      });
+
+      resumePage.drawText("Education", {
+        x: windowMargin + 25,
+        y: currentY - 10,
+        size: 16,
+        font,
+        color: black,
+      });
+      currentY -= 35;
+
+      resumeData.education.forEach((edu: any) => {
+        const degree = edu.degree || 'Degree';
+        const institution = edu.institution || 'Institution';
+        resumePage.drawText(`${degree} - ${institution}`, {
+          x: windowMargin + 30,
+          y: currentY,
+          size: 16,
+          font,
+          color: black,
+        });
+        currentY -= lineHeight;
+      });
+      currentY -= sectionSpacing;
+    }
+
+    // Contact section
+    if (resumeData.contact && (resumeData.contact.email || resumeData.contact.phone)) {
+      // Section header
+      resumePage.drawRectangle({
+        x: windowMargin + 20,
+        y: currentY - 25,
+        width: windowWidth - 40,
+        height: 25,
+        color: winGray,
+        borderWidth: 1,
+        borderColor: black,
+      });
+
+      resumePage.drawText("Contact", {
+        x: windowMargin + 25,
+        y: currentY - 10,
+        size: 16,
+        font,
+        color: black,
+      });
+      currentY -= 35;
+
+      const email = resumeData.contact.email || '';
+      const phone = resumeData.contact.phone || '';
+      const contactText = email && phone ? `${email} | ${phone}` : email || phone;
+      resumePage.drawText(contactText, {
+        x: windowMargin + 30,
+        y: currentY,
+        size: 14,
+        font,
+        color: black,
+      });
+    }
+
+    const pdfBytes = await pdfDoc.save();
+    
+    return new NextResponse(pdfBytes, {
+      headers: {
+        'Content-Type': 'application/pdf',
+        'Content-Disposition': 'attachment; filename="resume-explosive.pdf"',
+      },
+    });
+  } catch (error: any) {
+    console.error('Error generating explosive potential PDF:', error);
+    return NextResponse.json({ error: 'Failed to generate PDF', details: error.message }, { status: 500 });
   }
-  annots.push(linkAnnot);
+}
 
-  // Password text (black, centered)
-  const passwordText = `Password: ${password}`;
-  const passwordSize = 13;
-  const passwordWidth = font.widthOfTextAtSize(passwordText, passwordSize);
-  const passwordX = cardX + (cardWidth - passwordWidth) / 2;
-  const passwordY = linkY - 32;
-  page.drawText(passwordText, {
-    x: passwordX, y: passwordY,
-    size: passwordSize,
-    font,
-    color: rgb(0, 0, 0)
+function wrapText(text: string, font: any, fontSize: number, maxWidth: number): string[] {
+  // Clean the text by replacing newlines with spaces and removing extra whitespace
+  const cleanText = text.replace(/\n/g, ' ').replace(/\r/g, ' ').replace(/\t/g, ' ').replace(/\s+/g, ' ').trim();
+  const words = cleanText.split(' ');
+  const lines: string[] = [];
+  let currentLine = '';
+
+  words.forEach(word => {
+    const testLine = currentLine ? `${currentLine} ${word}` : word;
+    const testWidth = font.widthOfTextAtSize(testLine, fontSize);
+    
+    if (testWidth > maxWidth && currentLine) {
+      lines.push(currentLine);
+      currentLine = word;
+    } else {
+      currentLine = testLine;
+    }
   });
 
-  const pdfBytes = await pdfDoc.save();
-  return new NextResponse(pdfBytes, {
-    status: 200,
-    headers: {
-      'Content-Type': 'application/pdf',
-      'Content-Disposition': 'attachment; filename="explosive-potential-password.pdf"',
-    },
-  });
+  if (currentLine) {
+    lines.push(currentLine);
+  }
+
+  return lines;
 } 

@@ -4,6 +4,7 @@ import adminApp from '@/lib/firebase-admin';
 import { adminDb } from '@/lib/firebase-admin';
 import { rateLimiters } from '@/lib/rate-limiter';
 import { logAuthFailure, logAuthSuccess } from '@/lib/security-logger';
+import { verifyRecaptcha, getClientIP } from '@/lib/recaptcha';
 
 export async function POST(request: NextRequest) {
   try {
@@ -14,11 +15,21 @@ export async function POST(request: NextRequest) {
       return rateLimitResult;
     }
 
-    const { token, newPassword } = await request.json();
+    const { token, newPassword, recaptchaToken } = await request.json();
 
     if (!token || !newPassword) {
       logAuthFailure(request, 'Missing token or password');
       return NextResponse.json({ error: 'Token and new password are required' }, { status: 400 });
+    }
+
+    // Verify reCAPTCHA if enabled
+    if (recaptchaToken) {
+      const clientIP = getClientIP(request);
+      const recaptchaValid = await verifyRecaptcha(recaptchaToken, clientIP);
+      if (!recaptchaValid) {
+        logAuthFailure(request, 'reCAPTCHA verification failed');
+        return NextResponse.json({ error: 'reCAPTCHA verification failed' }, { status: 400 });
+      }
     }
 
     // Validate password strength

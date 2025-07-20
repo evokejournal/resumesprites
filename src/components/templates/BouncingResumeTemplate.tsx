@@ -89,6 +89,7 @@ export function BouncingResumeTemplate({ data }: { data: ResumeData }) {
   const [velocity, setVelocity] = useState({ x: 2.5, y: 2.5 });
   const [revealedSections, setRevealedSections] = useState<any[]>([]);
   const [currentColorIndex, setCurrentColorIndex] = useState(0);
+  const [showCoverLetter, setShowCoverLetter] = useState(true);
 
   const resumeChunks = useMemo(() => {
     const chunks: any[] = [];
@@ -134,7 +135,7 @@ export function BouncingResumeTemplate({ data }: { data: ResumeData }) {
     let animationFrameId: number;
 
     const moveLogo = () => {
-      if (!containerRef.current) return;
+      if (!containerRef.current || showCoverLetter) return; // Pause animation when cover letter is shown
 
       const container = containerRef.current;
       const { width: containerWidth, height: containerHeight } = container.getBoundingClientRect();
@@ -183,7 +184,7 @@ export function BouncingResumeTemplate({ data }: { data: ResumeData }) {
     
     animationFrameId = requestAnimationFrame(moveLogo);
     return () => cancelAnimationFrame(animationFrameId);
-  }, [velocity, position, resumeChunks, currentColorIndex]);
+  }, [velocity, position, resumeChunks, currentColorIndex, showCoverLetter]);
 
   const renderContent = (section: any) => {
     if (!section || !section.type) return null;
@@ -234,6 +235,160 @@ export function BouncingResumeTemplate({ data }: { data: ResumeData }) {
             </AnimatePresence>
         </div>
       </div>
+
+      {/* Cover Letter Button */}
+      <button
+        onClick={() => setShowCoverLetter(true)}
+        className="fixed top-4 right-16 z-40 bg-black border-2 border-white rounded-lg p-3 hover:bg-white hover:text-black transition-all duration-200 group"
+        style={{ 
+          boxShadow: '0 0 10px rgba(255, 255, 255, 0.3)',
+          fontFamily: 'Orbitron, monospace'
+        }}
+        title="View Cover Letter"
+      >
+        <svg 
+          width="20" 
+          height="20" 
+          viewBox="0 0 24 24" 
+          fill="currentColor" 
+          className="text-white group-hover:text-black transition-colors duration-200"
+        >
+          <path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/>
+        </svg>
+      </button>
+
+      {/* Download Button */}
+      <button
+        onClick={async () => {
+          const res = await fetch('/api/resumes/bouncing-resume-pdf', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ resumeData: data }),
+          });
+          if (!res.ok) return;
+          const blob = await res.blob();
+          const url = window.URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = 'resume-bouncing.pdf';
+          document.body.appendChild(a);
+          a.click();
+          a.remove();
+          window.URL.revokeObjectURL(url);
+        }}
+        className="fixed top-4 right-4 z-40 bg-black border-2 border-white rounded-lg p-3 hover:bg-white hover:text-black transition-all duration-200 group"
+        style={{ 
+          boxShadow: '0 0 10px rgba(255, 255, 255, 0.3)',
+          fontFamily: 'Orbitron, monospace'
+        }}
+        title="Download Resume PDF"
+      >
+        <svg 
+          width="20" 
+          height="20" 
+          viewBox="0 0 24 24" 
+          fill="currentColor" 
+          className="text-white group-hover:text-black transition-colors duration-200"
+        >
+          <path d="M12 16l-5-5h3V4h4v7h3l-5 5zm-5 4h10v-2H7v2z"/>
+        </svg>
+      </button>
+
+      {/* Cover Letter Modal */}
+      <AnimatePresence>
+        {showCoverLetter && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.5 }}
+            className="absolute inset-0 bg-black/80 flex items-center justify-center p-8 z-50"
+          >
+            <motion.div
+              initial={{ scale: 0.8, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.8, opacity: 0 }}
+              transition={{ duration: 0.3 }}
+              className="bg-black border-2 border-white rounded-lg p-8 max-w-2xl w-full max-h-[80vh] overflow-y-auto"
+              style={{ 
+                boxShadow: '0 0 20px rgba(255, 255, 255, 0.3)',
+                fontFamily: 'Orbitron, monospace'
+              }}
+            >
+              {/* Header */}
+              <div className="text-center mb-6">
+                <h1 
+                  className="text-4xl font-bungee text-white mb-2" 
+                  style={{ 
+                    fontStyle: 'italic',
+                    textShadow: '0 0 10px rgba(255, 255, 255, 0.5)'
+                  }}
+                >
+                  COVER LETTER
+                </h1>
+                <div className="w-32 h-1 bg-white mx-auto"></div>
+              </div>
+
+              {/* Content */}
+              <div className="text-white space-y-4 text-lg">
+                <div className="mb-4">
+                  <p className="mb-2">Dear Hiring Manager,</p>
+                </div>
+
+                <div className="space-y-3">
+                  <p>
+                    I am writing to express my strong interest in the position at your company. 
+                    With my background in {data.about.jobTitle}, I believe I would be a valuable 
+                    addition to your team.
+                  </p>
+
+                  <p>
+                    Throughout my career, I have demonstrated a strong ability to {data.skills?.length > 0 ? 
+                    `excel in areas such as ${data.skills.slice(0, 3).map(s => s.name).join(', ')}` : 
+                    'deliver exceptional results and drive innovation'}. My experience includes 
+                    {data.experience?.length > 0 ? ` working with companies like ${data.experience[0]?.company}` : 
+                    ' diverse projects and challenges'} that have honed my skills and prepared me for this opportunity.
+                  </p>
+
+                  <p>
+                    I am particularly drawn to this role because it aligns perfectly with my passion for 
+                    {data.about.summary ? data.about.summary.split(' ').slice(0, 8).join(' ') : 'excellence and innovation'}. 
+                    I am excited about the possibility of contributing to your organization's success.
+                  </p>
+
+                  <p>
+                    Thank you for considering my application. I look forward to discussing how my skills 
+                    and experience can benefit your team.
+                  </p>
+                </div>
+
+                <div className="mt-6 pt-4 border-t border-white/30">
+                  <p className="mb-1">Best regards,</p>
+                  <p className="font-bold text-xl">{data.about.name}</p>
+                  <p className="text-sm opacity-80">{data.about.jobTitle}</p>
+                  {data.contact?.email && (
+                    <p className="text-sm opacity-80">{data.contact.email}</p>
+                  )}
+                </div>
+              </div>
+
+              {/* Close Button */}
+              <div className="text-center mt-8">
+                <button
+                  onClick={() => setShowCoverLetter(false)}
+                  className="bg-white text-black px-8 py-3 rounded-lg font-bold hover:bg-gray-200 transition-colors duration-200 font-orbitron"
+                  style={{ 
+                    boxShadow: '0 0 10px rgba(255, 255, 255, 0.5)',
+                    textShadow: 'none'
+                  }}
+                >
+                  CLOSE COVER LETTER
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

@@ -1,331 +1,414 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { PDFDocument, rgb, StandardFonts } from 'pdf-lib';
 
-// Win95 color palette matching the password screen
-const WIN95_BG = rgb(0, 0.5, 0.5); // #008080 - teal background
-const WIN95_WINDOW = rgb(1, 1, 1); // white window background
-const WIN95_TITLEBAR = rgb(0, 0, 0.5); // #000080 - blue title bar
-const WIN95_TITLEBAR_TEXT = rgb(1, 1, 1); // white text
-const WIN95_BORDER = rgb(0.53, 0.53, 0.53); // #888 - gray border
-const WIN95_TEXT = rgb(0, 0, 0); // black text
-const WIN95_ACCENT = rgb(0, 0, 0.5); // #000080 - blue accent
-const WIN95_GRAY = rgb(0.75, 0.75, 0.75); // #C0C0C0 - light gray
+export async function POST(request: NextRequest) {
+  try {
+    const body = await request.json();
+    const { resumeData } = body;
+    
+    if (!resumeData) {
+      console.error('No resume data provided:', body);
+      return NextResponse.json({ error: 'No resume data provided' }, { status: 400 });
+    }
+    
+    // Ensure about section exists with fallbacks
+    if (!resumeData.about) {
+      resumeData.about = { name: 'Your Name', jobTitle: 'Your Title', summary: '', photo: '' };
+    }
+    
+    // Ensure other sections exist
+    if (!resumeData.contact) resumeData.contact = { email: '', phone: '', website: '', location: '' };
+    if (!resumeData.experience) resumeData.experience = [];
+    if (!resumeData.education) resumeData.education = [];
+    if (!resumeData.skills) resumeData.skills = [];
+    if (!resumeData.portfolio) resumeData.portfolio = [];
+    if (!resumeData.references) resumeData.references = [];
+    if (!resumeData.custom) resumeData.custom = { title: '', items: [] };
+    
+    const pdfDoc = await PDFDocument.create();
+    const { width, height } = { width: 612, height: 792 }; // US Letter size
+    
+    // Embed fonts
+    let font;
+    try {
+      const fontBytes = await fetch('https://fonts.gstatic.com/s/roboto/v30/KFOmCnqEu92Fr1Mu4mxK.ttf').then(res => res.arrayBuffer());
+      font = await pdfDoc.embedFont(fontBytes);
+    } catch (error) {
+      // Fallback to standard font
+      font = await pdfDoc.embedFont(StandardFonts.Helvetica);
+    }
+    
+    // Colors matching the Windows 95 template
+    const white = rgb(1, 1, 1);
+    const black = rgb(0, 0, 0);
+    const teal = rgb(0, 0.5, 0.5);
+    const winGray = rgb(0.8, 0.8, 0.8);
+    const darkGray = rgb(0.4, 0.4, 0.4);
 
-export async function POST(req: NextRequest) {
-  const { resumeData, resumeUrl, password } = await req.json();
-  const pdfDoc = await PDFDocument.create();
-  const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
-  const fontBold = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
+    // Create cover letter page first
+    const coverLetterPage = pdfDoc.addPage([width, height]);
+    coverLetterPage.drawRectangle({
+      x: 0,
+      y: 0,
+      width,
+      height,
+      color: teal,
+    });
 
-  const PAGE_WIDTH = 595;
-  const PAGE_HEIGHT = 842;
-  const MARGIN = 50;
-  
-  // Dialog box dimensions
-  const DIALOG_WIDTH = 400;
-  const DIALOG_HEIGHT = 280;
-  const DIALOG_X = (PAGE_WIDTH - DIALOG_WIDTH) / 2;
-  const DIALOG_Y = (PAGE_HEIGHT - DIALOG_HEIGHT) / 2;
-  
-  // Title bar dimensions
-  const TITLEBAR_HEIGHT = 24;
-  const TITLEBAR_Y = DIALOG_Y + DIALOG_HEIGHT - TITLEBAR_HEIGHT;
-  
-  // Content padding
-  const CONTENT_PADDING = 24;
-  const CONTENT_WIDTH = DIALOG_WIDTH - CONTENT_PADDING * 2;
+    // Cover letter window
+    const windowMargin = 40;
+    const windowWidth = width - (windowMargin * 2);
+    const windowHeight = height - (windowMargin * 2);
+    const titleBarHeight = 30;
+    
+    coverLetterPage.drawRectangle({
+      x: windowMargin - 2,
+      y: windowMargin - 2,
+      width: windowWidth + 4,
+      height: windowHeight + 4,
+      color: darkGray,
+    });
+    
+    coverLetterPage.drawRectangle({
+      x: windowMargin,
+      y: windowMargin,
+      width: windowWidth,
+      height: windowHeight,
+      color: winGray,
+    });
 
-  const page = pdfDoc.addPage([PAGE_WIDTH, PAGE_HEIGHT]);
+    // Cover letter title bar
+    coverLetterPage.drawRectangle({
+      x: windowMargin,
+      y: height - windowMargin - titleBarHeight,
+      width: windowWidth,
+      height: titleBarHeight,
+      color: teal,
+    });
 
-  // Draw teal background
-  page.drawRectangle({
-    x: 0, y: 0, width: PAGE_WIDTH, height: PAGE_HEIGHT,
-    color: WIN95_BG,
+    coverLetterPage.drawText("C:\\RESUME\\cover_letter.txt - " + (resumeData.about.name || 'Your Name'), {
+      x: windowMargin + 10,
+      y: height - windowMargin - 20,
+      size: 14,
+      font,
+      color: white,
+    });
+
+    // Cover letter content
+    let coverY = height - windowMargin - titleBarHeight - 40;
+    const coverLineHeight = 18;
+
+    const coverLetterText = resumeData.coverLetter || 
+      `Dear Hiring Manager,
+
+I am writing to express my strong interest in the position at your company. With my background in ${resumeData.about.jobTitle || 'my field'}, I believe I would be a valuable addition to your team.
+
+Throughout my career, I have demonstrated a strong ability to deliver exceptional results and drive innovation. My experience includes diverse projects and challenges that have honed my skills and prepared me for this opportunity.
+
+I am particularly drawn to this role because it aligns perfectly with my passion for excellence and innovation. I am excited about the possibility of contributing to your organization's success.
+
+Thank you for considering my application. I look forward to discussing how my skills and experience can benefit your team.
+
+Best regards,
+${resumeData.about.name || 'Your Name'}
+${resumeData.about.jobTitle || 'Your Title'}
+${resumeData.contact?.email || ''}`;
+
+    const coverLines = wrapText(coverLetterText, font, 14, windowWidth - 40);
+    coverLines.forEach(line => {
+      if (coverY > windowMargin + 40) {
+        coverLetterPage.drawText(line, {
+          x: windowMargin + 20,
+          y: coverY,
+          size: 14,
+          font,
+          color: black,
+        });
+        coverY -= coverLineHeight;
+      }
+    });
+
+    // Create Windows 95-style resume page second
+    const resumePage = pdfDoc.addPage([width, height]);
+    resumePage.drawRectangle({
+      x: 0,
+      y: 0,
+      width,
+      height,
+      color: teal,
+    });
+
+    // Resume window
+    resumePage.drawRectangle({
+      x: windowMargin - 2,
+      y: windowMargin - 2,
+      width: windowWidth + 4,
+      height: windowHeight + 4,
+      color: darkGray,
+    });
+    
+    resumePage.drawRectangle({
+      x: windowMargin,
+      y: windowMargin,
+      width: windowWidth,
+      height: windowHeight,
+      color: winGray,
+    });
+
+    // Resume title bar
+    resumePage.drawRectangle({
+      x: windowMargin,
+      y: height - windowMargin - titleBarHeight,
+      width: windowWidth,
+      height: titleBarHeight,
+      color: teal,
+    });
+
+    resumePage.drawText("C:\\RESUME\\resume.txt - " + (resumeData.about.name || 'Your Name'), {
+      x: windowMargin + 10,
+      y: height - windowMargin - 20,
+      size: 14,
+      font,
+      color: white,
+    });
+
+    // Resume content
+    let currentY = height - windowMargin - titleBarHeight - 40;
+    const lineHeight = 20;
+    const sectionSpacing = 30;
+
+    // Name and title
+    resumePage.drawText(resumeData.about.name || 'Your Name', {
+      x: windowMargin + 20,
+      y: currentY,
+      size: 24,
+      font,
+      color: black,
+    });
+    currentY -= lineHeight;
+
+    resumePage.drawText(resumeData.about.jobTitle || 'Your Title', {
+      x: windowMargin + 20,
+      y: currentY,
+      size: 18,
+      font,
+      color: black,
+    });
+    currentY -= sectionSpacing;
+
+    // About section
+    if (resumeData.about.summary && resumeData.about.summary.trim()) {
+      // Section header
+      resumePage.drawRectangle({
+        x: windowMargin + 20,
+        y: currentY - 25,
+        width: windowWidth - 40,
+        height: 25,
+        color: winGray,
+        borderWidth: 1,
+        borderColor: black,
+      });
+
+      resumePage.drawText("About Me", {
+        x: windowMargin + 25,
+        y: currentY - 10,
+        size: 16,
+        font,
+        color: black,
+      });
+      currentY -= 35;
+
+      const aboutLines = wrapText(resumeData.about.summary, font, 14, windowWidth - 60);
+      aboutLines.forEach(line => {
+        resumePage.drawText(line, {
+          x: windowMargin + 30,
+          y: currentY,
+          size: 14,
+          font,
+          color: black,
+        });
+        currentY -= lineHeight;
+      });
+      currentY -= sectionSpacing;
+    }
+
+    // Experience section
+    if (resumeData.experience && resumeData.experience.length > 0) {
+      // Section header
+      resumePage.drawRectangle({
+        x: windowMargin + 20,
+        y: currentY - 25,
+        width: windowWidth - 40,
+        height: 25,
+        color: winGray,
+        borderWidth: 1,
+        borderColor: black,
+      });
+
+      resumePage.drawText("Experience", {
+        x: windowMargin + 25,
+        y: currentY - 10,
+        size: 16,
+        font,
+        color: black,
+      });
+      currentY -= 35;
+
+      resumeData.experience.forEach((job: any) => {
+        const role = job.role || 'Role';
+        const company = job.company || 'Company';
+        resumePage.drawText(`${role} at ${company}`, {
+          x: windowMargin + 30,
+          y: currentY,
+          size: 16,
+          font,
+          color: black,
+        });
+        currentY -= lineHeight;
+      });
+      currentY -= sectionSpacing;
+    }
+
+    // Skills section
+    if (resumeData.skills && resumeData.skills.length > 0) {
+      // Section header
+      resumePage.drawRectangle({
+        x: windowMargin + 20,
+        y: currentY - 25,
+        width: windowWidth - 40,
+        height: 25,
+        color: winGray,
+        borderWidth: 1,
+        borderColor: black,
+      });
+
+      resumePage.drawText("Skills", {
+        x: windowMargin + 25,
+        y: currentY - 10,
+        size: 16,
+        font,
+        color: black,
+      });
+      currentY -= 35;
+
+      const skillsText = resumeData.skills.map((s: any) => s.name || 'Skill').join(', ');
+      resumePage.drawText(skillsText, {
+        x: windowMargin + 30,
+        y: currentY,
+        size: 14,
+        font,
+        color: black,
+      });
+      currentY -= sectionSpacing;
+    }
+
+    // Education section
+    if (resumeData.education && resumeData.education.length > 0) {
+      // Section header
+      resumePage.drawRectangle({
+        x: windowMargin + 20,
+        y: currentY - 25,
+        width: windowWidth - 40,
+        height: 25,
+        color: winGray,
+        borderWidth: 1,
+        borderColor: black,
+      });
+
+      resumePage.drawText("Education", {
+        x: windowMargin + 25,
+        y: currentY - 10,
+        size: 16,
+        font,
+        color: black,
+      });
+      currentY -= 35;
+
+      resumeData.education.forEach((edu: any) => {
+        const degree = edu.degree || 'Degree';
+        const institution = edu.institution || 'Institution';
+        resumePage.drawText(`${degree} - ${institution}`, {
+          x: windowMargin + 30,
+          y: currentY,
+          size: 16,
+          font,
+          color: black,
+        });
+        currentY -= lineHeight;
+      });
+      currentY -= sectionSpacing;
+    }
+
+    // Contact section
+    if (resumeData.contact && (resumeData.contact.email || resumeData.contact.phone)) {
+      // Section header
+      resumePage.drawRectangle({
+        x: windowMargin + 20,
+        y: currentY - 25,
+        width: windowWidth - 40,
+        height: 25,
+        color: winGray,
+        borderWidth: 1,
+        borderColor: black,
+      });
+
+      resumePage.drawText("Contact", {
+        x: windowMargin + 25,
+        y: currentY - 10,
+        size: 16,
+        font,
+        color: black,
+      });
+      currentY -= 35;
+
+      const email = resumeData.contact.email || '';
+      const phone = resumeData.contact.phone || '';
+      const contactText = email && phone ? `${email} | ${phone}` : email || phone;
+      resumePage.drawText(contactText, {
+        x: windowMargin + 30,
+        y: currentY,
+        size: 14,
+        font,
+        color: black,
+      });
+    }
+
+    const pdfBytes = await pdfDoc.save();
+    
+    return new NextResponse(pdfBytes, {
+      headers: {
+        'Content-Type': 'application/pdf',
+        'Content-Disposition': 'attachment; filename="resume-os.pdf"',
+      },
+    });
+  } catch (error: any) {
+    console.error('Error generating OS PDF:', error);
+    return NextResponse.json({ error: 'Failed to generate PDF', details: error.message }, { status: 500 });
+  }
+}
+
+function wrapText(text: string, font: any, fontSize: number, maxWidth: number): string[] {
+  // Clean the text by replacing newlines with spaces and removing extra whitespace
+  const cleanText = text.replace(/\n/g, ' ').replace(/\r/g, ' ').replace(/\t/g, ' ').replace(/\s+/g, ' ').trim();
+  const words = cleanText.split(' ');
+  const lines: string[] = [];
+  let currentLine = '';
+
+  words.forEach(word => {
+    const testLine = currentLine ? `${currentLine} ${word}` : word;
+    const testWidth = font.widthOfTextAtSize(testLine, fontSize);
+    
+    if (testWidth > maxWidth && currentLine) {
+      lines.push(currentLine);
+      currentLine = word;
+    } else {
+      currentLine = testLine;
+    }
   });
 
-  // Draw main dialog window (white background)
-  page.drawRectangle({
-    x: DIALOG_X, y: DIALOG_Y, width: DIALOG_WIDTH, height: DIALOG_HEIGHT,
-    color: WIN95_WINDOW,
-    borderColor: WIN95_BORDER,
-    borderWidth: 3,
-  });
+  if (currentLine) {
+    lines.push(currentLine);
+  }
 
-  // Draw title bar (blue)
-  page.drawRectangle({
-    x: DIALOG_X, y: TITLEBAR_Y, width: DIALOG_WIDTH, height: TITLEBAR_HEIGHT,
-    color: WIN95_TITLEBAR,
-  });
-
-  // Draw title bar text
-  page.drawText('Password Required', {
-    x: DIALOG_X + 12, y: TITLEBAR_Y + 6,
-    size: 12,
-    font: fontBold,
-    color: WIN95_TITLEBAR_TEXT,
-  });
-
-  // Draw window control buttons (minimize, maximize, close)
-  const buttonSize = 16;
-  const buttonY = TITLEBAR_Y + 4;
-  const buttonSpacing = 4;
-  
-  // Close button (X)
-  page.drawRectangle({
-    x: DIALOG_X + DIALOG_WIDTH - 20, y: buttonY, width: buttonSize, height: buttonSize,
-    color: WIN95_GRAY,
-    borderColor: WIN95_BORDER,
-    borderWidth: 1,
-  });
-  page.drawText('×', {
-    x: DIALOG_X + DIALOG_WIDTH - 16, y: buttonY + 2,
-    size: 10,
-    font: fontBold,
-    color: WIN95_TEXT,
-  });
-
-  // Maximize button (□)
-  page.drawRectangle({
-    x: DIALOG_X + DIALOG_WIDTH - 20 - buttonSize - buttonSpacing, y: buttonY, width: buttonSize, height: buttonSize,
-    color: WIN95_GRAY,
-    borderColor: WIN95_BORDER,
-    borderWidth: 1,
-  });
-  page.drawText('□', {
-    x: DIALOG_X + DIALOG_WIDTH - 16 - buttonSize - buttonSpacing, y: buttonY + 2,
-    size: 10,
-    font: fontBold,
-    color: WIN95_TEXT,
-  });
-
-  // Minimize button (_)
-  page.drawRectangle({
-    x: DIALOG_X + DIALOG_WIDTH - 20 - (buttonSize + buttonSpacing) * 2, y: buttonY, width: buttonSize, height: buttonSize,
-    color: WIN95_GRAY,
-    borderColor: WIN95_BORDER,
-    borderWidth: 1,
-  });
-  page.drawText('_', {
-    x: DIALOG_X + DIALOG_WIDTH - 16 - (buttonSize + buttonSpacing) * 2, y: buttonY + 2,
-    size: 10,
-    font: fontBold,
-    color: WIN95_TEXT,
-  });
-
-  // Content area
-  const contentY = TITLEBAR_Y - CONTENT_PADDING;
-  
-  // Draw lock icon area (gray box)
-  const iconSize = 64;
-  const iconX = DIALOG_X + CONTENT_PADDING;
-  const iconY = contentY - iconSize;
-  
-  page.drawRectangle({
-    x: iconX, y: iconY, width: iconSize, height: iconSize,
-    color: WIN95_GRAY,
-    borderColor: WIN95_BORDER,
-    borderWidth: 2,
-  });
-
-  // Draw lock icon (simplified as a rectangle with a circle)
-  const lockColor = WIN95_ACCENT;
-  // Lock body
-  page.drawRectangle({
-    x: iconX + 16, y: iconY + 24, width: 32, height: 24,
-    color: lockColor,
-  });
-  // Lock shackle
-  page.drawRectangle({
-    x: iconX + 20, y: iconY + 32, width: 24, height: 8,
-    color: lockColor,
-  });
-  page.drawRectangle({
-    x: iconX + 24, y: iconY + 40, width: 4, height: 8,
-    color: lockColor,
-  });
-  page.drawRectangle({
-    x: iconX + 36, y: iconY + 40, width: 4, height: 8,
-    color: lockColor,
-  });
-
-  // Draw text content
-  const textX = iconX + iconSize + 16;
-  const textStartY = contentY - 20;
-  
-  // "Authentication Required" heading
-  page.drawText('Authentication Required', {
-    x: textX, y: textStartY,
-    size: 16,
-    font: fontBold,
-    color: WIN95_ACCENT,
-  });
-
-  // "Please enter the password to view this resume." subtitle
-  page.drawText('Please enter the password to view this resume.', {
-    x: textX, y: textStartY - 20,
-    size: 10,
-    font: font,
-    color: rgb(0.4, 0.4, 0.4),
-  });
-
-  // "Password:" label
-  page.drawText('Password:', {
-    x: textX, y: textStartY - 50,
-    size: 12,
-    font: fontBold,
-    color: WIN95_TEXT,
-  });
-
-  // Password input field (gray border)
-  const inputY = textStartY - 70;
-  const inputHeight = 24;
-  page.drawRectangle({
-    x: textX, y: inputY, width: 200, height: inputHeight,
-    color: WIN95_WINDOW,
-    borderColor: WIN95_BORDER,
-    borderWidth: 2,
-  });
-
-  // Password text (masked with dots)
-  const passwordDots = '•'.repeat(password.length || 8);
-  page.drawText(passwordDots, {
-    x: textX + 8, y: inputY + 6,
-    size: 12,
-    font: font,
-    color: rgb(0.6, 0.6, 0.6),
-  });
-
-  // Eye icon (simplified as a circle)
-  page.drawCircle({
-    x: textX + 190, y: inputY + inputHeight / 2, size: 6,
-    color: rgb(0.5, 0.5, 0.5),
-  });
-
-  // Button area
-  const buttonAreaY = inputY - 40;
-  const buttonWidth = 60;
-  const buttonHeight = 24;
-  const buttonSpacingButtons = 8;
-
-  // Cancel button
-  page.drawRectangle({
-    x: textX + 120, y: buttonAreaY, width: buttonWidth, height: buttonHeight,
-    color: WIN95_GRAY,
-    borderColor: WIN95_BORDER,
-    borderWidth: 2,
-  });
-  page.drawText('Cancel', {
-    x: textX + 135, y: buttonAreaY + 6,
-    size: 10,
-    font: fontBold,
-    color: WIN95_TEXT,
-  });
-
-  // OK button
-  page.drawRectangle({
-    x: textX + 120 + buttonWidth + buttonSpacingButtons, y: buttonAreaY, width: buttonWidth, height: buttonHeight,
-    color: WIN95_GRAY,
-    borderColor: WIN95_BORDER,
-    borderWidth: 2,
-  });
-  page.drawText('OK', {
-    x: textX + 120 + buttonWidth + buttonSpacingButtons + 20, y: buttonAreaY + 6,
-    size: 10,
-    font: fontBold,
-    color: WIN95_TEXT,
-  });
-
-  // Draw resume link and password info below the dialog
-  const infoY = DIALOG_Y - 40;
-  
-  // Resume URL
-  page.drawText('Resume URL:', {
-    x: MARGIN, y: infoY,
-    size: 12,
-    font: fontBold,
-    color: WIN95_TEXT,
-  });
-  
-  page.drawText(resumeUrl || 'https://resumesprites.com/resume/[shortId]', {
-    x: MARGIN, y: infoY - 18,
-    size: 10,
-    font: font,
-    color: WIN95_ACCENT,
-  });
-
-  // Password
-  page.drawText('Password:', {
-    x: MARGIN, y: infoY - 40,
-    size: 12,
-    font: fontBold,
-    color: WIN95_TEXT,
-  });
-  
-  page.drawText(password || 'Enter the password provided', {
-    x: MARGIN, y: infoY - 58,
-    size: 10,
-    font: font,
-    color: WIN95_TEXT,
-  });
-
-  // Draw taskbar at bottom
-  const taskbarHeight = 36;
-  const taskbarY = 0;
-  
-  page.drawRectangle({
-    x: 0, y: taskbarY, width: PAGE_WIDTH, height: taskbarHeight,
-    color: WIN95_GRAY,
-    borderColor: WIN95_TITLEBAR_TEXT,
-    borderWidth: 2,
-  });
-
-  // Start button
-  page.drawRectangle({
-    x: 4, y: taskbarY + 4, width: 60, height: 28,
-    color: WIN95_GRAY,
-    borderColor: WIN95_BORDER,
-    borderWidth: 2,
-  });
-  
-  // Windows flag icon (simplified)
-  page.drawRectangle({
-    x: 8, y: taskbarY + 8, width: 16, height: 16,
-    color: WIN95_BG,
-  });
-  page.drawRectangle({
-    x: 10, y: taskbarY + 10, width: 12, height: 12,
-    color: WIN95_WINDOW,
-  });
-  
-  page.drawText('Start', {
-    x: 30, y: taskbarY + 12,
-    size: 10,
-    font: fontBold,
-    color: WIN95_TEXT,
-  });
-
-  // Clock
-  const clockText = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-  const clockWidth = font.widthOfTextAtSize(clockText, 10);
-  page.drawRectangle({
-    x: PAGE_WIDTH - clockWidth - 16, y: taskbarY + 4, width: clockWidth + 12, height: 28,
-    color: WIN95_GRAY,
-    borderColor: WIN95_BORDER,
-    borderWidth: 2,
-  });
-  page.drawText(clockText, {
-    x: PAGE_WIDTH - clockWidth - 12, y: taskbarY + 12,
-    size: 10,
-    font: font,
-    color: WIN95_TEXT,
-  });
-
-  const pdfBytes = await pdfDoc.save();
-  return new NextResponse(pdfBytes, {
-    status: 200,
-    headers: {
-      'Content-Type': 'application/pdf',
-      'Content-Disposition': 'attachment; filename="operating-system-password.pdf"',
-    },
-  });
+  return lines;
 } 
