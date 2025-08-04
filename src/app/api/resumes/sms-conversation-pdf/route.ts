@@ -350,6 +350,259 @@ ${resumeData.contact?.email || ''}`;
       currentY -= skillsBubbleHeight + 20;
     }
 
+    // Education section
+    if (resumeData.education && resumeData.education.length > 0) {
+      const educationMsg = "Great skills! What about your education background?";
+      const eduQLines = wrapText(educationMsg, font, 12, maxBubbleWidth - 40);
+      const eduQBubbleHeight = eduQLines.length * 16 + 20;
+      
+      conversationPage.drawRectangle({
+        x: 50,
+        y: currentY - eduQBubbleHeight,
+        width: Math.min(font.widthOfTextAtSize(educationMsg, 12) + 40, maxBubbleWidth),
+        height: eduQBubbleHeight,
+        color: gray,
+      });
+      
+      eduQLines.forEach((line, index) => {
+        conversationPage.drawText(line, {
+          x: 70,
+          y: currentY - 20 - (index * 16),
+          size: 12,
+          font,
+          color: darkGray,
+        });
+      });
+
+      currentY -= eduQBubbleHeight + 20;
+
+      // Education items
+      resumeData.education.forEach((edu: any) => {
+        const degree = edu.degree || 'Degree';
+        const institution = edu.institution || 'Institution';
+        const startDate = edu.startDate || 'Start';
+        const endDate = edu.endDate || 'End';
+        const eduMsg = `${degree} from ${institution}\n${startDate} - ${endDate}`;
+        const eduLines = wrapText(eduMsg, font, 12, maxBubbleWidth - 40);
+        const eduBubbleHeight = eduLines.length * 16 + 20;
+        const eduBubbleWidth = Math.min(font.widthOfTextAtSize(eduMsg, 12) + 40, maxBubbleWidth);
+        
+        conversationPage.drawRectangle({
+          x: width - 50 - eduBubbleWidth,
+          y: currentY - eduBubbleHeight,
+          width: eduBubbleWidth,
+          height: eduBubbleHeight,
+          color: blue,
+        });
+        
+        eduLines.forEach((line, index) => {
+          conversationPage.drawText(line, {
+            x: width - 50 - eduBubbleWidth + 20,
+            y: currentY - 20 - (index * 16),
+            size: 12,
+            font,
+            color: white,
+          });
+        });
+
+        currentY -= eduBubbleHeight + 20;
+      });
+    }
+
+    // Portfolio section
+    if (resumeData.portfolio && resumeData.portfolio.length > 0) {
+      const portfolioMsg = "Impressive! Do you have any portfolio projects to showcase?";
+      const portfolioQLines = wrapText(portfolioMsg, font, 12, maxBubbleWidth - 40);
+      const portfolioQBubbleHeight = portfolioQLines.length * 16 + 20;
+      
+      conversationPage.drawRectangle({
+        x: 50,
+        y: currentY - portfolioQBubbleHeight,
+        width: Math.min(font.widthOfTextAtSize(portfolioMsg, 12) + 40, maxBubbleWidth),
+        height: portfolioQBubbleHeight,
+        color: gray,
+      });
+      
+      portfolioQLines.forEach((line, index) => {
+        conversationPage.drawText(line, {
+          x: 70,
+          y: currentY - 20 - (index * 16),
+          size: 12,
+          font,
+          color: darkGray,
+        });
+      });
+
+      currentY -= portfolioQBubbleHeight + 20;
+
+      // Portfolio items
+      resumeData.portfolio.forEach((project: any) => {
+        const title = project.title || 'Project';
+        const description = project.description || '';
+        const url = project.url || '';
+        const projectMsg = `${title}\n${description}${url ? `\nURL: ${url}` : ''}`;
+        const projectLines = wrapText(projectMsg, font, 12, maxBubbleWidth - 40);
+        const projectBubbleHeight = projectLines.length * 16 + 20;
+        const projectBubbleWidth = Math.min(font.widthOfTextAtSize(projectMsg, 12) + 40, maxBubbleWidth);
+        
+        conversationPage.drawRectangle({
+          x: width - 50 - projectBubbleWidth,
+          y: currentY - projectBubbleHeight,
+          width: projectBubbleWidth,
+          height: projectBubbleHeight,
+          color: blue,
+        });
+        
+        projectLines.forEach((line, index) => {
+          conversationPage.drawText(line, {
+            x: width - 50 - projectBubbleWidth + 20,
+            y: currentY - 20 - (index * 16),
+            size: 12,
+            font,
+            color: white,
+          });
+        });
+
+        currentY -= projectBubbleHeight + 20;
+      });
+    }
+
+    // References section
+    if (resumeData.references && resumeData.references.length > 0) {
+      const referencesMsg = "Excellent work! Can you provide some references?";
+      const refQLines = wrapText(referencesMsg, font, 12, maxBubbleWidth - 40);
+      const refQBubbleHeight = refQLines.length * 16 + 20;
+      
+      conversationPage.drawRectangle({
+        x: 50,
+        y: currentY - refQBubbleHeight,
+        width: Math.min(font.widthOfTextAtSize(referencesMsg, 12) + 40, maxBubbleWidth),
+        height: refQBubbleHeight,
+        color: gray,
+      });
+      
+      refQLines.forEach((line, index) => {
+        conversationPage.drawText(line, {
+          x: 70,
+          y: currentY - 20 - (index * 16),
+          size: 12,
+          font,
+          color: darkGray,
+        });
+      });
+
+      currentY -= refQBubbleHeight + 20;
+
+      // References items
+      resumeData.references.forEach((ref: any) => {
+        const name = ref.name || 'Name';
+        const relation = ref.relation || 'Relation';
+        const contact = ref.contact || '';
+        const refMsg = `${name} (${relation})${contact ? `\n${contact}` : ''}`;
+        const refLines = wrapText(refMsg, font, 12, maxBubbleWidth - 40);
+        const refBubbleHeight = refLines.length * 16 + 20;
+        const refBubbleWidth = Math.min(font.widthOfTextAtSize(refMsg, 12) + 40, maxBubbleWidth);
+        
+        conversationPage.drawRectangle({
+          x: width - 50 - refBubbleWidth,
+          y: currentY - refBubbleHeight,
+          width: refBubbleWidth,
+          height: refBubbleHeight,
+          color: blue,
+        });
+        
+        refLines.forEach((line, index) => {
+          conversationPage.drawText(line, {
+            x: width - 50 - refBubbleWidth + 20,
+            y: currentY - 20 - (index * 16),
+            size: 12,
+            font,
+            color: white,
+          });
+        });
+
+        currentY -= refBubbleHeight + 20;
+      });
+    }
+
+    // Custom section
+    if (resumeData.custom && resumeData.custom.title && resumeData.custom.items.length > 0) {
+      const customMsg = `Tell me about your ${resumeData.custom.title.toLowerCase()}.`;
+      const customQLines = wrapText(customMsg, font, 12, maxBubbleWidth - 40);
+      const customQBubbleHeight = customQLines.length * 16 + 20;
+      
+      conversationPage.drawRectangle({
+        x: 50,
+        y: currentY - customQBubbleHeight,
+        width: Math.min(font.widthOfTextAtSize(customMsg, 12) + 40, maxBubbleWidth),
+        height: customQBubbleHeight,
+        color: gray,
+      });
+      
+      customQLines.forEach((line, index) => {
+        conversationPage.drawText(line, {
+          x: 70,
+          y: currentY - 20 - (index * 16),
+          size: 12,
+          font,
+          color: darkGray,
+        });
+      });
+
+      currentY -= customQBubbleHeight + 20;
+
+      // Custom items
+      resumeData.custom.items.forEach((item: any) => {
+        const description = item.description || '';
+        const customLines = wrapText(description, font, 12, maxBubbleWidth - 40);
+        const customBubbleHeight = customLines.length * 16 + 20;
+        const customBubbleWidth = Math.min(font.widthOfTextAtSize(description, 12) + 40, maxBubbleWidth);
+        
+        conversationPage.drawRectangle({
+          x: width - 50 - customBubbleWidth,
+          y: currentY - customBubbleHeight,
+          width: customBubbleWidth,
+          height: customBubbleHeight,
+          color: blue,
+        });
+        
+        customLines.forEach((line, index) => {
+          conversationPage.drawText(line, {
+            x: width - 50 - customBubbleWidth + 20,
+            y: currentY - 20 - (index * 16),
+            size: 12,
+            font,
+            color: white,
+          });
+        });
+
+        currentY -= customBubbleHeight + 20;
+      });
+    }
+
+    // Final message
+    const finalMsg = "Perfect! I'm very impressed with your background. Let's schedule an interview!";
+    const finalLines = wrapText(finalMsg, font, 12, maxBubbleWidth - 40);
+    const finalBubbleHeight = finalLines.length * 16 + 20;
+    
+    conversationPage.drawRectangle({
+      x: 50,
+      y: currentY - finalBubbleHeight,
+      width: Math.min(font.widthOfTextAtSize(finalMsg, 12) + 40, maxBubbleWidth),
+      height: finalBubbleHeight,
+      color: gray,
+    });
+    
+    finalLines.forEach((line, index) => {
+      conversationPage.drawText(line, {
+        x: 70,
+        y: currentY - 20 - (index * 16),
+        size: 12,
+        font,
+        color: darkGray,
+      });
+    });
+
     const pdfBytes = await pdfDoc.save();
     
     return new NextResponse(pdfBytes, {

@@ -11,6 +11,8 @@ const GRID_SIZE = 25;
 const INITIAL_SPEED = 200; // ms per move
 const SPEED_INCREMENT = 10; // ms faster per food
 const MIN_SPEED = 80;
+const SHOWCASE_SPEED = 50; // ms per move in showcase mode
+const SHOWCASE_MIN_SPEED = 20; // minimum speed in showcase mode
 
 // Utility to generate a random position for food
 const randomFoodPosition = (snake: {x:number, y:number}[]) => {
@@ -63,6 +65,8 @@ const Confetti = ({ count = 400 }) => {
 
 interface TemplateProps {
   data: ResumeData;
+  pdfMode?: boolean;
+  showcaseMode?: boolean;
 }
 
 const SectionDisplay = ({ sectionData }: { sectionData: any }) => {
@@ -153,14 +157,16 @@ const SectionDisplay = ({ sectionData }: { sectionData: any }) => {
 }
 
 
-export function SnakebiteResumeTemplate({ data }: TemplateProps) {
-  const [snake, setSnake] = useState([{ x: 12, y: 12 }]);
-  const [food, setFood] = useState({ x: 18, y: 12 });
+export function SnakebiteResumeTemplate({ data, pdfMode, showcaseMode }: TemplateProps) {
+  const [snake, setSnake] = useState([{ x: 10, y: 10 }]);
+  const [food, setFood] = useState(randomFoodPosition([{ x: 10, y: 10 }]));
   const [direction, setDirection] = useState<'UP' | 'DOWN' | 'LEFT' | 'RIGHT'>('RIGHT');
-  const [speed, setSpeed] = useState<number>(INITIAL_SPEED);
   const [gameState, setGameState] = useState<'playing' | 'won'>('playing');
-  const [revealedSections, setRevealedSections] = useState<any[]>([]);
+  const [speed, setSpeed] = useState(showcaseMode ? SHOWCASE_SPEED : INITIAL_SPEED);
   const [justAte, setJustAte] = useState(false);
+  const [revealedSections, setRevealedSections] = useState<any[]>([]);
+  const [showCoverLetter, setShowCoverLetter] = useState(!!(data.coverLetter && data.coverLetter.trim() !== ''));
+  const [isDownloading, setIsDownloading] = useState(false);
   const contentRef = useRef<HTMLDivElement>(null);
   
   const directionRef = useRef(direction);
@@ -205,8 +211,6 @@ export function SnakebiteResumeTemplate({ data }: TemplateProps) {
       });
     }
   }, []);
-
-  const [showCoverLetter, setShowCoverLetter] = useState(!!(data.coverLetter && data.coverLetter.trim() !== ''));
 
   useEffect(() => {
     window.addEventListener('keydown', handleKeyDown);
@@ -269,7 +273,7 @@ export function SnakebiteResumeTemplate({ data }: TemplateProps) {
         return current;
       });
       
-      setSpeed(s => Math.max(MIN_SPEED, s - SPEED_INCREMENT));
+      setSpeed(s => Math.max(showcaseMode ? SHOWCASE_MIN_SPEED : MIN_SPEED, s - SPEED_INCREMENT));
 
       if (revealedSections.length + 1 < resumeChunks.length) {
           setFood(randomFoodPosition(snake));
@@ -347,12 +351,16 @@ export function SnakebiteResumeTemplate({ data }: TemplateProps) {
         {/* Download Button */}
         <button
           onClick={async () => {
+            setIsDownloading(true);
             const res = await fetch('/api/resumes/snakebite-resume-pdf', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({ resumeData: data }),
             });
-            if (!res.ok) return;
+            if (!res.ok) {
+              setIsDownloading(false);
+              return;
+            }
             const blob = await res.blob();
             const url = window.URL.createObjectURL(blob);
             const a = document.createElement('a');
@@ -362,19 +370,28 @@ export function SnakebiteResumeTemplate({ data }: TemplateProps) {
             a.click();
             a.remove();
             window.URL.revokeObjectURL(url);
+            setIsDownloading(false);
           }}
           className="fixed top-4 right-4 z-50 bg-[#0f380f] text-[#cadc9f] rounded p-3 shadow-lg hover:bg-[#306230] transition-all duration-200"
           title="Download Resume PDF"
           style={{ fontFamily: 'inherit' }}
+          disabled={isDownloading}
         >
-          <svg 
-            width="20" 
-            height="20" 
-            viewBox="0 0 24 24" 
-            fill="currentColor"
-          >
-            <path d="M12 16l-5-5h3V4h4v7h3l-5 5zm-5 4h10v-2H7v2z"/>
-          </svg>
+          {isDownloading ? (
+            <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+          ) : (
+            <svg 
+              width="20" 
+              height="20" 
+              viewBox="0 0 24 24" 
+              fill="currentColor"
+            >
+              <path d="M12 16l-5-5h3V4h4v7h3l-5 5zm-5 4h10v-2H7v2z"/>
+            </svg>
+          )}
         </button>
         {gameState === 'won' && <Confetti />}
         <div className="relative w-full h-full max-w-4xl max-h-[80vh] aspect-video bg-[#8bac0f] rounded-lg shadow-2xl overflow-hidden border-4 border-black/20">

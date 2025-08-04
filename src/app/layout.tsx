@@ -102,19 +102,7 @@ export default function RootLayout({
         <link
           href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Bungee&family=Gloock&family=Orbitron:wght@400;700&family=Rock+Salt&family=Space+Grotesk:wght@400;500;700&family=Ultra&display=swap"
           rel="stylesheet"
-          media="print"
-        />
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `
-              (function() {
-                var link = document.querySelector('link[href*="fonts.googleapis.com/css2?family=Archivo+Black"]');
-                if (link) {
-                  link.media = 'all';
-                }
-              })();
-            `
-          }}
+          media="all"
         />
         <link rel="icon" href="/favicon.ico" />
         <link rel="apple-touch-icon" href="/apple-touch-icon.png" />

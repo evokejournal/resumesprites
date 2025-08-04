@@ -83,13 +83,16 @@ const colors = [
   '#A9A9A9', // Gray
 ];
 
-export function BouncingResumeTemplate({ data }: { data: ResumeData }) {
+export function BouncingResumeTemplate({ data, pdfMode, showcaseMode }: { data: ResumeData; pdfMode?: boolean; showcaseMode?: boolean }) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [position, setPosition] = useState({ x: 50, y: 50 });
-  const [velocity, setVelocity] = useState({ x: 2.5, y: 2.5 });
+  // Speed multiplier for showcase mode
+  const baseVelocity = showcaseMode ? 8 : 2.5; // 3.2x faster in showcase
+  const [velocity, setVelocity] = useState({ x: baseVelocity, y: baseVelocity });
   const [revealedSections, setRevealedSections] = useState<any[]>([]);
   const [currentColorIndex, setCurrentColorIndex] = useState(0);
-  const [showCoverLetter, setShowCoverLetter] = useState(true);
+  const [showCoverLetter, setShowCoverLetter] = useState(!showcaseMode); // Don't show cover letter in showcase mode
+  const [isDownloading, setIsDownloading] = useState(false);
 
   const resumeChunks = useMemo(() => {
     const chunks: any[] = [];
@@ -204,6 +207,31 @@ export function BouncingResumeTemplate({ data }: { data: ResumeData }) {
     }
   };
 
+  const handleDownloadPDF = async () => {
+    setIsDownloading(true);
+    try {
+      const res = await fetch('/api/resumes/bouncing-resume-pdf', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ resumeData: data }),
+      });
+      if (!res.ok) throw new Error('Failed to generate PDF');
+      const blob = await res.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'resume-bouncing.pdf';
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error('Download failed:', error);
+    } finally {
+      setIsDownloading(false);
+    }
+  };
+
   return (
     <div ref={containerRef} className="bg-black h-screen w-full relative overflow-hidden select-none cursor-default">
       <div
@@ -236,67 +264,66 @@ export function BouncingResumeTemplate({ data }: { data: ResumeData }) {
         </div>
       </div>
 
-      {/* Cover Letter Button */}
-      <button
-        onClick={() => setShowCoverLetter(true)}
-        className="fixed top-4 right-16 z-40 bg-black border-2 border-white rounded-lg p-3 hover:bg-white hover:text-black transition-all duration-200 group"
-        style={{ 
-          boxShadow: '0 0 10px rgba(255, 255, 255, 0.3)',
-          fontFamily: 'Orbitron, monospace'
-        }}
-        title="View Cover Letter"
-      >
-        <svg 
-          width="20" 
-          height="20" 
-          viewBox="0 0 24 24" 
-          fill="currentColor" 
-          className="text-white group-hover:text-black transition-colors duration-200"
+      {/* Cover Letter Button - Hidden in showcase mode */}
+      {!showcaseMode && (
+        <button
+          onClick={() => setShowCoverLetter(true)}
+          className="fixed top-4 right-16 z-40 bg-black border-2 border-white rounded-lg p-3 hover:bg-white hover:text-black transition-all duration-200 group"
+          style={{ 
+            boxShadow: '0 0 10px rgba(255, 255, 255, 0.3)',
+            fontFamily: 'Orbitron, monospace'
+          }}
+          title="View Cover Letter"
         >
-          <path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/>
-        </svg>
-      </button>
+          <svg 
+            width="20" 
+            height="20" 
+            viewBox="0 0 24 24" 
+            fill="currentColor" 
+            className="text-white group-hover:text-black transition-colors duration-200"
+          >
+            <path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/>
+          </svg>
+        </button>
+      )}
 
       {/* Download Button */}
       <button
-        onClick={async () => {
-          const res = await fetch('/api/resumes/bouncing-resume-pdf', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ resumeData: data }),
-          });
-          if (!res.ok) return;
-          const blob = await res.blob();
-          const url = window.URL.createObjectURL(blob);
-          const a = document.createElement('a');
-          a.href = url;
-          a.download = 'resume-bouncing.pdf';
-          document.body.appendChild(a);
-          a.click();
-          a.remove();
-          window.URL.revokeObjectURL(url);
-        }}
-        className="fixed top-4 right-4 z-40 bg-black border-2 border-white rounded-lg p-3 hover:bg-white hover:text-black transition-all duration-200 group"
+        onClick={handleDownloadPDF}
+        disabled={isDownloading}
+        className="fixed top-4 right-4 z-40 bg-black border-2 border-white rounded-lg p-3 hover:bg-white hover:text-black transition-all duration-200 group disabled:opacity-50 disabled:cursor-not-allowed"
         style={{ 
           boxShadow: '0 0 10px rgba(255, 255, 255, 0.3)',
           fontFamily: 'Orbitron, monospace'
         }}
         title="Download Resume PDF"
       >
-        <svg 
-          width="20" 
-          height="20" 
-          viewBox="0 0 24 24" 
-          fill="currentColor" 
-          className="text-white group-hover:text-black transition-colors duration-200"
-        >
-          <path d="M12 16l-5-5h3V4h4v7h3l-5 5zm-5 4h10v-2H7v2z"/>
-        </svg>
+        {isDownloading ? (
+          <svg 
+            width="20" 
+            height="20" 
+            viewBox="0 0 24 24" 
+            fill="currentColor" 
+            className="text-white group-hover:text-black transition-colors duration-200 animate-spin"
+          >
+            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17V7h2v7.17l3.59-3.59L17 12l-5 5z"/>
+          </svg>
+        ) : (
+          <svg 
+            width="20" 
+            height="20" 
+            viewBox="0 0 24 24" 
+            fill="currentColor" 
+            className="text-white group-hover:text-black transition-colors duration-200"
+          >
+            <path d="M12 16l-5-5h3V4h4v7h3l-5 5zm-5 4h10v-2H7v2z"/>
+          </svg>
+        )}
       </button>
 
-      {/* Cover Letter Modal */}
+      {/* Cover Letter Modal - Hidden in showcase mode */}
       <AnimatePresence>
-        {showCoverLetter && (
+        {showCoverLetter && !showcaseMode && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -309,12 +336,23 @@ export function BouncingResumeTemplate({ data }: { data: ResumeData }) {
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.8, opacity: 0 }}
               transition={{ duration: 0.3 }}
-              className="bg-black border-2 border-white rounded-lg p-8 max-w-2xl w-full max-h-[80vh] overflow-y-auto"
+              className="bg-black border-2 border-white rounded-lg p-8 max-w-2xl w-full max-h-[80vh] overflow-y-auto relative"
               style={{ 
                 boxShadow: '0 0 20px rgba(255, 255, 255, 0.3)',
                 fontFamily: 'Orbitron, monospace'
               }}
             >
+              {/* Close Button */}
+              <button
+                onClick={() => setShowCoverLetter(false)}
+                className="absolute top-4 right-4 text-white hover:text-gray-300 transition-colors duration-200 z-10"
+                aria-label="Close cover letter"
+              >
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
+                </svg>
+              </button>
+
               {/* Header */}
               <div className="text-center mb-6">
                 <h1 
@@ -372,19 +410,7 @@ export function BouncingResumeTemplate({ data }: { data: ResumeData }) {
                 </div>
               </div>
 
-              {/* Close Button */}
-              <div className="text-center mt-8">
-                <button
-                  onClick={() => setShowCoverLetter(false)}
-                  className="bg-white text-black px-8 py-3 rounded-lg font-bold hover:bg-gray-200 transition-colors duration-200 font-orbitron"
-                  style={{ 
-                    boxShadow: '0 0 10px rgba(255, 255, 255, 0.5)',
-                    textShadow: 'none'
-                  }}
-                >
-                  CLOSE COVER LETTER
-                </button>
-              </div>
+
             </motion.div>
           </motion.div>
         )}

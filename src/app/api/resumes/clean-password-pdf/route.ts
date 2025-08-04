@@ -206,40 +206,6 @@ export async function POST(req: NextRequest) {
     color: accentColor
   });
 
-  // ResumeSprites email logo
-  try {
-    const logoPath = path.join(process.cwd(), 'public', 'email-logo.png');
-    if (fs.existsSync(logoPath)) {
-      const logoBytes = fs.readFileSync(logoPath);
-      const logoImage = await pdfDoc.embedPng(logoBytes);
-      
-      const logoWidth = 80;
-      const logoHeight = 40;
-      const logoX = (595 - logoWidth) / 2;
-      const logoY = bottomY - 50;
-      
-      page.drawImage(logoImage, {
-        x: logoX,
-        y: logoY,
-        width: logoWidth,
-        height: logoHeight,
-      });
-    }
-  } catch (error) {
-    console.error('Error embedding logo:', error);
-    // Fallback to text if logo fails to load
-    const fallbackText = 'ResumeSprites';
-    const fallbackSize = 12;
-    const fallbackWidth = font.widthOfTextAtSize(fallbackText, fallbackSize);
-    page.drawText(fallbackText, {
-      x: (595 - fallbackWidth) / 2,
-      y: bottomY - 30,
-      size: fallbackSize,
-      font: fontBold,
-      color: primaryColor
-    });
-  }
-
   const pdfBytes = await pdfDoc.save();
   return new NextResponse(pdfBytes, {
     status: 200,

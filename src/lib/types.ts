@@ -77,6 +77,7 @@ export interface GeneratedLink {
   shortId: string;
   password: string;
   companyName?: string;
+  customAnchorTexts?: string[];
   resumeDataSnapshot: ResumeData;
   templateSnapshot: string;
   createdAt: string;

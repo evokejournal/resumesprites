@@ -1,7 +1,7 @@
 
 'use client';
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import type { ResumeData } from '@/lib/types';
 import { motion } from 'framer-motion';
 import { Window } from './os/Window';
@@ -9,7 +9,12 @@ import { DesktopIcon } from './os/DesktopIcon';
 import { Calculator } from './os/Calculator';
 import * as Icons from './os/icons';
 import { useIsMobile } from '@/hooks/use-mobile';
-import { DownloadIcon } from './os/icons';
+
+const DownloadIcon = ({ className }: { className?: string }) => (
+  <svg className={className} fill="currentColor" viewBox="0 0 24 24">
+    <path d="M12 16l-5-5h3V4h4v7h3l-5 5zm-5 4h10v-2H7v2z"/>
+  </svg>
+);
 
 interface WindowState {
   id: string;
@@ -23,12 +28,15 @@ interface WindowState {
 
 interface OperatingSystemTemplateProps {
   data: ResumeData;
+  pdfMode?: boolean;
+  showcaseMode?: boolean;
 }
 
-export function OperatingSystemTemplate({ data }: OperatingSystemTemplateProps) {
+export function OperatingSystemTemplate({ data, pdfMode, showcaseMode }: OperatingSystemTemplateProps) {
   const [windows, setWindows] = useState<WindowState[]>([]);
   const [nextZIndex, setNextZIndex] = useState(10);
   const [time, setTime] = useState('');
+  const [isDownloading, setIsDownloading] = useState(false);
   const isMobile = useIsMobile();
 
   useEffect(() => {
@@ -54,7 +62,7 @@ export function OperatingSystemTemplate({ data }: OperatingSystemTemplateProps) 
       
       setTimeout(() => {
         openWindow('coverLetter', 'cover_letter.txt', Icons.CoverLetterIcon, coverLetterContent);
-      }, 500); // Small delay to let the page settle
+      }, showcaseMode ? 100 : 500); // Faster in showcase mode
     }
   }, [data.coverLetter]);
 
@@ -100,22 +108,29 @@ export function OperatingSystemTemplate({ data }: OperatingSystemTemplateProps) 
   };
 
   const handleDownloadResume = async () => {
-    // Call the API to generate and download the PDF
-    const res = await fetch('/api/resumes/os-pdf', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ resumeData: data }),
-    });
-    if (!res.ok) return;
-    const blob = await res.blob();
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'resume-operating-system.pdf';
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-    window.URL.revokeObjectURL(url);
+    setIsDownloading(true);
+    try {
+      // Call the API to generate and download the PDF
+      const res = await fetch('/api/resumes/os-pdf', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ resumeData: data }),
+      });
+      if (!res.ok) throw new Error('Failed to generate PDF');
+      const blob = await res.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'resume-operating-system.pdf';
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error('Download failed:', error);
+    } finally {
+      setIsDownloading(false);
+    }
   };
 
   const desktopItems = [
@@ -167,6 +182,7 @@ export function OperatingSystemTemplate({ data }: OperatingSystemTemplateProps) 
             label={item.title}
             Icon={item.icon}
             onDoubleClick={item.id === 'download' ? handleDownloadResume : () => openWindow(item.id, `${item.title.toLowerCase().replace(' ', '_')}.txt`, item.icon, item.content)}
+            disabled={item.id === 'download' && isDownloading}
           />
         ))}
       </div>

@@ -4,6 +4,7 @@ import React, { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import { Loader2 } from 'lucide-react';
+import { isAdminUser } from '@/lib/admin-config';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -12,12 +13,20 @@ interface ProtectedRouteProps {
 export function ProtectedRoute({ children }: ProtectedRouteProps) {
   const { user, loading } = useAuth();
   const router = useRouter();
+  
+  // Check if site is locked
+  const isSiteLocked = process.env.NEXT_PUBLIC_SITE_LOCKED === 'true';
 
   useEffect(() => {
     if (!loading && !user) {
       router.push('/');
     }
-  }, [user, loading, router]);
+    
+    // If site is locked and user is not admin, redirect to home
+    if (!loading && user && isSiteLocked && !isAdminUser(user)) {
+      router.push('/?locked=true');
+    }
+  }, [user, loading, router, isSiteLocked]);
 
   if (loading) {
     return (

@@ -48,6 +48,11 @@ const VerticalCarousel = ({
 export default function HeroPageClient() {
   const { user, loading } = useAuth();
   const router = useRouter();
+  
+  // Check if site is locked (from URL params or environment)
+  const isSiteLocked = typeof window !== 'undefined' 
+    ? new URLSearchParams(window.location.search).get('locked') === 'true' 
+    : process.env.NEXT_PUBLIC_SITE_LOCKED === 'true';
 
   // Redirect authenticated users to builder
   useEffect(() => {
@@ -146,23 +151,58 @@ export default function HeroPageClient() {
             </div>
         </div>
         
-        <motion.div
+        {isSiteLocked ? (
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, ease: "easeInOut", delay: 0.2 }}
+            className="mt-12 w-full max-w-2xl"
+          >
+            <div className="bg-gradient-to-r from-orange-500 to-red-600 text-white p-6 rounded-2xl shadow-2xl border-2 border-white/20">
+              <h2 className="text-2xl font-bold mb-3">🚀 Coming Soon on Kickstarter!</h2>
+              <p className="text-lg mb-4">
+                ResumeSprites is launching soon! We're putting the finishing touches on our revolutionary resume builder. 
+                Be the first to know when we go live and get exclusive early access.
+              </p>
+              <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                <Button 
+                  size="lg" 
+                  variant="secondary" 
+                  className="text-lg font-semibold rounded-full bg-white text-orange-600 hover:bg-gray-100 shadow-lg transition-transform hover:scale-105"
+                  onClick={() => window.open('https://kickstarter.com', '_blank')}
+                >
+                  Follow on Kickstarter
+                </Button>
+                <Button 
+                  size="lg" 
+                  variant="outline" 
+                  className="text-lg font-semibold rounded-full border-white text-white hover:bg-white/10 shadow-lg transition-transform hover:scale-105"
+                  onClick={() => window.open('mailto:hello@resumesprites.com?subject=Kickstarter%20Notification', '_blank')}
+                >
+                  Get Notified
+                </Button>
+              </div>
+            </div>
+          </motion.div>
+        ) : (
+          <motion.div
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, ease: "easeInOut", delay: 0.2 }}
             className="mt-12 w-full max-w-sm sm:max-w-md grid grid-cols-1 sm:grid-cols-2 gap-4"
-        >
+          >
             <Button asChild size="lg" className="text-lg font-semibold rounded-full bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg transition-transform hover:scale-105">
-                <Link href="/auth">
-                    Log In / Sign Up
-                </Link>
+              <Link href="/auth">
+                Log In / Sign Up
+              </Link>
             </Button>
             <Button asChild size="lg" variant="outline" className="text-lg font-semibold rounded-full shadow-lg transition-transform hover:scale-105 bg-background/50">
-                <Link href="/explore-templates">
-                    Preview Templates
-                </Link>
+              <Link href="/showcase">
+                Preview Templates
+              </Link>
             </Button>
-        </motion.div>
+          </motion.div>
+        )}
 
       </main>
     </div>

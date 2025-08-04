@@ -338,6 +338,72 @@ ${resumeData.contact?.email || ''}`;
       currentY -= resultSpacing;
     }
 
+    // References result
+    if (resumeData.references && resumeData.references.length > 0) {
+      searchPage.drawText("Professional References", {
+        x: 50,
+        y: currentY,
+        size: 16,
+        font,
+        color: blue,
+      });
+
+      searchPage.drawText(`https://youble.com/search?q=${(resumeData.about.name || 'your-name').toLowerCase().replace(' ', '-')}+references`, {
+        x: 50,
+        y: currentY - 15,
+        size: 12,
+        font,
+        color: green,
+      });
+
+      const referencesText = resumeData.references.map((ref: any) => 
+        `${ref.name || 'Name'} (${ref.relation || 'Relation'})`
+      ).join(' ... ');
+
+      searchPage.drawText(referencesText, {
+        x: 50,
+        y: currentY - 35,
+        size: 12,
+        font,
+        color: gray,
+      });
+
+      currentY -= resultSpacing;
+    }
+
+    // Custom section result
+    if (resumeData.custom && resumeData.custom.title && resumeData.custom.items.length > 0) {
+      searchPage.drawText(resumeData.custom.title, {
+        x: 50,
+        y: currentY,
+        size: 16,
+        font,
+        color: blue,
+      });
+
+      searchPage.drawText(`https://youble.com/search?q=${(resumeData.about.name || 'your-name').toLowerCase().replace(' ', '-')}+${resumeData.custom.title.toLowerCase().replace(' ', '-')}`, {
+        x: 50,
+        y: currentY - 15,
+        size: 12,
+        font,
+        color: green,
+      });
+
+      const customText = resumeData.custom.items.map((item: any) => 
+        item.description || 'Custom item'
+      ).join(' ... ');
+
+      searchPage.drawText(customText, {
+        x: 50,
+        y: currentY - 35,
+        size: 12,
+        font,
+        color: gray,
+      });
+
+      currentY -= resultSpacing;
+    }
+
     const pdfBytes = await pdfDoc.save();
     
     return new NextResponse(pdfBytes, {

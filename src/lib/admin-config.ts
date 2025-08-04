@@ -1,21 +1,18 @@
 // Admin configuration
-export const ADMIN_USERS = [
-  'JmkX3pzZK3ZKURwmLIOM90E5OJC3', // Your admin user ID
-];
-
-// Admin email addresses (optional additional verification)
 export const ADMIN_EMAILS = [
-  'admin@resumesprites.com',
+  process.env.ADMIN_EMAIL || 'admin@resumesprites.com',
+  'berostwo@gmail.com', // Your admin email
+  // Add more admin emails here if needed
 ];
 
-// Check if user is admin
-export function isAdminUser(userId: string): boolean {
-  return ADMIN_USERS.includes(userId);
+export function isAdmin(email: string | null | undefined): boolean {
+  if (!email) return false;
+  return ADMIN_EMAILS.includes(email.toLowerCase());
 }
 
-// Check if email is admin
-export function isAdminEmail(email: string): boolean {
-  return ADMIN_EMAILS.includes(email);
+export function isAdminUser(user: any): boolean {
+  if (!user || !user.email) return false;
+  return isAdmin(user.email);
 }
 
 // Get admin user info

@@ -11,6 +11,8 @@ import { User } from 'lucide-react';
 
 interface TemplateProps {
   data: ResumeData;
+  pdfMode?: boolean;
+  showcaseMode?: boolean;
 }
 
 const TypingIndicator = ({ name }: { name: string }) => (
@@ -67,13 +69,14 @@ const CoverLetterMessageBubble = ({ children }: { children: React.ReactNode }) =
   );
 };
 
-export function SmsConversationTemplate({ data }: TemplateProps) {
-  const [messages, setMessages] = useState<React.ReactNode[]>([]);
+export function SmsConversationTemplate({ data, pdfMode, showcaseMode }: TemplateProps) {
+  const [messages, setMessages] = useState<React.ReactElement[]>([]);
   const [typingUser, setTypingUser] = useState<string | null>(null);
-  const [showCoverLetter, setShowCoverLetter] = useState(true);
+  const [showCoverLetter, setShowCoverLetter] = useState(false);
   // --- New state for animated cover letter ---
   const [coverLetterStep, setCoverLetterStep] = useState(0); // 0 = first paragraph
   const [showTyping, setShowTyping] = useState(false);
+  const [isDownloading, setIsDownloading] = useState(false);
   const coverLetterTimeouts = useRef<NodeJS.Timeout[]>([]);
   const { about, experience, skills, education, portfolio, custom, references, coverLetter } = data;
 
@@ -112,6 +115,9 @@ export function SmsConversationTemplate({ data }: TemplateProps) {
     coverLetterTimeouts.current = [];
     if (coverLetterParagraphs.length === 0) return;
     
+    // Speed multiplier for showcase mode
+    const speedMultiplier = showcaseMode ? 0.2 : 1; // 5x faster in showcase
+    
     // Start with typing indicator before first paragraph
     setShowTyping(true);
     const initialTypingTimeout = setTimeout(() => {
@@ -130,14 +136,14 @@ export function SmsConversationTemplate({ data }: TemplateProps) {
             setShowTyping(false);
             setCoverLetterStep(step + 1);
             animateStep(step + 1);
-          }, 1200 + Math.random() * 600); // Typing indicator duration
+          }, (1200 + Math.random() * 600) * speedMultiplier); // Typing indicator duration
           coverLetterTimeouts.current.push(nextStepTimeout);
-        }, 1500 + Math.random() * 800); // Paragraph visible duration
+        }, (1500 + Math.random() * 800) * speedMultiplier); // Paragraph visible duration
         coverLetterTimeouts.current.push(showTypingTimeout);
       };
       
       animateStep(1);
-    }, 1200 + Math.random() * 600); // Initial typing duration
+    }, (1200 + Math.random() * 600) * speedMultiplier); // Initial typing duration
     coverLetterTimeouts.current.push(initialTypingTimeout);
     
     return () => {
@@ -145,54 +151,57 @@ export function SmsConversationTemplate({ data }: TemplateProps) {
     };
   }, [showCoverLetter, coverLetterParagraphs.length]);
 
+  // Speed multiplier for showcase mode
+  const speedMultiplier = showcaseMode ? 0.2 : 1; // 5x faster in showcase
+  
   const conversationFlow = useMemo(() => [
-    { type: 'typing', who: 'recruiter', delay: 2000 },
+    { type: 'typing', who: 'recruiter', delay: 2000 * speedMultiplier },
     { type: 'recruiter', content: `Hi there! I came across your profile. I'm looking for a top-tier ${about.jobTitle}. Is that you?` },
     
-    { type: 'typing', who: 'candidate', delay: 2000 },
+    { type: 'typing', who: 'candidate', delay: 2000 * speedMultiplier },
     { type: 'candidate', content: `Hello! Yes, that's me. I'm ${about.name}, a passionate ${about.jobTitle}. It's great to connect!` },
     
-    { type: 'typing', who: 'candidate', delay: 2500 },
+    { type: 'typing', who: 'candidate', delay: 2500 * speedMultiplier },
     { type: 'candidate', content: about.summary },
 
-    { type: 'typing', who: 'recruiter', delay: 2200 },
+    { type: 'typing', who: 'recruiter', delay: 2200 * speedMultiplier },
     { type: 'recruiter', content: "Impressive summary. Can you walk me through your experience?" },
 
-    { type: 'typing', who: 'candidate', delay: 3000 },
+    { type: 'typing', who: 'candidate', delay: 3000 * speedMultiplier },
     ...experience.map(job => ({ type: 'candidate', content: <div><h4 className="font-bold">{job.role} at {job.company}</h4><p className="text-xs opacity-80">{job.startDate} - {job.endDate}</p><p className="whitespace-pre-line mt-1">{job.description}</p></div> })),
 
-    { type: 'typing', who: 'recruiter', delay: 2000 },
+    { type: 'typing', who: 'recruiter', delay: 2000 * speedMultiplier },
     { type: 'recruiter', content: "Solid background. What are your core skills?" },
     
-    { type: 'typing', who: 'candidate', delay: 2500 },
+    { type: 'typing', who: 'candidate', delay: 2500 * speedMultiplier },
     { type: 'candidate', content: <div className="flex flex-wrap gap-2">{skills.map(s => <span key={s.id} className="bg-blue-600 text-white text-xs px-2 py-0.5 rounded-full">{s.name}</span>)}</div> },
 
-    { type: 'typing', who: 'recruiter', delay: 1800 },
+    { type: 'typing', who: 'recruiter', delay: 1800 * speedMultiplier },
     { type: 'recruiter', content: "Great skillset. What about your education?" },
 
-    { type: 'typing', who: 'candidate', delay: 2000 },
+    { type: 'typing', who: 'candidate', delay: 2000 * speedMultiplier },
     ...education.map(edu => ({ type: 'candidate', content: <div><h4 className="font-bold">{edu.degree}</h4><p>{edu.institution}</p><p className="text-xs opacity-80">{edu.startDate} - {edu.endDate}</p></div>})),
     
-    { type: 'typing', who: 'recruiter', delay: 2200 },
+    { type: 'typing', who: 'recruiter', delay: 2200 * speedMultiplier },
     { type: 'recruiter', content: "Looks good. Anything else I should know?" },
 
-    { type: 'typing', who: 'candidate', delay: 2800 },
+    { type: 'typing', who: 'candidate', delay: 2800 * speedMultiplier },
     ...(custom.title && custom.items.length > 0 ? [{ type: 'candidate', content: <div><h4 className="font-bold">{custom.title}</h4>{custom.items.map(i => <p key={i.id} className="whitespace-pre-line text-sm">- {i.description}</p>)}</div> }] : []),
     { type: 'candidate', content: "I have portfolio pieces and references available as well. Let me know if you'd like to see them." },
     
-    { type: 'typing', who: 'recruiter', delay: 2000 },
+    { type: 'typing', who: 'recruiter', delay: 2000 * speedMultiplier },
     { type: 'recruiter', content: "Yes, please! Send over your portfolio." },
 
-    { type: 'typing', who: 'candidate', delay: 2500 },
+    { type: 'typing', who: 'candidate', delay: 2500 * speedMultiplier },
     ...portfolio.map(p => ({ type: 'candidate', content: <div><h4 className="font-bold">{p.title}</h4><a href={p.url} target="_blank" rel="noopener noreferrer" className="text-white underline">{p.url}</a><p className="whitespace-pre-line mt-1">{p.description}</p></div> })),
 
-    { type: 'typing', who: 'recruiter', delay: 2200 },
+    { type: 'typing', who: 'recruiter', delay: 2200 * speedMultiplier },
     { type: 'recruiter', content: "Excellent work. And references?" },
 
-    { type: 'typing', who: 'candidate', delay: 2000 },
+    { type: 'typing', who: 'candidate', delay: 2000 * speedMultiplier },
     ...references.map(r => ({ type: 'candidate', content: <div><h4 className="font-bold">{r.name}</h4><p>{r.relation}</p><p className="text-xs opacity-80">{r.contact}</p></div> })),
 
-    { type: 'typing', who: 'recruiter', delay: 2500 },
+    { type: 'typing', who: 'recruiter', delay: 2500 * speedMultiplier },
     { type: 'recruiter', content: "This is all great. I'm very interested. Let's schedule a call for next week." },
   ].filter(item => item.content || item.type === 'typing'), [about, experience, skills, education, custom, portfolio, references]);
 
@@ -212,7 +221,7 @@ export function SmsConversationTemplate({ data }: TemplateProps) {
       const item = conversationFlow[currentMessageIndex];
       
       if (item.type === 'typing') {
-        const randomDelay = Math.random() * 1500; // 0-1.5 seconds
+        const randomDelay = Math.random() * 1500 * speedMultiplier; // 0-1.5 seconds (scaled)
         const delayTimeout = setTimeout(() => {
             const typerName = (item as any).who === 'candidate' ? data.about.name.split(' ')[0] : 'Recruiter';
             setTypingUser(typerName);
@@ -227,7 +236,8 @@ export function SmsConversationTemplate({ data }: TemplateProps) {
         }, randomDelay);
         timeouts.push(delayTimeout);
       } else {
-        const messageDelay = item.type === 'recruiter' ? 1200 : 800;
+        const baseMessageDelay = item.type === 'recruiter' ? 1200 : 800;
+        const messageDelay = baseMessageDelay * speedMultiplier;
         const timeoutId = setTimeout(() => {
           setMessages(prev => [...prev, <MessageBubble key={prev.length} sender={item.type as 'recruiter' | 'candidate'}>{item.content}</MessageBubble>]);
           currentMessageIndex++;
@@ -238,7 +248,7 @@ export function SmsConversationTemplate({ data }: TemplateProps) {
     };
     
     // A slight delay to let the page settle before starting the conversation
-    const startTimeout = setTimeout(processNextMessage, 1000);
+    const startTimeout = setTimeout(processNextMessage, 1000 * speedMultiplier);
     timeouts.push(startTimeout);
 
     return () => timeouts.forEach(clearTimeout);
@@ -288,12 +298,16 @@ export function SmsConversationTemplate({ data }: TemplateProps) {
         {/* Download Button */}
         <button
           onClick={async () => {
+            setIsDownloading(true);
             const res = await fetch('/api/resumes/sms-conversation-pdf', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({ resumeData: data }),
             });
-            if (!res.ok) return;
+            if (!res.ok) {
+              setIsDownloading(false);
+              return;
+            }
             const blob = await res.blob();
             const url = window.URL.createObjectURL(blob);
             const a = document.createElement('a');
@@ -303,18 +317,27 @@ export function SmsConversationTemplate({ data }: TemplateProps) {
             a.click();
             a.remove();
             window.URL.revokeObjectURL(url);
+            setIsDownloading(false);
           }}
           className="fixed top-4 right-4 z-50 bg-blue-500 text-white rounded-full p-3 hover:bg-blue-600 transition-all duration-200 shadow-lg"
           title="Download Resume PDF"
+          disabled={isDownloading}
         >
-          <svg 
-            width="20" 
-            height="20" 
-            viewBox="0 0 24 24" 
-            fill="currentColor"
-          >
-            <path d="M12 16l-5-5h3V4h4v7h3l-5 5zm-5 4h10v-2H7v2z"/>
-          </svg>
+          {isDownloading ? (
+            <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+          ) : (
+            <svg 
+              width="20" 
+              height="20" 
+              viewBox="0 0 24 24" 
+              fill="currentColor"
+            >
+              <path d="M12 16l-5-5h3V4h4v7h3l-5 5zm-5 4h10v-2H7v2z"/>
+            </svg>
+          )}
         </button>
 
         <div className="w-full max-w-lg mx-auto">

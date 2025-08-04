@@ -50,6 +50,7 @@ const Barcode = ({ text }: { text: string }) => {
 interface TemplateProps {
   data: ResumeData;
   pdfMode?: boolean;
+  showcaseMode?: boolean;
 }
 
 const getNodeTextLength = (node: React.ReactNode): number => {
@@ -69,7 +70,7 @@ const getNodeTextLength = (node: React.ReactNode): number => {
 };
 
 
-export function ForTaxPurposesTemplate({ data, pdfMode }: TemplateProps) {
+export function ForTaxPurposesTemplate({ data, pdfMode, showcaseMode }: TemplateProps) {
     const { about, contact, experience, education, skills, portfolio, custom, coverLetter } = data;
     const [lines, setLines] = useState<React.ReactNode[]>([]);
     const [isPrinting, setIsPrinting] = useState(false);
@@ -217,10 +218,14 @@ export function ForTaxPurposesTemplate({ data, pdfMode }: TemplateProps) {
         setLines([]);
         setIsPrinting(true);
 
-        let accumulatedDelay = 500;
+        // Speed multiplier for showcase mode
+        const speedMultiplier = showcaseMode ? 0.1 : 1; // 10x faster in showcase
+        let accumulatedDelay = showcaseMode ? 50 : 500;
 
         allContent.forEach((lineContent) => {
-            const lineDelay = 80 + getNodeTextLength(lineContent) * 10;
+            const baseLineDelay = showcaseMode ? 8 : 80;
+            const baseCharDelay = showcaseMode ? 1 : 10;
+            const lineDelay = baseLineDelay + getNodeTextLength(lineContent) * baseCharDelay;
             accumulatedDelay += lineDelay;
 
             const timeout = setTimeout(() => {
@@ -233,7 +238,7 @@ export function ForTaxPurposesTemplate({ data, pdfMode }: TemplateProps) {
         const finalTimeout = setTimeout(() => {
           if (isCancelled) return;
           setIsPrinting(false);
-        }, accumulatedDelay + 500);
+        }, accumulatedDelay + (showcaseMode ? 50 : 500));
         timeouts.push(finalTimeout);
 
         return () => {
@@ -252,10 +257,12 @@ export function ForTaxPurposesTemplate({ data, pdfMode }: TemplateProps) {
         setLines([]);
         setIsPrintingCoverLetter(true);
 
-        let accumulatedDelay = 500;
+        let accumulatedDelay = showcaseMode ? 50 : 500;
 
         coverLetterContent.forEach((lineContent) => {
-            const lineDelay = 40 + getNodeTextLength(lineContent) * 5;
+            const baseLineDelay = showcaseMode ? 4 : 40;
+            const baseCharDelay = showcaseMode ? 0.5 : 5;
+            const lineDelay = baseLineDelay + getNodeTextLength(lineContent) * baseCharDelay;
             accumulatedDelay += lineDelay;
 
             const timeout = setTimeout(() => {
@@ -268,7 +275,7 @@ export function ForTaxPurposesTemplate({ data, pdfMode }: TemplateProps) {
         const finalTimeout = setTimeout(() => {
           if (isCancelled) return;
           setIsPrintingCoverLetter(false);
-        }, accumulatedDelay + 500);
+        }, accumulatedDelay + (showcaseMode ? 50 : 500));
         timeouts.push(finalTimeout);
 
         return () => {

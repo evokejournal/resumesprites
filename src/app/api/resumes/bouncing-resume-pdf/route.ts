@@ -11,12 +11,10 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'No resume data provided' }, { status: 400 });
     }
     
-    // Ensure about section exists with fallbacks
+    // Ensure all sections exist with fallbacks
     if (!resumeData.about) {
       resumeData.about = { name: 'Your Name', jobTitle: 'Your Title', summary: '', photo: '' };
     }
-    
-    // Ensure other sections exist
     if (!resumeData.contact) resumeData.contact = { email: '', phone: '', website: '', location: '' };
     if (!resumeData.experience) resumeData.experience = [];
     if (!resumeData.education) resumeData.education = [];
@@ -128,7 +126,7 @@ ${resumeData.contact?.email || ''}`;
       color: black,
     });
 
-    // Draw bouncing logo at the top
+    // Draw bouncing logo at the top (matching template design)
     const logoColor = colors[0]; // White
     const logoWidth = 200;
     const logoHeight = 100;
@@ -145,31 +143,48 @@ ${resumeData.contact?.email || ''}`;
       opacity: 0.1,
     });
 
-    // Draw name in logo
+    // Draw name in logo (split first and last name)
+    const nameParts = (resumeData.about.name || 'Your Name').split(' ');
+    const firstName = nameParts[0] || 'Your';
+    const lastName = nameParts.slice(1).join(' ') || 'Name';
+    
     const nameFontSize = 24;
-    const nameText = resumeData.about.name.toUpperCase();
-    const nameWidth = font.widthOfTextAtSize(nameText, nameFontSize);
-    resumePage.drawText(nameText, {
-      x: logoX + (logoWidth - nameWidth) / 2,
+    const firstNameText = firstName.toUpperCase();
+    const lastNameText = lastName.toUpperCase();
+    
+    // Draw first name
+    const firstNameWidth = font.widthOfTextAtSize(firstNameText, nameFontSize);
+    resumePage.drawText(firstNameText, {
+      x: logoX + (logoWidth - firstNameWidth) / 2,
       y: logoY + 60,
       size: nameFontSize,
       font,
       color: logoColor,
     });
 
-    // Draw "RESUME" text
+    // Draw last name
+    const lastNameWidth = font.widthOfTextAtSize(lastNameText, nameFontSize);
+    resumePage.drawText(lastNameText, {
+      x: logoX + (logoWidth - lastNameWidth) / 2,
+      y: logoY + 35,
+      size: nameFontSize,
+      font,
+      color: logoColor,
+    });
+
+    // Draw "RESUME" text in the curved area
     const resumeText = "RESUME";
     const resumeFontSize = 16;
     const resumeWidth = font.widthOfTextAtSize(resumeText, resumeFontSize);
     resumePage.drawText(resumeText, {
       x: logoX + (logoWidth - resumeWidth) / 2,
-      y: logoY + 30,
+      y: logoY + 10,
       size: resumeFontSize,
       font,
       color: black,
     });
 
-    // Draw resume content
+    // Draw resume content sections
     let currentY = logoY - 50;
     const lineHeight = 20;
     const sectionSpacing = 30;
@@ -232,6 +247,11 @@ ${resumeData.contact?.email || ''}`;
       resumeData.experience.forEach((job: any) => {
         const role = job.role || 'Role';
         const company = job.company || 'Company';
+        const startDate = job.startDate || '';
+        const endDate = job.endDate || 'Present';
+        const description = job.description || '';
+        
+        // Job title and company
         resumePage.drawText(`${role} at ${company}`, {
           x: 50,
           y: currentY,
@@ -240,6 +260,35 @@ ${resumeData.contact?.email || ''}`;
           color: white,
         });
         currentY -= lineHeight;
+        
+        // Dates
+        if (startDate || endDate) {
+          const dateText = `${startDate} - ${endDate}`;
+          resumePage.drawText(dateText, {
+            x: 50,
+            y: currentY,
+            size: 14,
+            font,
+            color: white,
+          });
+          currentY -= lineHeight;
+        }
+        
+        // Description
+        if (description) {
+          const descLines = wrapText(description, font, 14, width - 100);
+          descLines.forEach(line => {
+            resumePage.drawText(line, {
+              x: 70,
+              y: currentY,
+              size: 14,
+              font,
+              color: white,
+            });
+            currentY -= lineHeight;
+          });
+        }
+        currentY -= 10; // Extra spacing between jobs
       });
       currentY -= sectionSpacing;
     }
@@ -256,12 +305,16 @@ ${resumeData.contact?.email || ''}`;
       currentY -= lineHeight;
 
       const skillsText = resumeData.skills.map((s: any) => s.name || 'Skill').join(' / ');
-      resumePage.drawText(skillsText, {
-        x: 50,
-        y: currentY,
-        size: 16,
-        font,
-        color: white,
+      const skillsLines = wrapText(skillsText, font, 16, width - 100);
+      skillsLines.forEach(line => {
+        resumePage.drawText(line, {
+          x: 50,
+          y: currentY,
+          size: 16,
+          font,
+          color: white,
+        });
+        currentY -= lineHeight;
       });
       currentY -= sectionSpacing;
     }
@@ -280,6 +333,9 @@ ${resumeData.contact?.email || ''}`;
       resumeData.education.forEach((edu: any) => {
         const degree = edu.degree || 'Degree';
         const institution = edu.institution || 'Institution';
+        const startDate = edu.startDate || '';
+        const endDate = edu.endDate || '';
+        
         resumePage.drawText(`${degree} - ${institution}`, {
           x: 50,
           y: currentY,
@@ -288,12 +344,145 @@ ${resumeData.contact?.email || ''}`;
           color: white,
         });
         currentY -= lineHeight;
+        
+        if (startDate || endDate) {
+          const dateText = `${startDate} - ${endDate}`;
+          resumePage.drawText(dateText, {
+            x: 50,
+            y: currentY,
+            size: 14,
+            font,
+            color: white,
+          });
+          currentY -= lineHeight;
+        }
+      });
+      currentY -= sectionSpacing;
+    }
+
+    // Portfolio section
+    if (resumeData.portfolio && resumeData.portfolio.length > 0) {
+      resumePage.drawText("PORTFOLIO", {
+        x: 50,
+        y: currentY,
+        size: 20,
+        font,
+        color: white,
+      });
+      currentY -= lineHeight;
+
+      resumeData.portfolio.forEach((project: any) => {
+        const title = project.title || 'Project';
+        const description = project.description || '';
+        const url = project.url || '';
+        
+        resumePage.drawText(title, {
+          x: 50,
+          y: currentY,
+          size: 16,
+          font,
+          color: white,
+        });
+        currentY -= lineHeight;
+        
+        if (description) {
+          const descLines = wrapText(description, font, 14, width - 100);
+          descLines.forEach(line => {
+            resumePage.drawText(line, {
+              x: 70,
+              y: currentY,
+              size: 14,
+              font,
+              color: white,
+            });
+            currentY -= lineHeight;
+          });
+        }
+        
+        if (url) {
+          resumePage.drawText(`URL: ${url}`, {
+            x: 70,
+            y: currentY,
+            size: 14,
+            font,
+            color: white,
+          });
+          currentY -= lineHeight;
+        }
+        currentY -= 10; // Extra spacing between projects
+      });
+      currentY -= sectionSpacing;
+    }
+
+    // References section
+    if (resumeData.references && resumeData.references.length > 0) {
+      resumePage.drawText("REFERENCES", {
+        x: 50,
+        y: currentY,
+        size: 20,
+        font,
+        color: white,
+      });
+      currentY -= lineHeight;
+
+      resumeData.references.forEach((ref: any) => {
+        const name = ref.name || 'Name';
+        const relation = ref.relation || 'Relation';
+        const contact = ref.contact || '';
+        
+        resumePage.drawText(`${name} (${relation})`, {
+          x: 50,
+          y: currentY,
+          size: 16,
+          font,
+          color: white,
+        });
+        currentY -= lineHeight;
+        
+        if (contact) {
+          resumePage.drawText(contact, {
+            x: 70,
+            y: currentY,
+            size: 14,
+            font,
+            color: white,
+          });
+          currentY -= lineHeight;
+        }
+      });
+      currentY -= sectionSpacing;
+    }
+
+    // Custom section
+    if (resumeData.custom && resumeData.custom.title && resumeData.custom.items.length > 0) {
+      resumePage.drawText(resumeData.custom.title.toUpperCase(), {
+        x: 50,
+        y: currentY,
+        size: 20,
+        font,
+        color: white,
+      });
+      currentY -= lineHeight;
+
+      resumeData.custom.items.forEach((item: any) => {
+        const description = item.description || '';
+        const descLines = wrapText(description, font, 16, width - 100);
+        descLines.forEach(line => {
+          resumePage.drawText(line, {
+            x: 50,
+            y: currentY,
+            size: 16,
+            font,
+            color: white,
+          });
+          currentY -= lineHeight;
+        });
       });
       currentY -= sectionSpacing;
     }
 
     // Contact section
-    if (resumeData.contact && (resumeData.contact.email || resumeData.contact.phone)) {
+    if (resumeData.contact && (resumeData.contact.email || resumeData.contact.phone || resumeData.contact.website || resumeData.contact.location)) {
       resumePage.drawText("CONTACT", {
         x: 50,
         y: currentY,
@@ -303,15 +492,23 @@ ${resumeData.contact?.email || ''}`;
       });
       currentY -= lineHeight;
 
-      const email = resumeData.contact.email || '';
-      const phone = resumeData.contact.phone || '';
-      const contactText = email && phone ? `${email} | ${phone}` : email || phone;
-      resumePage.drawText(contactText, {
-        x: 50,
-        y: currentY,
-        size: 16,
-        font,
-        color: white,
+      const contactInfo = [];
+      if (resumeData.contact.email) contactInfo.push(resumeData.contact.email);
+      if (resumeData.contact.phone) contactInfo.push(resumeData.contact.phone);
+      if (resumeData.contact.website) contactInfo.push(resumeData.contact.website);
+      if (resumeData.contact.location) contactInfo.push(resumeData.contact.location);
+      
+      const contactText = contactInfo.join(' | ');
+      const contactLines = wrapText(contactText, font, 16, width - 100);
+      contactLines.forEach(line => {
+        resumePage.drawText(line, {
+          x: 50,
+          y: currentY,
+          size: 16,
+          font,
+          color: white,
+        });
+        currentY -= lineHeight;
       });
     }
 

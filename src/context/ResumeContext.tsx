@@ -14,6 +14,8 @@ interface ResumeContextType {
   generatedLinks: GeneratedLink[];
   generateResumeLink: (password: string, templateOverride?: string, companyName?: string) => Promise<GeneratedLink>;
   deleteGeneratedLink: (id: string) => Promise<void>;
+  addAnchorText: (id: string, customAnchorText: string) => Promise<void>;
+  removeAnchorText: (id: string, customAnchorText: string) => Promise<void>;
   refreshLinks: () => Promise<void>;
   isHydrated: boolean;
   loading: boolean;
@@ -283,6 +285,73 @@ export const ResumeProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
+  const addAnchorText = async (id: string, customAnchorText: string): Promise<void> => {
+    if (!user) return;
+    
+    try {
+      const response = await fetch(`/api/resume/links/${id}/hyperlink`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify({ customAnchorText, action: 'add' })
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to add anchor text');
+      }
+      
+      const result = await response.json();
+      
+      // Update local state
+      setGeneratedLinks(prevLinks => 
+        prevLinks.map(link => 
+          link.id === id 
+            ? { ...link, customAnchorTexts: result.customAnchorTexts } 
+            : link
+        )
+      );
+    } catch (err) {
+      console.error('Failed to add anchor text:', err);
+      throw err;
+    }
+  };
+
+  const removeAnchorText = async (id: string, customAnchorText: string): Promise<void> => {
+    if (!user) return;
+    
+    try {
+      const response = await fetch(`/api/resume/links/${id}/hyperlink`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify({ customAnchorText, action: 'remove' })
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to remove anchor text');
+      }
+      
+      const result = await response.json();
+      
+      // Update local state
+      setGeneratedLinks(prevLinks => 
+        prevLinks.map(link => 
+          link.id === id 
+            ? { ...link, customAnchorTexts: result.customAnchorTexts } 
+            : link
+        )
+      );
+    } catch (err) {
+      console.error('Failed to remove anchor text:', err);
+      throw err;
+    }
+  };
+
   return (
     <ResumeContext.Provider value={{ 
       resumeData, 
@@ -291,6 +360,8 @@ export const ResumeProvider = ({ children }: { children: ReactNode }) => {
       generatedLinks,
       generateResumeLink,
       deleteGeneratedLink,
+      addAnchorText,
+      removeAnchorText,
       refreshLinks,
       isHydrated, 
       loading, 

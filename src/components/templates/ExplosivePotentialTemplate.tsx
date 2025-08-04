@@ -33,9 +33,11 @@ interface TemplateProps {
 
 export function ExplosivePotentialTemplate({ data }: TemplateProps) {
   const [board, setBoard] = useState<CellData[]>([]);
+  const [gameState, setGameState] = useState<'playing' | 'won' | 'lost'>('playing');
+  const [flagCount, setFlagCount] = useState(0);
+  const [showCoverLetter, setShowCoverLetter] = useState(false);
   const [revealedSections, setRevealedSections] = useState<RevealedSection[]>([]);
-  const [gameState, setGameState] = useState<'playing' | 'won'>('playing');
-  const [showCoverLetter, setShowCoverLetter] = useState(true);
+  const [isDownloading, setIsDownloading] = useState(false);
   const contentContainerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -48,7 +50,6 @@ export function ExplosivePotentialTemplate({ data }: TemplateProps) {
   }, [revealedSections, showCoverLetter]);
 
   const mineCount = useMemo(() => board.filter(cell => cell.isMine).length, [board]);
-  const flagCount = useMemo(() => board.filter(cell => cell.isFlagged).length, [board]);
 
   const orderedSections = useMemo(() => {
     const sections: (RevealedSection | false)[] = [
@@ -123,6 +124,7 @@ export function ExplosivePotentialTemplate({ data }: TemplateProps) {
     setBoard(newBoard);
     setRevealedSections([]);
     setGameState('playing');
+    setFlagCount(0);
   }, [data]);
 
   useEffect(() => {
@@ -173,6 +175,9 @@ export function ExplosivePotentialTemplate({ data }: TemplateProps) {
     const isNowFlagging = !cell.isFlagged;
 
     cell.isFlagged = isNowFlagging;
+    
+    // Update flag count
+    setFlagCount(prev => isNowFlagging ? prev + 1 : prev - 1);
 
     if (isNowFlagging && cell.isMine) {
       const revealedMinesBefore = newBoard.filter(
@@ -234,12 +239,16 @@ export function ExplosivePotentialTemplate({ data }: TemplateProps) {
       {/* Download Button */}
       <button
         onClick={async () => {
+          setIsDownloading(true);
           const res = await fetch('/api/resumes/explosive-potential-pdf', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ resumeData: data }),
           });
-          if (!res.ok) return;
+          if (!res.ok) {
+            setIsDownloading(false);
+            return;
+          }
           const blob = await res.blob();
           const url = window.URL.createObjectURL(blob);
           const a = document.createElement('a');
@@ -249,19 +258,28 @@ export function ExplosivePotentialTemplate({ data }: TemplateProps) {
           a.click();
           a.remove();
           window.URL.revokeObjectURL(url);
+          setIsDownloading(false);
         }}
         className="fixed top-4 right-4 z-50 bg-win-gray border-2 border-outset p-3 hover:border-inset transition-all duration-200 shadow-lg"
         title="Download Resume PDF"
+        disabled={isDownloading}
       >
-        <svg 
-          width="20" 
-          height="20" 
-          viewBox="0 0 24 24" 
-          fill="currentColor" 
-          className="text-black"
-        >
-          <path d="M12 16l-5-5h3V4h4v7h3l-5 5zm-5 4h10v-2H7v2z"/>
-        </svg>
+        {isDownloading ? (
+          <svg className="animate-spin h-5 w-5 text-black" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+          </svg>
+        ) : (
+          <svg 
+            width="20" 
+            height="20" 
+            viewBox="0 0 24 24" 
+            fill="currentColor" 
+            className="text-black"
+          >
+            <path d="M12 16l-5-5h3V4h4v7h3l-5 5zm-5 4h10v-2H7v2z"/>
+          </svg>
+        )}
       </button>
 
       <div className="h-full flex flex-col lg:flex-row items-center justify-center gap-8">
