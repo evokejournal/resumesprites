@@ -72,7 +72,12 @@ export function SecurityOverview({ adminUserId }: SecurityOverviewProps) {
 
   const fetchSecurityMetrics = async () => {
     try {
-      const response = await fetch('/api/admin/security-metrics');
+      const response = await fetch('/api/admin/security-metrics', {
+        headers: {
+          'x-user-id': adminUserId,
+          'Content-Type': 'application/json',
+        },
+      });
       if (!response.ok) throw new Error('Failed to fetch security metrics');
       const data = await response.json();
       setMetrics(data);
@@ -86,7 +91,12 @@ export function SecurityOverview({ adminUserId }: SecurityOverviewProps) {
   const fetchSecurityLogs = async () => {
     try {
       setLogsLoading(true);
-      const response = await fetch('/api/admin/security-logs');
+      const response = await fetch('/api/admin/security-logs', {
+        headers: {
+          'x-user-id': adminUserId,
+          'Content-Type': 'application/json',
+        },
+      });
       if (!response.ok) throw new Error('Failed to fetch security logs');
       const data = await response.json();
       setLogs(data);

@@ -94,17 +94,16 @@ export default function ShowcasePageClient() {
   const currentTemplate = templates[currentTemplateIndex];
   const TemplateComponent = templateComponentMap[currentTemplate.id];
 
+  // Check if site is locked (from URL params or environment)
+  const isSiteLocked = typeof window !== 'undefined' 
+    ? new URLSearchParams(window.location.search).get('locked') === 'true' 
+    : process.env.NEXT_PUBLIC_SITE_LOCKED === 'true';
+
   // Keyboard navigation
   useEffect(() => {
     const handleKeyPress = (event: KeyboardEvent) => {
-      if (event.key === 'n' || event.key === 'N') {
-        setShowTemplateName(true);
-        setCurrentTemplateIndex((prev) => (prev + 1) % templates.length);
-        
-        // Hide template name after animation completes (2.5 seconds total)
-        setTimeout(() => {
-          setShowTemplateName(false);
-        }, 2500);
+      if (event.key === 'ArrowRight') {
+        handleNextTemplate();
       }
     };
 
@@ -112,26 +111,47 @@ export default function ShowcasePageClient() {
     return () => window.removeEventListener('keydown', handleKeyPress);
   }, []);
 
-  // Initial template name display
+  // Handle next template
+  const handleNextTemplate = () => {
+    // Show template name
+    setShowTemplateName(true);
+    
+    // Update template index immediately
+    setCurrentTemplateIndex((prev) => (prev + 1) % templates.length);
+    
+    // Hide template name after 2.8 seconds (allows for animation completion)
+    setTimeout(() => {
+      setShowTemplateName(false);
+    }, 2800);
+  };
+
+  // Initial load sequence
   useEffect(() => {
     if (isInitialLoad) {
-      // For initial load, wait a bit longer to ensure everything is ready
+      // Extended initial display for first load
       setTimeout(() => {
         setShowTemplateName(false);
         setIsInitialLoad(false);
-      }, 3000);
-    } else {
-      // For subsequent template changes, use normal timing
-      setTimeout(() => {
-        setShowTemplateName(false);
-      }, 2500);
+      }, 3500);
     }
-  }, [currentTemplateIndex, isInitialLoad]);
+  }, [isInitialLoad]);
 
   return (
-    <div className="fixed inset-0 bg-black overflow-hidden">
+    <div className="fixed inset-0 bg-black overflow-auto">
+      {/* Black Screen Overlay - Linked to Template Name */}
+      <motion.div
+        className="fixed inset-0 bg-black z-40 pointer-events-none"
+        animate={{ 
+          opacity: showTemplateName ? 1 : 0 
+        }}
+        transition={{ 
+          duration: 0.3,
+          ease: "easeInOut"
+        }}
+      />
+
       {/* Large Template Name Animation */}
-      <AnimatePresence>
+      <AnimatePresence mode="wait">
         {showTemplateName && (
           <motion.div
             key={`name-${currentTemplate.id}`}
@@ -193,8 +213,7 @@ export default function ShowcasePageClient() {
           transition={{ duration: 0.8, ease: "easeInOut" }}
           className="w-full h-full relative"
           style={{ 
-            opacity: showTemplateName ? 0 : 1,
-            pointerEvents: showTemplateName ? 'none' : 'auto'
+            opacity: showTemplateName ? 0 : 1
           }}
         >
           {/* Template Component */}
@@ -204,46 +223,7 @@ export default function ShowcasePageClient() {
         </motion.div>
       </AnimatePresence>
 
-      {/* Template Counter */}
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: 0.5, delay: 0.5 }}
-        className="absolute top-8 right-8 text-white/80 text-sm z-40"
-      >
-        <div className="bg-black/20 backdrop-blur-sm px-4 py-2 rounded-full">
-          {currentTemplateIndex + 1} / {templates.length}
-        </div>
-      </motion.div>
 
-      {/* Exit Button */}
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: 0.5, delay: 1 }}
-        className="absolute top-8 right-24 z-40"
-      >
-        <Button
-          onClick={() => window.history.back()}
-          variant="outline"
-          size="sm"
-          className="bg-black/20 backdrop-blur-sm border-white/20 text-white hover:bg-black/40"
-        >
-          Exit Showcase
-        </Button>
-      </motion.div>
-
-      {/* Keyboard Instructions */}
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: 0.5, delay: 1.5 }}
-        className="absolute bottom-8 left-1/2 transform -translate-x-1/2 text-white/60 text-sm z-40"
-      >
-        <div className="bg-black/20 backdrop-blur-sm px-4 py-2 rounded-full">
-          Press 'N' for next template
-        </div>
-      </motion.div>
     </div>
   );
 } 

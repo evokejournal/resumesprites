@@ -273,7 +273,13 @@ export function SnakebiteResumeTemplate({ data, pdfMode, showcaseMode }: Templat
         return current;
       });
       
-      setSpeed(s => Math.max(showcaseMode ? SHOWCASE_MIN_SPEED : MIN_SPEED, s - SPEED_INCREMENT));
+      // In showcase mode, keep constant speed. In normal mode, increase speed when eating
+      if (showcaseMode) {
+        // Keep the same speed in showcase mode
+        setSpeed(SHOWCASE_SPEED);
+      } else {
+        setSpeed(s => Math.max(MIN_SPEED, s - SPEED_INCREMENT));
+      }
 
       if (revealedSections.length + 1 < resumeChunks.length) {
           setFood(randomFoodPosition(snake));
@@ -352,7 +358,7 @@ export function SnakebiteResumeTemplate({ data, pdfMode, showcaseMode }: Templat
         <button
           onClick={async () => {
             setIsDownloading(true);
-            const res = await fetch('/api/resumes/snakebite-resume-pdf', {
+            const res = await fetch('/api/resumes/generic-pdf', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({ resumeData: data }),
@@ -365,7 +371,7 @@ export function SnakebiteResumeTemplate({ data, pdfMode, showcaseMode }: Templat
             const url = window.URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
-            a.download = 'resume-snakebite.pdf';
+            a.download = 'resume.pdf';
             document.body.appendChild(a);
             a.click();
             a.remove();

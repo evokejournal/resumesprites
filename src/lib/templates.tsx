@@ -66,7 +66,7 @@ export const templates = [
   },
   {
     id: "sms-conversation",
-    name: "Typing...",
+    name: "SMS Conversation",
     description: "Your resume unfolds as an automated, engaging text message chat.",
     previewComponent: <SmsConversationPreview />,
   },

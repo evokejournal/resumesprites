@@ -60,7 +60,7 @@ export function SidebarNav() {
   const suggestItem = { href: '/suggest-template', label: 'Suggest Template' };
 
   // Add admin menu item if user is admin
-  const isAdmin = isAdminUser(user?.id || '') || user?.email === 'admin@resumesprites.com';
+  const isAdmin = isAdminUser(user) || user?.email === 'berostwo@gmail.com';
   if (isAdmin) {
     menuItems.push({ href: '/admin', label: 'Admin', icon: <Shield /> });
   }

@@ -299,7 +299,7 @@ export function SmsConversationTemplate({ data, pdfMode, showcaseMode }: Templat
         <button
           onClick={async () => {
             setIsDownloading(true);
-            const res = await fetch('/api/resumes/sms-conversation-pdf', {
+            const res = await fetch('/api/resumes/generic-pdf', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({ resumeData: data }),
@@ -312,7 +312,7 @@ export function SmsConversationTemplate({ data, pdfMode, showcaseMode }: Templat
             const url = window.URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
-            a.download = 'resume-sms.pdf';
+            a.download = 'resume.pdf';
             document.body.appendChild(a);
             a.click();
             a.remove();

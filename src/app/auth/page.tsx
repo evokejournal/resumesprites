@@ -10,6 +10,9 @@ import Link from 'next/link';
 
 export default function AuthPage() {
   const [isSignUp, setIsSignUp] = useState(false);
+  
+  // Check if site is locked
+  const isSiteLocked = process.env.NEXT_PUBLIC_SITE_LOCKED === 'true';
 
   // Generate random particle positions and animation params only on the client after hydration
   const [particles, setParticles] = useState<{ left: number; top: number; duration: number; delay: number }[]>([]);
@@ -121,7 +124,7 @@ export default function AuthPage() {
 
             {/* Form */}
             <AnimatePresence mode="wait">
-              {isSignUp ? (
+              {isSignUp && !isSiteLocked ? (
                 <motion.div
                   key="signup"
                   initial={{ opacity: 0, x: 20 }}
@@ -151,26 +154,41 @@ export default function AuthPage() {
               transition={{ duration: 0.5, delay: 0.6 }}
               className="mt-6 text-center"
             >
-              <p className="text-sm text-muted-foreground">
-                {isSignUp ? 'Already have an account?' : "Don't have an account?"}
-              </p>
-              <Button
-                variant="link"
-                onClick={() => setIsSignUp(!isSignUp)}
-                className="text-primary hover:text-primary/80 font-medium"
-              >
-                {isSignUp ? (
-                  <>
-                    <LogIn className="w-4 h-4 mr-2" />
-                    Sign In
-                  </>
-                ) : (
-                  <>
-                    <UserPlus className="w-4 h-4 mr-2" />
-                    Sign Up
-                  </>
-                )}
-              </Button>
+              {isSiteLocked ? (
+                // When site is locked, only show sign-in option
+                <div>
+                  <p className="text-sm text-muted-foreground mb-2">
+                    Site is currently locked for Kickstarter campaign
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    Only existing users can sign in
+                  </p>
+                </div>
+              ) : (
+                // Normal toggle when site is unlocked
+                <>
+                  <p className="text-sm text-muted-foreground">
+                    {isSignUp ? 'Already have an account?' : "Don't have an account?"}
+                  </p>
+                  <Button
+                    variant="link"
+                    onClick={() => setIsSignUp(!isSignUp)}
+                    className="text-primary hover:text-primary/80 font-medium"
+                  >
+                    {isSignUp ? (
+                      <>
+                        <LogIn className="w-4 h-4 mr-2" />
+                        Sign In
+                      </>
+                    ) : (
+                      <>
+                        <UserPlus className="w-4 h-4 mr-2" />
+                        Sign Up
+                      </>
+                    )}
+                  </Button>
+                </>
+              )}
               {!isSignUp && (
                 <div className="mt-2">
                   <Link href="/auth/forgot-password" className="text-xs text-muted-foreground hover:text-primary underline">

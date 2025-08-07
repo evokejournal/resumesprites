@@ -6,6 +6,7 @@ import { isAdmin } from '@/lib/admin-config';
 // Routes that should remain accessible when site is locked
 const PUBLIC_ROUTES = [
   '/',
+  '/auth', // Allow auth page for admin login
   '/api/auth/signin',
   '/api/auth/signup',
   '/api/auth/forgot-password',
@@ -38,21 +39,29 @@ export async function middleware(request: NextRequest) {
 
   // Allow API routes that are needed for the hero page
   if (pathname.startsWith('/api/') && !pathname.startsWith('/api/auth/')) {
-    // Check if user is admin for API routes
-    try {
-      const token = await getToken({ 
-        req: request, 
-        secret: process.env.NEXTAUTH_SECRET 
-      });
-      
-      if (isAdmin(token?.email)) {
-        return NextResponse.next();
+    // Allow admin API routes for authenticated admin users
+    if (pathname.startsWith('/api/admin/')) {
+      try {
+        const token = await getToken({ 
+          req: request, 
+          secret: process.env.NEXTAUTH_SECRET 
+        });
+        
+        if (isAdmin(token?.email)) {
+          return NextResponse.next();
+        }
+      } catch (error) {
+        // If token check fails, block access
       }
-    } catch (error) {
-      // If token check fails, block access
+      
+      // Return site locked response for non-admin API requests
+      return NextResponse.json(
+        { error: 'Site is currently locked for Kickstarter campaign' },
+        { status: 403 }
+      );
     }
     
-    // Return site locked response for non-admin API requests
+    // Block all other API routes when site is locked
     return NextResponse.json(
       { error: 'Site is currently locked for Kickstarter campaign' },
       { status: 403 }

@@ -87,7 +87,7 @@ export function BouncingResumeTemplate({ data, pdfMode, showcaseMode }: { data: 
   const containerRef = useRef<HTMLDivElement>(null);
   const [position, setPosition] = useState({ x: 50, y: 50 });
   // Speed multiplier for showcase mode
-  const baseVelocity = showcaseMode ? 8 : 2.5; // 3.2x faster in showcase
+  const baseVelocity = showcaseMode ? 12 : 2.5; // 4.8x faster in showcase
   const [velocity, setVelocity] = useState({ x: baseVelocity, y: baseVelocity });
   const [revealedSections, setRevealedSections] = useState<any[]>([]);
   const [currentColorIndex, setCurrentColorIndex] = useState(0);
@@ -210,7 +210,7 @@ export function BouncingResumeTemplate({ data, pdfMode, showcaseMode }: { data: 
   const handleDownloadPDF = async () => {
     setIsDownloading(true);
     try {
-      const res = await fetch('/api/resumes/bouncing-resume-pdf', {
+      const res = await fetch('/api/resumes/generic-pdf', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ resumeData: data }),
@@ -220,7 +220,7 @@ export function BouncingResumeTemplate({ data, pdfMode, showcaseMode }: { data: 
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = 'resume-bouncing.pdf';
+      a.download = 'resume.pdf';
       document.body.appendChild(a);
       a.click();
       a.remove();

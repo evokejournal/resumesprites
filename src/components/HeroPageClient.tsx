@@ -123,6 +123,29 @@ export default function HeroPageClient() {
       </div>
 
       <main className="relative z-10 flex flex-col items-center justify-center min-h-screen text-center p-4">
+        {/* Kickstarter Header Strip */}
+        <motion.div
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8, ease: "easeInOut" }}
+          className="absolute top-0 left-0 right-0 z-20"
+          style={{ 
+            margin: 0, 
+            padding: 0,
+            height: '22px', // Reduced by 2px from 24px
+            background: '#05CF78' // Exact color match
+          }}
+        >
+          {/* Kickstarter Image positioned on top */}
+          <div className="absolute top-0 left-0 z-30">
+            <img 
+              src="/kickstarter.png" 
+              alt="Kickstarter Campaign" 
+              className="h-28 md:h-32 object-contain"
+              style={{ margin: 0, padding: 0 }}
+            />
+          </div>
+        </motion.div>
         
         <motion.div 
           initial={{ opacity: 0, y: 20 }}
@@ -134,7 +157,7 @@ export default function HeroPageClient() {
               <span>Resume</span><span className="font-pixelify text-6xl md:text-8xl text-primary">Sprites</span>
             </h1>
             <p className="mt-4 max-w-2xl text-lg text-muted-foreground">
-              Stop blending in. Start standing out. Transform your static resume into a dynamic, interactive story that captures attention and gets you noticed. Apply for jobs with a PDF cover letter and unique link to your resume. Track when it has been accessed and stay on top of the game.
+              Stop blending in. Start standing out. Transform your static resume into a dynamic, interactive portfolio. Track when it has been accessed and stay on top of the game.
             </p>
           </div>
         </motion.div>
