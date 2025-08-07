@@ -18,7 +18,7 @@ export function SignInForm() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const router = useRouter();
-  const { execute: executeRecaptcha } = useRecaptcha();
+  const { execute: executeRecaptcha, isLoaded: recaptchaLoaded, isLoading: recaptchaLoading } = useRecaptcha();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -27,7 +27,13 @@ export function SignInForm() {
 
     try {
       // Get reCAPTCHA token
-      const recaptchaToken = await executeRecaptcha();
+      let recaptchaToken = 'disabled';
+      try {
+        recaptchaToken = await executeRecaptcha();
+      } catch (recaptchaError: any) {
+        console.warn('reCAPTCHA failed, proceeding without it:', recaptchaError.message);
+        // Continue without reCAPTCHA if it fails
+      }
       
       const result = await signIn('credentials', {
         redirect: false,

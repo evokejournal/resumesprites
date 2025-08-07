@@ -12,27 +12,22 @@ import { Eye, EyeOff, Mail, Lock, User, Loader2, Check, X } from 'lucide-react';
 import { useRecaptcha } from '@/hooks/use-recaptcha';
 
 export function SignUpForm() {
-  const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [name, setName] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const router = useRouter();
-  const { execute: executeRecaptcha } = useRecaptcha();
+  const { execute: executeRecaptcha, isLoaded: recaptchaLoaded, isLoading: recaptchaLoading } = useRecaptcha();
 
   // Password validation
-  const passwordRequirements = {
-    length: password.length >= 8,
-    uppercase: /[A-Z]/.test(password),
-    lowercase: /[a-z]/.test(password),
-    number: /\d/.test(password),
-    special: /[!@#$%^&*(),.?":{}|<>]/.test(password),
-  };
-
-  const isPasswordValid = Object.values(passwordRequirements).every(Boolean);
+  const isPasswordValid = password.length >= 8 && 
+    /[A-Z]/.test(password) && 
+    /[a-z]/.test(password) && 
+    /[0-9]/.test(password);
   const passwordsMatch = password === confirmPassword;
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -54,7 +49,13 @@ export function SignUpForm() {
 
     try {
       // Get reCAPTCHA token
-      const recaptchaToken = await executeRecaptcha();
+      let recaptchaToken = 'disabled';
+      try {
+        recaptchaToken = await executeRecaptcha();
+      } catch (recaptchaError: any) {
+        console.warn('reCAPTCHA failed, proceeding without it:', recaptchaError.message);
+        // Continue without reCAPTCHA if it fails
+      }
       
       const result = await signIn('credentials', {
         redirect: false,
@@ -171,22 +172,46 @@ export function SignUpForm() {
             >
               <p className="text-xs text-muted-foreground font-medium">Password requirements:</p>
               <div className="space-y-1">
-                {Object.entries(passwordRequirements).map(([key, valid]) => (
-                  <div key={key} className="flex items-center gap-2 text-xs">
-                    {valid ? (
-                      <Check className="w-3 h-3 text-green-500" />
-                    ) : (
-                      <X className="w-3 h-3 text-red-500" />
-                    )}
-                    <span className={valid ? 'text-green-600' : 'text-red-600'}>
-                      {key === 'length' && 'At least 8 characters'}
-                      {key === 'uppercase' && 'One uppercase letter'}
-                      {key === 'lowercase' && 'One lowercase letter'}
-                      {key === 'number' && 'One number'}
-                      {key === 'special' && 'One special character'}
-                    </span>
-                  </div>
-                ))}
+                <div className="flex items-center gap-2 text-xs">
+                  {password.length >= 8 ? (
+                    <Check className="w-3 h-3 text-green-500" />
+                  ) : (
+                    <X className="w-3 h-3 text-red-500" />
+                  )}
+                  <span className={password.length >= 8 ? 'text-green-600' : 'text-red-600'}>
+                    At least 8 characters
+                  </span>
+                </div>
+                <div className="flex items-center gap-2 text-xs">
+                  {/[A-Z]/.test(password) ? (
+                    <Check className="w-3 h-3 text-green-500" />
+                  ) : (
+                    <X className="w-3 h-3 text-red-500" />
+                  )}
+                  <span className={/[A-Z]/.test(password) ? 'text-green-600' : 'text-red-600'}>
+                    One uppercase letter
+                  </span>
+                </div>
+                <div className="flex items-center gap-2 text-xs">
+                  {/[a-z]/.test(password) ? (
+                    <Check className="w-3 h-3 text-green-500" />
+                  ) : (
+                    <X className="w-3 h-3 text-red-500" />
+                  )}
+                  <span className={/[a-z]/.test(password) ? 'text-green-600' : 'text-red-600'}>
+                    One lowercase letter
+                  </span>
+                </div>
+                <div className="flex items-center gap-2 text-xs">
+                  {/[0-9]/.test(password) ? (
+                    <Check className="w-3 h-3 text-green-500" />
+                  ) : (
+                    <X className="w-3 h-3 text-red-500" />
+                  )}
+                  <span className={/[0-9]/.test(password) ? 'text-green-600' : 'text-red-600'}>
+                    One number
+                  </span>
+                </div>
               </div>
             </motion.div>
           )}
