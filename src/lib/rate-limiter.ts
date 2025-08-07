@@ -48,40 +48,119 @@ class MemoryStore {
 // Production Redis store
 class RedisStore {
   private client: any;
+  private initialized = false;
+  private connectionFailed = false;
 
   constructor() {
-    // Dynamic import to avoid build issues
-    const Redis = require('ioredis');
-    this.client = new Redis(process.env.REDIS_URL!);
+    // Don't initialize during build time
+    if (typeof window !== 'undefined') {
+      return;
+    }
+  }
+
+  private async initialize() {
+    if (this.initialized || this.connectionFailed) return;
+    
+    try {
+      // Dynamic import to avoid build issues
+      const Redis = require('ioredis');
+      
+      // Create Redis client with better error handling
+      this.client = new Redis(process.env.REDIS_URL!, {
+        retryDelayOnFailover: 100,
+        maxRetriesPerRequest: 3,
+        lazyConnect: true, // Don't connect immediately
+        connectTimeout: 5000, // 5 second timeout
+      });
+
+      // Handle connection events
+      this.client.on('error', (error: any) => {
+        console.warn('Redis connection error:', error.message);
+        this.connectionFailed = true;
+      });
+
+      this.client.on('connect', () => {
+        console.log('Redis connected successfully');
+        this.initialized = true;
+      });
+
+      // Only connect if we're not in build mode
+      if (process.env.NODE_ENV !== 'production' || process.env.NEXT_PHASE !== 'phase-production-build') {
+        await this.client.connect();
+      }
+      
+    } catch (error) {
+      console.warn('Redis initialization failed, falling back to memory store:', error);
+      this.connectionFailed = true;
+      throw error;
+    }
   }
 
   async get(key: string): Promise<{ count: number; resetTime: number } | null> {
-    const data = await this.client.get(key);
-    return data ? JSON.parse(data) : null;
+    try {
+      await this.initialize();
+      if (!this.client || this.connectionFailed) {
+        return null;
+      }
+      const data = await this.client.get(key);
+      return data ? JSON.parse(data) : null;
+    } catch (error) {
+      console.warn('Redis get failed, falling back to memory:', error);
+      this.connectionFailed = true;
+      return null;
+    }
   }
 
   async set(key: string, count: number, resetTime: number): Promise<void> {
-    await this.client.setex(key, Math.ceil((resetTime - Date.now()) / 1000), JSON.stringify({ count, resetTime }));
+    try {
+      await this.initialize();
+      if (!this.client || this.connectionFailed) {
+        return;
+      }
+      await this.client.setex(key, Math.ceil((resetTime - Date.now()) / 1000), JSON.stringify({ count, resetTime }));
+    } catch (error) {
+      console.warn('Redis set failed:', error);
+      this.connectionFailed = true;
+      // Fallback to memory store
+    }
   }
 
   async increment(key: string, windowMs: number): Promise<{ count: number; resetTime: number }> {
-    const now = Date.now();
-    const record = await this.get(key);
-    
-    if (!record) {
-      const newRecord = { count: 1, resetTime: now + windowMs };
-      await this.set(key, newRecord.count, newRecord.resetTime);
-      return newRecord;
+    try {
+      await this.initialize();
+      if (!this.client || this.connectionFailed) {
+        // Fallback to memory store behavior
+        const memoryStore = new MemoryStore();
+        return memoryStore.increment(key, windowMs);
+      }
+      
+      const now = Date.now();
+      const record = await this.get(key);
+      
+      if (!record) {
+        const newRecord = { count: 1, resetTime: now + windowMs };
+        await this.set(key, newRecord.count, newRecord.resetTime);
+        return newRecord;
+      }
+      
+      record.count++;
+      await this.set(key, record.count, record.resetTime);
+      return record;
+    } catch (error) {
+      console.warn('Redis increment failed, falling back to memory:', error);
+      this.connectionFailed = true;
+      // Fallback to memory store behavior
+      const memoryStore = new MemoryStore();
+      return memoryStore.increment(key, windowMs);
     }
-    
-    record.count++;
-    await this.set(key, record.count, record.resetTime);
-    return record;
   }
 }
 
-// Choose store based on environment
-const store = process.env.NODE_ENV === 'production' && process.env.REDIS_URL
+// Choose store based on environment - be more conservative about when to use Redis
+const store = (process.env.NODE_ENV === 'production' && 
+               process.env.REDIS_URL && 
+               typeof window === 'undefined' &&
+               process.env.NEXT_PHASE !== 'phase-production-build')
   ? new RedisStore()
   : new MemoryStore();
 
